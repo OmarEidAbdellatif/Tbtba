@@ -1,0 +1,251 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../providers/app_riverpod.dart';
+import '../../../models/app_models.dart';
+
+
+class StaffManagementView extends StatelessWidget {
+  final List<Animation<double>> fadeAnimations;
+
+  const StaffManagementView({super.key, required this.fadeAnimations});
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer(
+      builder: (context, ref, child) {
+        final provider = ref.watch(appRiverpod);
+        final staffList = provider.staffPerformanceList;
+
+        return Stack(
+          children: [
+            SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  _buildStaffSummary(provider),
+                  const SizedBox(height: 24),
+                  const Text('قائمة الطاقم العملي الرسمي', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1e293b))),
+                  const SizedBox(height: 16),
+                  ...staffList.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final s = entry.value;
+                    return FadeTransition(
+                      opacity: fadeAnimations[index % fadeAnimations.length],
+                      child: _buildStaffCard(s.name, s.role, s.completionRate, s.status, s.lastActive),
+                    );
+                  }).toList(),
+                ],
+              ),
+            ),
+            Positioned(
+              bottom: 24,
+              right: 24,
+              child: FloatingActionButton.extended(
+                onPressed: () => _showAddStaffSheet(context, ref),
+                backgroundColor: const Color(0xFF0ea5e9),
+                icon: const Icon(Icons.add_moderator_rounded, color: Colors.white),
+                label: const Text('إضافة موظف', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showAddStaffSheet(BuildContext context, WidgetRef ref) {
+    final nameController = TextEditingController();
+    String selectedRole = 'Nurse';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          ),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+            left: 24,
+            right: 24,
+            top: 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(10)))),
+              const SizedBox(height: 20),
+              const Text('تسجيل موظف جديد 📋', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1e293b))),
+              const Text('قم بإضافة بيانات العضو الجديد للطاقم الطبي أو الإداري', style: TextStyle(fontSize: 13, color: Color(0xFF64748b))),
+              const SizedBox(height: 24),
+              const Text('الاسم الكامل', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
+              const SizedBox(height: 8),
+              _buildField(nameController, 'مثلاً: أ. محمد العزازي'),
+              const SizedBox(height: 20),
+              const Text('الدور الوظيفي', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 10,
+                children: [
+                  _buildRoleTag('Nurse', 'تمريض', selectedRole == 'Nurse', () => setModalState(() => selectedRole = 'Nurse')),
+                  _buildRoleTag('Specialist', 'أخصائي', selectedRole == 'Specialist', () => setModalState(() => selectedRole = 'Specialist')),
+                  _buildRoleTag('PT', 'علاج طبيعي', selectedRole == 'PT', () => setModalState(() => selectedRole = 'PT')),
+                ],
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                height: 55,
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (nameController.text.isNotEmpty) {
+                      final newStaff = StaffPerformance(
+                        id: 'st${DateTime.now().millisecondsSinceEpoch}',
+                        name: nameController.text,
+                        role: selectedRole,
+                        completionRate: 0.8, // Default starting rate
+                        lastActive: 'نشط الآن',
+                        status: 'online',
+                      );
+                      ref.read(appRiverpod).addStaff(newStaff);
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('تم تسجيل "${nameController.text}" بنجاح! 🎉'),
+                          backgroundColor: const Color(0xFF0ea5e9),
+                        ),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0ea5e9),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: const Text('تأكيد التسجيل', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRoleTag(String value, String label, bool isSelected, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF0ea5e9) : const Color(0xFFf8fafc),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: isSelected ? const Color(0xFF0ea5e9) : const Color(0xFFe2e8f0)),
+        ),
+        child: Text(label, style: TextStyle(color: isSelected ? Colors.white : const Color(0xFF64748b), fontSize: 12, fontWeight: FontWeight.bold)),
+      ),
+    );
+  }
+
+  Widget _buildField(TextEditingController controller, String hint) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(color: const Color(0xFFf8fafc), borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFe2e8f0))),
+      child: TextField(
+        controller: controller,
+        textAlign: TextAlign.right,
+        decoration: InputDecoration(hintText: hint, border: InputBorder.none, hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF94a3b8))),
+      ),
+    );
+  }
+
+  Widget _buildStaffSummary(AppRiverpod provider) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(color: const Color(0xFF0369a1), borderRadius: BorderRadius.circular(24)),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+           _summaryItem(provider.totalStaffCount.toString(), 'إجمالي الطاقم'),
+           _summaryItem(provider.activeStaffCount.toString(), 'نشط الآن'),
+           _summaryItem('${(provider.averageStaffCompletion * 100).toInt()}%', 'معدل الإنجاز'),
+        ],
+      ),
+    );
+  }
+
+  static Widget _summaryItem(String val, String label) {
+    return Column(
+      children: [
+        Text(val, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 10)),
+      ],
+    );
+  }
+
+  Widget _buildStaffCard(String name, String role, double rate, String status, String time) {
+    bool isOnline = status == 'online';
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), border: Border.all(color: const Color(0xFFf1f5f9))),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(time, style: const TextStyle(color: Color(0xFF94a3b8), fontSize: 9)),
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(color: isOnline ? const Color(0xFFdcfce7) : const Color(0xFFf1f5f9), borderRadius: BorderRadius.circular(8)),
+                    child: Text(isOnline ? 'نشط' : 'غير نشط', style: TextStyle(color: isOnline ? const Color(0xFF166534) : const Color(0xFF94a3b8), fontSize: 8, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+              const Spacer(),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF1e293b))),
+                  Text(role == 'Nurse' ? 'طاقم التمريض' : 'أخصائي اجتماعي', style: const TextStyle(fontSize: 11, color: Color(0xFF64748b))),
+                ],
+              ),
+              const SizedBox(width: 12),
+              const CircleAvatar(backgroundColor: Color(0xFFf0f9ff), radius: 22, child: Icon(Icons.person_pin, color: Color(0xFF0ea5e9))),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildCompletionBar(rate),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompletionBar(double rate) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('${(rate * 100).toInt()}%', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF1e293b))),
+            const Text('معدل إنجاز المهام اليومية', style: TextStyle(fontSize: 10, color: Color(0xFF64748b))),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(value: rate, backgroundColor: const Color(0xFFf1f5f9), valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF0ea5e9)), minHeight: 6),
+        ),
+      ],
+    );
+  }
+}

@@ -1,0 +1,799 @@
+import 'dart:async';
+import 'dart:math';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/app_riverpod.dart';
+import '../../models/app_models.dart';
+
+class MedicationScreen extends ConsumerStatefulWidget {
+  const MedicationScreen({super.key});
+
+  @override
+  ConsumerState<MedicationScreen> createState() => _MedicationScreenState();
+}
+
+class _MedicationScreenState extends ConsumerState<MedicationScreen>
+    with TickerProviderStateMixin {
+  late AnimationController _bgController;
+  late AnimationController _pillController;
+  late AnimationController _ringController;
+  late AnimationController _glowController;
+  late AnimationController _missController;
+
+  int remainingSeconds = 22 * 60;
+  Timer? _timer;
+  int selectedDay = 1;
+  final List<String> tabs = ['أمس', 'اليوم', 'غداً', 'الأسبوع'];
+
+  @override
+  void initState() {
+    super.initState();
+
+    _bgController =
+        AnimationController(vsync: this, duration: const Duration(seconds: 10))
+          ..repeat();
+    _pillController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 2800))
+      ..repeat(reverse: true);
+    _ringController =
+        AnimationController(vsync: this, duration: const Duration(seconds: 2))
+          ..repeat();
+    _glowController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 2500))
+      ..repeat(reverse: true);
+    _missController =
+        AnimationController(vsync: this, duration: const Duration(seconds: 1))
+          ..repeat();
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (remainingSeconds > 0) setState(() => remainingSeconds--);
+    });
+  }
+
+  @override
+  void dispose() {
+    _bgController.dispose();
+    _pillController.dispose();
+    _ringController.dispose();
+    _glowController.dispose();
+    _missController.dispose();
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  String formatTime(int seconds) {
+    final m = seconds ~/ 60;
+    final s = seconds % 60;
+    return m > 0 ? '$m دقيقة' : '$s ثانية';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = ref.watch(appRiverpod);
+    return SafeArea(
+      child: Column(
+        children: [
+          _buildHero(provider),
+          SizedBox(
+            height: 48,
+            child: _buildDayTabs(),
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(14, 14, 14, 34),
+              child: Column(
+                children: [
+                  _buildMissBanner(),
+                  const SizedBox(height: 12),
+                  ..._buildDynamicSections(provider, selectedDay),
+                  // _buildAppointmentsSection(), // Wait, keep this static for now, uncomment below if wanted
+                  const SizedBox(height: 12),
+                  _buildAppointmentsSection(provider),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHero(AppRiverpod provider) {
+    return AnimatedBuilder(
+      animation: _bgController,
+      builder: (context, child) {
+        return Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF1a0533),
+                Color(0xFF3730a3),
+                Color(0xFF0f3460),
+                Color(0xFF6C63FF)
+              ],
+            ),
+          ),
+          child: Stack(
+            children: [
+              _buildBlob(180, const Color(0xFF6C63FF), -50, -50, 7),
+              _buildBlob(130, const Color(0xFFf472b6), -35, 30, 9),
+              _buildBlob(80, const Color(0xFF0ea5e9), 80, -10, 6),
+              SafeArea(
+                bottom: false,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(left: 16.0, top: 16.0),
+                    ),
+                    Padding(
+                      padding:
+                          const EdgeInsets.only(right: 22, top: 8, bottom: 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text('💊 دواء ${tabs[selectedDay]}',
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 4),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(
+                          left: 16, right: 16, top: 8, bottom: 24),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _buildHeroChip('✅ ${provider.getMedicationsForDay(selectedDay).where((m) => m.isTaken).length}', 'تم', 0),
+                          const SizedBox(width: 8),
+                          _buildHeroChip('⏰ ${provider.getMedicationsForDay(selectedDay).where((m) => !m.isTaken).length}', 'باقي', 1),
+                          const SizedBox(width: 8),
+                          _buildHeroChip('🔵 ٠', 'لاحقاً', 2),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildBlob(
+      double size, Color color, double right, double top, double duration) {
+    return AnimatedBuilder(
+      animation: _bgController,
+      builder: (context, child) {
+        final t = _bgController.value * 2 * pi;
+        final x = sin(t * (duration / 7)) * 10;
+        final y = cos(t * (duration / 7)) * 12;
+        return Positioned(
+          right: right + x,
+          top: top + y,
+          child: Container(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                  shape: BoxShape.circle, color: color.withOpacity(0.4))),
+        );
+      },
+    );
+  }
+
+  Widget _buildHeroChip(String value, String label, int index) {
+    return Expanded(
+      child: TweenAnimationBuilder(
+        tween: Tween<double>(begin: 0.6, end: 1),
+        duration: Duration(milliseconds: 450 + (index * 110)),
+        curve: Curves.elasticOut,
+        builder: (context, scale, child) =>
+            Transform.scale(scale: scale, child: child!),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 4),
+          decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.13),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                  color: Colors.white.withOpacity(0.12), width: 0.8)),
+          child: Column(children: [
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(value,
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold)),
+            ),
+            const SizedBox(height: 2),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(label,
+                  style: TextStyle(
+                      color: Colors.white.withOpacity(0.9),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500)),
+            ),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDayTabs() {
+    bool hc = ref.watch(appRiverpod).isHighContrast;
+    return Container(
+      color: hc ? const Color(0xFF1E1E1E) : Colors.white,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: List.generate(tabs.length, (index) {
+            final isActive = selectedDay == index;
+            return GestureDetector(
+              onTap: () => setState(() => selectedDay = index),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 34, vertical: 9),
+                decoration: BoxDecoration(
+                  border: Border(
+                      bottom: BorderSide(
+                          color: isActive
+                              ? (hc ? const Color(0xFF9FA8DA) : const Color(0xFF6C63FF))
+                              : Colors.transparent,
+                          width: 2.5)),
+                ),
+                child: Text(tabs[index],
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: isActive
+                            ? (hc ? const Color(0xFF9FA8DA) : const Color(0xFF6C63FF))
+                            : (hc ? Colors.white38 : const Color(0xFF94a3b8)))),
+              ),
+            );
+          }),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMissBanner() {
+    bool hc = ref.watch(appRiverpod).isHighContrast;
+    return AnimatedBuilder(
+      animation: _missController,
+      builder: (context, child) {
+        final shake = sin(_missController.value * pi * 2) * 3;
+        return Transform.translate(
+          offset: Offset(shake, 0),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+            decoration: BoxDecoration(
+                color: hc ? const Color(0xFF421515) : const Color(0xFFfff5f5),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: hc ? const Color(0xFFef4444) : const Color(0xFFfca5a5), width: 1.5)),
+            child: Row(
+              children: [
+                Container(
+                    width: 10,
+                    height: 10,
+                    decoration: const BoxDecoration(
+                        shape: BoxShape.circle, color: Color(0xFFef4444))),
+                const SizedBox(width: 10),
+                Expanded(
+                    child: Text(
+                        'جرعة الأمس المسائية لم تُؤخذ — تم إشعار الممرضة 👩‍⚕️',
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: hc ? Colors.white : const Color(0xFF7f1d1d),
+                            height: 1.5))),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  List<Widget> _buildDynamicSections(AppRiverpod provider, int currentDay) {
+    Map<String, List<Medication>> grouped = {
+      'الصباح': [],
+      'الظهر': [],
+      'المساء': [],
+    };
+    for (var m in provider.getMedicationsForDay(currentDay)) {
+      if (grouped.containsKey(m.timeOfDay)) {
+        grouped[m.timeOfDay]!.add(m);
+      } else {
+        grouped[m.timeOfDay] = [m];
+      }
+    }
+
+    final nextMed = provider.nextMedication;
+    List<Widget> sections = [];
+    grouped.forEach((time, meds) {
+      if (meds.isEmpty) return;
+      
+      Color color = time == 'الصباح' ? const Color(0xFFfbbf24) : (time == 'الظهر' ? const Color(0xFF6C63FF) : const Color(0xFF818cf8));
+
+      sections.add(_buildSectionLabel(time, color));
+      sections.add(const SizedBox(height: 8));
+
+      for (int i = 0; i < meds.length; i++) {
+        var m = meds[i];
+        if (m == nextMed) {
+          sections.add(_buildActiveMedCard(provider, m));
+          sections.add(const SizedBox(height: 10));
+          sections.add(_buildConfirmButton(provider, m));
+        } else {
+          sections.add(_buildMedCard(m.name, m.dosage, m.timeDescription, m.isTaken, false, false, i));
+        }
+        sections.add(const SizedBox(height: 8));
+      }
+      sections.add(const SizedBox(height: 12));
+    });
+
+    return sections;
+  }
+
+  Widget _buildSectionLabel(String text, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+            width: 4,
+            height: 16,
+            decoration: BoxDecoration(
+                color: color, borderRadius: BorderRadius.circular(3))),
+        const SizedBox(width: 7),
+        Text(text,
+            style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF6C63FF))),
+      ],
+    );
+  }
+
+  Widget _buildMedCard(String name, String dose, String time, bool isDone,
+      bool isMissed, bool isLater, int delayIndex) {
+    bool hc = ref.watch(appRiverpod).isHighContrast;
+    final bgColor = isDone
+        ? const Color(0xFFd1fae5)
+        : (isMissed
+            ? const Color(0xFFfee2e2)
+            : (isLater ? const Color(0xFFf1f5f9) : Colors.white));
+    final borderColor = isDone
+        ? const Color(0xFFd1fae5)
+        : (isMissed
+            ? const Color(0xFFfca5a5)
+            : (isLater ? const Color(0xFFede9fe) : const Color(0xFFede9fe)));
+    final badgeText =
+        isDone ? '✓ تم' : (isMissed ? 'فائتة' : (isLater ? 'لاحقاً' : ''));
+    final badgeColor = isDone
+        ? const Color(0xFFd1fae5)
+        : (isMissed
+            ? const Color(0xFFfee2e2)
+            : (isLater ? const Color(0xFFf1f5f9) : Colors.white));
+    final badgeTextColor = isDone
+        ? const Color(0xFF065f46)
+        : (isMissed
+            ? const Color(0xFF7f1d1d)
+            : (isLater ? const Color(0xFF9ca3af) : Colors.white));
+
+    return TweenAnimationBuilder(
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeOut,
+      builder: (context, value, child) => Transform.translate(
+          offset: Offset(14 * (1 - value), 0),
+          child: Opacity(opacity: value, child: child)),
+      child: Container(
+        padding: const EdgeInsets.all(13),
+        decoration: BoxDecoration(
+            color: hc ? const Color(0xFF1E1E1E) : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: hc ? const Color(0xFF333333) : borderColor, width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                  color: const Color(0xFF6C63FF).withOpacity(hc ? 0.2 : 0.06),
+                  blurRadius: 12,
+                  offset: const Offset(0, 2))
+            ]),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                  color: bgColor, borderRadius: BorderRadius.circular(15)),
+              child: Center(child: _buildPillIcon(isDone, isLater)),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(name,
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: hc ? Colors.white : const Color(0xFF0f172a))),
+                  const SizedBox(height: 4),
+                  Text(dose,
+                      style: const TextStyle(
+                          fontSize: 14, color: Color(0xFF64748b))),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.access_time,
+                          size: 14,
+                          color: isLater
+                              ? const Color(0xFF94a3b8)
+                              : const Color(0xFF94a3b8)),
+                      const SizedBox(width: 6),
+                      Text(time,
+                          style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: isLater
+                                  ? const Color(0xFF475569)
+                                  : const Color(0xFF475569))),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                  color: badgeColor, borderRadius: BorderRadius.circular(10)),
+              child: Text(badgeText,
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: badgeTextColor)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActiveMedCard(AppRiverpod provider, Medication med) {
+    return AnimatedBuilder(
+      animation: _glowController,
+      builder: (context, child) {
+        return Container(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF6C63FF), Color(0xFFA78BFA)]),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                  color: const Color(0xFF6C63FF)
+                      .withOpacity(0.35 + (_glowController.value * 0.25)),
+                  blurRadius: 24,
+                  offset: const Offset(0, 6))
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(13),
+            child: Row(
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    provider.takeMedication(med.id);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('تم تسجيل الجرعة بنجاح! +10 نقاط 🌟', style: TextStyle(fontSize: 18, fontFamily: 'Cairo')),
+                        backgroundColor: Color(0xFF10b981),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                  child: SizedBox(
+                    width: 56,
+                    height: 56,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        AnimatedBuilder(
+                          animation: _ringController,
+                          builder: (context, child) => Transform.scale(
+                            scale: 1 + (_ringController.value * 0.32),
+                            child: Container(
+                                width: 56,
+                                height: 56,
+                                decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                        color: Colors.white.withOpacity(0.55 -
+                                            (_ringController.value * 0.55)),
+                                        width: 2))),
+                          ),
+                        ),
+                        AnimatedBuilder(
+                          animation: _pillController,
+                          builder: (context, child) => Transform.translate(
+                            offset: Offset(0, -6 * _pillController.value),
+                            child: Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.15),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 3),
+                                  )
+                                ]
+                              ),
+                              child: const Icon(Icons.touch_app,
+                                  color: Color(0xFF7c3aed), size: 26),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(med.name,
+                          style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white)),
+                      const SizedBox(height: 4),
+                      Text(med.dosage,
+                          style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.white.withOpacity(0.85))),
+                      const SizedBox(height: 6),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          AnimatedBuilder(
+                            animation: _ringController,
+                            builder: (context, child) => Transform.scale(
+                                scale: 1 +
+                                    (sin(_ringController.value * pi * 2) *
+                                        0.06),
+                                child: const Icon(Icons.timer,
+                                    size: 16, color: Colors.white)),
+                          ),
+                          const SizedBox(width: 6),
+                          Text('⏱ باقي ${formatTime(remainingSeconds)}',
+                              style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.25),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.white.withOpacity(0.3))),
+                  child: const Text('الآن',
+                      style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white)),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildConfirmButton(AppRiverpod provider, Medication med) {
+    return AnimatedBuilder(
+      animation: _glowController,
+      builder: (context, child) {
+        return Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF6C63FF), Color(0xFFA78BFA)]),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                  color: const Color(0xFF6C63FF)
+                      .withOpacity(0.4 + (_glowController.value * 0.2)),
+                  blurRadius: 24,
+                  offset: const Offset(0, 6))
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                provider.takeMedication(med.id);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('تم تسجيل الجرعة بنجاح! +10 نقاط 🌟', style: TextStyle(fontSize: 18, fontFamily: 'Cairo')),
+                    backgroundColor: Color(0xFF10b981),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              },
+              borderRadius: BorderRadius.circular(20),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 15),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 20,
+                      height: 20,
+                      decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withOpacity(0.25)),
+                      child: const Icon(Icons.check,
+                          color: Colors.white, size: 14),
+                    ),
+                    const SizedBox(width: 9),
+                    const Text('أخذت الدواء ✓',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAppointmentsSection(AppRiverpod provider) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(width: 4, height: 16, decoration: BoxDecoration(color: const Color(0xFFf472b6), borderRadius: BorderRadius.circular(3))),
+            const SizedBox(width: 7),
+            const Text('مواعيد وجلسات قادمة 📅', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF6C63FF))),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (provider.medicalSessions.isEmpty)
+          const Center(child: Text('لا توجد مواعيد مسجلة حالياً', style: TextStyle(color: Colors.white70, fontSize: 13)))
+        else
+          ...provider.medicalSessions.map((s) => _buildAppointmentCard(
+            s.date == 'اليوم' ? '٢١' : '٢٠',
+            'أبريل',
+            s.specialistName,
+            '${s.type == 'doctor' ? 'كشف طبي' : 'جلسة علاج'} · ${s.time}',
+            s.type == 'doctor',
+            0,
+          )).toList(),
+      ],
+    );
+  }
+
+  Widget _buildAppointmentCard(String day, String month, String title,
+      String detail, bool isPurple, int delay) {
+    return TweenAnimationBuilder(
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeOut,
+      builder: (context, value, child) => Transform.translate(
+          offset: Offset(14 * (1 - value), 0),
+          child: Opacity(opacity: value, child: child)),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFFede9fe), width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                  color: const Color(0xFF6C63FF).withOpacity(0.06),
+                  blurRadius: 12,
+                  offset: const Offset(0, 2))
+            ]),
+        child: Row(
+          children: [
+            Container(
+              width: 58,
+              height: 68,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: isPurple
+                        ? const [Color(0xFF6C63FF), Color(0xFFA78BFA)]
+                        : const [Color(0xFF4f46e5), Color(0xFF818cf8)]),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(4.0),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(day,
+                          style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white)),
+                      Text(month,
+                          style: TextStyle(fontSize: 14, color: Colors.white)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(title,
+                      style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0f172a))),
+                  const SizedBox(height: 6),
+                  Text(detail,
+                      style: const TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFF64748b),
+                          fontWeight: FontWeight.w500)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPillIcon(bool isDone, bool isLater) {
+    final color = isDone
+        ? const Color(0xFF10b981)
+        : (isLater ? const Color(0xFFcbd5e1) : const Color(0xFF7c3aed));
+
+    return Icon(
+      Icons.medication,
+      color: color,
+      size: 26,
+    );
+  }
+}
