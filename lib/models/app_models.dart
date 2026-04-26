@@ -19,6 +19,7 @@ class Medication {
   String timeDescription;
   String timeOfDay; // 'الصباح', 'الظهر', 'المساء'
   bool isTaken;
+  String dayTag; // 'أمس', 'اليوم', 'غداً', 'الأسبوع'
 
   Medication({
     required this.id,
@@ -27,6 +28,7 @@ class Medication {
     required this.timeDescription,
     required this.timeOfDay,
     this.isTaken = false,
+    this.dayTag = 'اليوم',
   });
 }
 
@@ -91,6 +93,7 @@ class Activity {
   String status; // 'done', 'active', 'later', 'coming'
   String badges;
   int pointsReward;
+  String dayTag; // 'أمس', 'اليوم', 'غداً', 'الأسبوع'
 
   Activity({
     required this.id,
@@ -101,6 +104,7 @@ class Activity {
     required this.status,
     required this.badges,
     required this.pointsReward,
+    this.dayTag = 'اليوم',
   });
 }
 
@@ -412,6 +416,40 @@ class FamilyBill {
     required this.isPaid,
     required this.dueDate,
   });
+
+  FamilyBill copyWith({
+    String? id,
+    String? title,
+    String? month,
+    double? amount,
+    bool? isPaid,
+    String? dueDate,
+  }) {
+    return FamilyBill(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      month: month ?? this.month,
+      amount: amount ?? this.amount,
+      isPaid: isPaid ?? this.isPaid,
+      dueDate: dueDate ?? this.dueDate,
+    );
+  }
+}
+
+class ShiftHandoff {
+  final String nurseName;
+  final String shiftType;
+  final String notes;
+  final DateTime timestamp;
+  final List<String> criticalCases;
+
+  ShiftHandoff({
+    required this.nurseName,
+    required this.shiftType,
+    required this.notes,
+    required this.timestamp,
+    required this.criticalCases,
+  });
 }
 
 class FamilyHealthMetric {
@@ -609,3 +647,128 @@ class MemoryMoment {
      );
    }
  }
+class NursingNote {
+  final String id;
+  final String residentName;
+  final String title;
+  final String content;
+  final String author;
+  final DateTime timestamp;
+
+  NursingNote({
+    required this.id,
+    required this.residentName,
+    required this.title,
+    required this.content,
+    required this.author,
+    required this.timestamp,
+  });
+}
+
+class ResidentMedicalInfo {
+  final String residentName;
+  final List<String> medications;
+  final List<String> allergies;
+  final List<String> chronicDiseases;
+
+  ResidentMedicalInfo({
+    required this.residentName,
+    this.medications = const [],
+    this.allergies = const [],
+    this.chronicDiseases = const [],
+  });
+}
+
+class CareTask {
+  final String id;
+  final String residentName;
+  final String title;
+  final String category; // 'فندقية', 'شخصية', 'ترفيهية'
+  bool isCompleted;
+  final String time;
+
+  CareTask({
+    required this.id,
+    required this.residentName,
+    required this.title,
+    required this.category,
+    this.isCompleted = false,
+    required this.time,
+  });
+}
+
+class InventoryItem {
+  final String id;
+  final String name;
+  final String category; // 'أدوية', 'مستلزمات', 'شخصي'
+  final int currentStock;
+  final int minRequired;
+  final String unit;
+
+  InventoryItem({
+    required this.id,
+    required this.name,
+    required this.category,
+    required this.currentStock,
+    required this.minRequired,
+    this.unit = 'قطعة',
+  });
+
+  bool get isLowStock => currentStock <= minRequired;
+}
+
+class DoctorVisit {
+  final String id;
+  final String doctorName;
+  final String specialty;
+  final DateTime date;
+  final String purpose;
+  final String results;
+  final String residentName;
+
+  DoctorVisit({
+    required this.id,
+    required this.doctorName,
+    required this.specialty,
+    required this.date,
+    required this.purpose,
+    this.results = '',
+    required this.residentName,
+  });
+}
+
+class MealPlan {
+  final String residentName;
+  final String breakfast;
+  final String lunch;
+  final String dinner;
+  final String snacks;
+  final String specialInstructions;
+
+  MealPlan({
+    required this.residentName,
+    required this.breakfast,
+    required this.lunch,
+    required this.dinner,
+    this.snacks = '',
+    this.specialInstructions = '',
+  });
+}
+
+class ActivitySession {
+  final String id;
+  final String title;
+  final String description;
+  final DateTime startTime;
+  final String location;
+  final List<String> participants;
+
+  ActivitySession({
+    required this.id,
+    required this.title,
+    required this.description,
+    required this.startTime,
+    required this.location,
+    required this.participants,
+  });
+}

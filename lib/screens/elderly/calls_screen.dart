@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/app_riverpod.dart';
 import '../../models/app_models.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class CallsScreen extends ConsumerStatefulWidget {
   const CallsScreen({super.key});
@@ -67,8 +68,8 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                 padding: const EdgeInsets.all(14),
                 child: Column(
                   children: [
-                    _buildIncomingCall(provider),
-                    const SizedBox(height: 12),
+                    if (provider.isIncomingCall) _buildIncomingCall(provider),
+                    if (provider.isIncomingCall) const SizedBox(height: 12),
                     _buildFamilyGrid(provider),
                     const SizedBox(height: 12),
                     _buildVoiceMessages(provider),
@@ -93,37 +94,133 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
   }
 
   Widget _buildRecordingButton(AppRiverpod provider) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        GestureDetector(
-          onLongPressStart: (_) {
-            // Simulation
-          },
-          onLongPressEnd: (_) {
-            provider.sendVoiceMessageFromResident('رسالة "أنا بخير" من الجد');
-          },
-          child: Column(
-            children: [
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [Color(0xFF6C63FF), Color(0xFFc084fc)]),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(color: const Color(0xFF6C63FF).withOpacity(0.4), blurRadius: 20, spreadRadius: 5),
-                  ],
-                ),
-                child: const Icon(Icons.mic, color: Colors.white, size: 40),
+    return Center(
+      child: GestureDetector(
+        onTap: () => _showRecordDialog(provider),
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 40),
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 28),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF6C63FF), Color(0xFFc084fc)],
+            ),
+            borderRadius: BorderRadius.circular(32),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF6C63FF).withOpacity(0.4),
+                blurRadius: 20, spreadRadius: 4,
               ),
-              const SizedBox(height: 8),
-              const Text('اضغط مطولاً للتحدث مع الأسرة 🎙️', 
-                  style: TextStyle(color: Color(0xFF3730a3), fontWeight: FontWeight.bold, fontSize: 16)),
+            ],
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.mic, color: Colors.white, size: 28),
+              SizedBox(width: 12),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text('اضغط لتسجيل رسالة للأسرة 🎤',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 17,
+                      )),
+                ),
+              ),
             ],
           ),
         ),
-      ],
+      ),
+    );
+  }
+
+  void _showRecordDialog(AppRiverpod provider) {
+    bool isRecording = false;
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setS) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+          child: Padding(
+            padding: const EdgeInsets.all(28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('🎤 إرسال رسالة صوتية',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Text(
+                  isRecording ? 'جاري التسجيل...' : 'اضغط زر التسجيل للبدء',
+                  style: TextStyle(
+                    color: isRecording ? const Color(0xFFef4444) : const Color(0xFF94a3b8),
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                GestureDetector(
+                  onTap: () => setS(() => isRecording = !isRecording),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    width: 80, height: 80,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: isRecording
+                            ? [const Color(0xFFef4444), const Color(0xFFf97316)]
+                            : [const Color(0xFF6C63FF), const Color(0xFFc084fc)],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: (isRecording ? const Color(0xFFef4444) : const Color(0xFF6C63FF)).withOpacity(0.4),
+                          blurRadius: 20, spreadRadius: 4,
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      isRecording ? Icons.stop_rounded : Icons.mic,
+                      color: Colors.white, size: 38,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: const Text('إلغاء', style: TextStyle(color: Color(0xFF94a3b8), fontSize: 16)),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          provider.sendVoiceMessageFromResident('رسالة من الجد — أنا بخير وبشوقكم');
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('تم إرسال رسالتك الصوتية للأسرة 🎤❤️'),
+                              backgroundColor: Color(0xFF6C63FF),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF6C63FF),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: const Text('إرسال ✨', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -244,15 +341,21 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: Colors.white.withOpacity(hc ? 0.05 : 0.1))),
           child: Column(children: [
-            Text(value,
-                style: TextStyle(
-                    color: valueColor,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold)),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(value,
+                  style: TextStyle(
+                      color: valueColor,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold)),
+            ),
             const SizedBox(height: 2),
-            Text(label,
-                style: TextStyle(
-                    color: Colors.white.withOpacity(hc ? 0.7 : 0.9), fontSize: 16)),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(label,
+                  style: TextStyle(
+                      color: Colors.white.withOpacity(hc ? 0.7 : 0.9), fontSize: 16)),
+            ),
           ]),
         ),
       ),
@@ -340,11 +443,17 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                                         shape: BoxShape.circle,
                                         color: Colors.white.withOpacity(0.25)),
                                     child: const Center(
-                                        child: Text('سا',
-                                            style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.w500))),
+                                        child: Padding(
+                                          padding: EdgeInsets.all(4.0),
+                                          child: FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            child: Text('سا',
+                                                style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.w500)),
+                                          ),
+                                        )),
                                   ),
                                 ),
                               ],
@@ -367,64 +476,71 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                                     return Transform.rotate(
                                         angle: shake * pi / 180, child: child);
                                   },
-                                    child: const Text('📲 بتتصل بك الآن...',
-                                        style: TextStyle(
-                                            color: Colors.white70,
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold)),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  const Text('سارة',
+                                  child: const Text('📲 بتتصل بك الآن...',
+                                      style: TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold)),
+                                ),
+                                const SizedBox(height: 4),
+                                const Flexible(
+                                  child: Text('سارة',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
                                           color: Colors.white,
                                           fontSize: 24,
                                           fontWeight: FontWeight.bold)),
-                                  const SizedBox(height: 4),
-                                  const Text('مكالمة فيديو واردة',
+                                ),
+                                const SizedBox(height: 4),
+                                const Flexible(
+                                  child: Text('مكالمة فيديو واردة',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
                                           color: Colors.white,
                                           fontSize: 16)),
+                                ),
                               ],
                             ),
                           ),
                           const SizedBox(width: 8),
                           Row(
                             children: [
-                              AnimatedBuilder(
-                                animation: _glowController,
-                                builder: (context, child) => GestureDetector(
-                                  onTap: () => provider.startVideoCall('سارة', 'سا'),
-                                  child: Container(
-                                    width: 44,
-                                    height: 44,
+                              GestureDetector(
+                                onTap: () => _handleCallAction(provider, 'accept'),
+                                child: AnimatedBuilder(
+                                  animation: _glowController,
+                                  builder: (context, child) => Container(
+                                    width: 48,
+                                    height: 48,
                                     decoration: BoxDecoration(
                                         shape: BoxShape.circle,
                                         color: Colors.white,
                                         boxShadow: [
                                           BoxShadow(
                                               color: const Color(0xFF4ade80)
-                                                  .withOpacity(0.5 +
-                                                      (_glowController.value *
-                                                          0.5)),
-                                              blurRadius: 10 +
-                                                  (_glowController.value * 10),
-                                              spreadRadius:
-                                                  _glowController.value * 5)
+                                                  .withOpacity(0.5 + (_glowController.value * 0.5)),
+                                              blurRadius: 10 + (_glowController.value * 10),
+                                              spreadRadius: _glowController.value * 5)
                                         ]),
                                     child: const Icon(Icons.check,
-                                        color: Color(0xFF059669), size: 20),
+                                        color: Color(0xFF059669), size: 22),
                                   ),
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              Container(
-                                width: 44,
-                                height: 44,
-                                decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Colors.white.withOpacity(0.2)),
-                                child: const Icon(Icons.close,
-                                    color: Colors.white, size: 18),
+                              GestureDetector(
+                                onTap: () => provider.rejectCall(),
+                                child: Container(
+                                  width: 48,
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.white.withOpacity(0.25)),
+                                  child: const Icon(Icons.close,
+                                      color: Colors.white, size: 22),
+                                ),
                               ),
                             ],
                           ),
@@ -687,73 +803,64 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                       children: [
                         Expanded(
                           child: GestureDetector(
-                            onTap: () {
-                              if (isOnline) {
-                                provider.startVideoCall(name, initials);
-                              }
-                            },
+                            onTap: () => _handleCallAction(provider, 'video', name: name, initials: initials),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 7),
+                              padding: const EdgeInsets.symmetric(vertical: 8),
                               decoration: BoxDecoration(
-                                  gradient: isOnline
-                                      ? const LinearGradient(colors: [
-                                          Color(0xFF6C63FF),
-                                          Color(0xFFA78BFA)
-                                        ])
-                                      : null,
-                                  color:
-                                      isOnline ? null : const Color(0xFFede9fe),
-                                  borderRadius: BorderRadius.circular(11)),
+                                gradient: isOnline
+                                    ? const LinearGradient(colors: [Color(0xFF6C63FF), Color(0xFFA78BFA)])
+                                    : null,
+                                color: isOnline ? null : const Color(0xFFede9fe),
+                                borderRadius: BorderRadius.circular(11),
+                              ),
                               child: FittedBox(
                                 fit: BoxFit.scaleDown,
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Icon(Icons.videocam,
-                                        color: isOnline
-                                            ? Colors.white
-                                            : const Color(0xFF6C63FF),
-                                        size: 11),
-                                    const SizedBox(width: 3),
+                                        color: isOnline ? Colors.white : const Color(0xFF6C63FF),
+                                        size: 13),
+                                    const SizedBox(width: 4),
                                     Text('فيديو',
                                         style: TextStyle(
-                                            fontSize: 16,
+                                            fontSize: 15,
                                             fontWeight: FontWeight.bold,
-                                            color: isOnline
-                                                ? Colors.white
-                                                : const Color(0xFF6C63FF))),
+                                            color: isOnline ? Colors.white : const Color(0xFF6C63FF))),
                                   ],
                                 ),
                               ),
                             ),
                           ),
                         ),
-                        const SizedBox(width: 5),
+                        const SizedBox(width: 6),
                         Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 7),
-                            decoration: BoxDecoration(
+                          child: GestureDetector(
+                            onTap: () => _handleCallAction(provider, 'audio', name: name, initials: initials),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              decoration: BoxDecoration(
                                 color: isOnline
                                     ? const Color(0xFFede9fe)
                                     : const Color(0xFFede9fe).withOpacity(0.5),
-                                borderRadius: BorderRadius.circular(11)),
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.phone,
-                                      color: const Color(0xFF6C63FF)
-                                          .withOpacity(isOnline ? 1 : 0.5),
-                                      size: 10),
-                                  const SizedBox(width: 3),
-                                  Text('صوت',
-                                      style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          color: const Color(0xFF6C63FF)
-                                              .withOpacity(isOnline ? 1 : 0.5))),
-                                ],
+                                borderRadius: BorderRadius.circular(11),
+                              ),
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.phone,
+                                        color: const Color(0xFF6C63FF).withOpacity(isOnline ? 1 : 0.5),
+                                        size: 13),
+                                    const SizedBox(width: 4),
+                                    Text('صوت',
+                                        style: TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.bold,
+                                            color: const Color(0xFF6C63FF).withOpacity(isOnline ? 1 : 0.5))),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
@@ -797,8 +904,10 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                     alignment: Alignment.centerRight,
                     fit: BoxFit.scaleDown,
                     child: Text('🎙️ رسائل صوتية من الأسرة',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                            fontSize: 20,
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF6C63FF))),
                   ),
@@ -919,12 +1028,16 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(msg.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF0f172a))),
                 const SizedBox(height: 4),
                 Text(msg.timeDescription,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                         fontSize: 16, color: Color(0xFF94a3b8))),
               ],
@@ -938,11 +1051,17 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                 gradient: LinearGradient(colors: gradient),
                 shape: BoxShape.circle),
             child: Center(
-                child: Text(sender.initials,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold))),
+                child: Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(sender.initials,
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold)),
+                  ),
+                )),
           ),
         ],
       ),
@@ -989,6 +1108,8 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text('📋 آخر المكالمات',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -1048,14 +1169,19 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF0f172a))),
                 const SizedBox(height: 4),
                 Text(detail,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                         fontSize: 14, color: Color(0xFF94a3b8), fontWeight: FontWeight.w500)),
               ],
@@ -1069,14 +1195,65 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                 gradient: LinearGradient(colors: gradient),
                 shape: BoxShape.circle),
             child: Center(
-                child: Text(initials,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold))),
+                child: Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(initials,
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold)),
+                  ),
+                )),
           ),
         ],
       ),
     );
+  }
+
+  void _handleCallAction(AppRiverpod provider, String type, {String? name, String? initials}) async {
+    // Permission Request Simulation
+    bool granted = await _requestPermissions();
+    if (!granted) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('يجب الموافقة على إذن الكاميرا والميكروفون لإجراء المكالمة ⚠️'),
+            backgroundColor: Color(0xFFef4444),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return;
+    }
+
+    if (type == 'accept') {
+      provider.acceptCall();
+    } else if (type == 'video' || type == 'audio') {
+      provider.startVideoCall(name!, initials!);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('جاري الاتصال ب— $name...'),
+            backgroundColor: const Color(0xFF6C63FF),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<bool> _requestPermissions() async {
+    // Request Camera and Microphone permissions from the system
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.camera,
+      Permission.microphone,
+    ].request();
+
+    bool cameraGranted = statuses[Permission.camera] == PermissionStatus.granted;
+    bool microGranted = statuses[Permission.microphone] == PermissionStatus.granted;
+
+    return cameraGranted && microGranted;
   }
 }

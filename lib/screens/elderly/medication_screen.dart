@@ -135,11 +135,14 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Text('💊 دواء ${tabs[selectedDay]}',
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.bold)),
+                          const FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text('💊 دواء اليوم', // Fixed to Today as default or dynamic
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold)),
+                          ),
                           const SizedBox(height: 4),
                         ],
                       ),
@@ -418,18 +421,27 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
                   color: bgColor, borderRadius: BorderRadius.circular(15)),
               child: Center(child: _buildPillIcon(isDone, isLater)),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 8),
+            IconButton(
+              icon: const Icon(Icons.volume_up_rounded, color: Color(0xFF6C63FF), size: 24),
+              onPressed: () => ref.read(appRiverpod).startReading('دواء $name، الجرعة $dose، الموعد $time'),
+            ),
+            const SizedBox(width: 4),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: hc ? Colors.white : const Color(0xFF0f172a))),
                   const SizedBox(height: 4),
                   Text(dose,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                           fontSize: 14, color: Color(0xFF64748b))),
                   const SizedBox(height: 6),
@@ -559,6 +571,8 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(med.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
@@ -593,6 +607,10 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
                   ),
                 ),
                 const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.volume_up_rounded, color: Colors.white, size: 28),
+                  onPressed: () => provider.startReading('دواء ${med.name}، الجرعة ${med.dosage}، الآن'),
+                ),
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -766,12 +784,16 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF0f172a))),
                   const SizedBox(height: 6),
                   Text(detail,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                           fontSize: 14,
                           color: Color(0xFF64748b),

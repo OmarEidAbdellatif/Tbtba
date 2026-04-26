@@ -3,78 +3,134 @@ import 'package:flutter/material.dart';
 class CareReportDetailScreen extends StatelessWidget {
   final String title;
   final String date;
-  const CareReportDetailScreen({super.key, required this.title, required this.date});
+
+  const CareReportDetailScreen(
+      {super.key, required this.title, required this.date});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFfdfcfb),
+      backgroundColor: const Color(0xFFF1F1F6),
       appBar: AppBar(
-        title: const Text('تفاصيل التقرير', style: TextStyle(color: Color(0xFF1f2937), fontSize: 16, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
+        title: const Text('تفاصيل التقرير',
+            style: TextStyle(
+                color: Color(0xFF1e293b),
+                fontSize: 20,
+                fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF1f2937), size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              color: Color(0xFF1e293b), size: 22),
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            _buildReportHeader(),
-            const SizedBox(height: 24),
-            _buildSection('الملخص المهني', 'يُظهر المقيم تحسناً ملحوظاً في التفاعل مع الأنشطة الجماعية وخاصة جلسات القراءة. الروح المعنوية مرتفعة والشهية للطعام منتظمة.'),
-            const SizedBox(height: 20),
-            _buildMetricsSection(),
-            const SizedBox(height: 24),
-            _buildSection('الملاحظات الاجتماعية', 'شارك في مسابقة الذاكرة وحصل على المركز الثاني. أبدى رغبة في التحدث عن ذكريات الطفولة مع زملائه في الغرفة.'),
-            const SizedBox(height: 20),
-            _buildSection('التوصيات', 'يُنصح بزيادة التفاعل العائلي عبر مكالمات الفيديو خلال عطلة نهاية الأسبوع لتعزيز الشعور بالانتماء.'),
-            const SizedBox(height: 40),
-            _buildContactButton(),
-          ],
-        ),
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  _buildMainCard(),
+                  const SizedBox(height: 32),
+                  _buildSectionHeader('الملخص المهني'),
+                  const SizedBox(height: 12),
+                  _buildContentCard(
+                      'يُظهر المقيم تحسناً ملحوظاً في التفاعل مع الأنشطة الجماعية وخاصة جلسات القراءة. الروح المعنوية مرتفعة والشهية للطعام منتظمة.'),
+                  const SizedBox(height: 24),
+                  _buildMetricsRow(),
+                  const SizedBox(height: 32),
+                  _buildSectionHeader('الملاحظات الاجتماعية'),
+                  const SizedBox(height: 12),
+                  _buildContentCard(
+                      'شارك في مسابقة الذاكرة وحصل على المركز الثاني. أبدى رغبة في التحدث عن ذكريات الطفولة مع زملائه في الغرفة.'),
+                  const SizedBox(height: 32),
+                  _buildSectionHeader('التوصيات'),
+                  const SizedBox(height: 12),
+                  _buildContentCard(
+                      'يُنصح بزيادة التفاعل العائلي عبر مكالمات الفيديو خلال عطلة نهاية الأسبوع لتعزيز الشعور بالانتماء.'),
+                  const SizedBox(height: 40),
+                ],
+              ),
+            ),
+          ),
+          _buildBottomAction(context),
+        ],
       ),
     );
   }
 
-  Widget _buildReportHeader() {
+  Widget _buildMainCard() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFf1f5f9)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 15)],
+        borderRadius: BorderRadius.circular(32),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 20,
+              offset: const Offset(0, 10))
+        ],
       ),
       child: Column(
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(date, style: const TextStyle(color: Color(0xFF94a3b8), fontSize: 11)),
-              const Spacer(),
-              const Text('تقرير تقييم دوري', style: TextStyle(color: Color(0xFFea580c), fontSize: 10, fontWeight: FontWeight.bold)),
+              Text(date,
+                  style:
+                      const TextStyle(color: Color(0xFF94a3b8), fontSize: 14)),
+              const Text('تقرير تقييم دوري',
+                  style: TextStyle(
+                      color: Color(0xFFea580c),
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold)),
             ],
           ),
-          const SizedBox(height: 12),
-          Text(title, textAlign: TextAlign.center, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1f2937))),
           const SizedBox(height: 20),
-          const Divider(color: Color(0xFFf1f5f9)),
-          const SizedBox(height: 16),
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          Text(title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1e293b),
+                  height: 1.3)),
+          const SizedBox(height: 24),
+          const Divider(color: Color(0xFFf1f5f9), thickness: 1.5),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              Column(
+              const Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                   Text('أ. نور الدين', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                   Text('أخصائي اجتماعي أول', style: TextStyle(color: Color(0xFF64748b), fontSize: 11)),
+                  Text('أ. نور الدين',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          color: Color(0xFF1e293b))),
+                  Text('أخصائي اجتماعي أول',
+                      style: TextStyle(color: Color(0xFF64748b), fontSize: 13)),
                 ],
               ),
-              SizedBox(width: 12),
-              CircleAvatar(backgroundColor: Color(0xFFfee2e2), child: Text('ن', style: TextStyle(color: Color(0xFFef4444)))),
+              const SizedBox(width: 16),
+              Container(
+                width: 50,
+                height: 50,
+                decoration: const BoxDecoration(
+                    color: Color(0xFFfee2e2), shape: BoxShape.circle),
+                child: const Center(
+                    child: Text('ن',
+                        style: TextStyle(
+                            color: Color(0xFFef4444),
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold))),
+              ),
             ],
           ),
         ],
@@ -82,63 +138,115 @@ class CareReportDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSection(String title, String content) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFFea580c))),
-        const SizedBox(height: 8),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFf1f5f9))),
-          child: Text(content, textAlign: TextAlign.right, style: const TextStyle(color: Color(0xFF4b5563), fontSize: 13, height: 1.6)),
-        ),
-      ],
+  Widget _buildSectionHeader(String title) {
+    return Text(title,
+        style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFFea580c)));
+  }
+
+  Widget _buildContentCard(String text) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 15,
+              offset: const Offset(0, 5))
+        ],
+      ),
+      child: Text(text,
+          textAlign: TextAlign.right,
+          style: const TextStyle(
+              color: Color(0xFF4b5563),
+              fontSize: 15,
+              height: 1.7,
+              fontWeight: FontWeight.w500)),
     );
   }
 
-  Widget _buildMetricsSection() {
+  Widget _buildMetricsRow() {
     return Row(
       children: [
-        Expanded(child: _buildMiniMetric('التفاعل', 'ممتاز', const Color(0xFFdcfce7), const Color(0xFF166534))),
-        const SizedBox(width: 12),
-        Expanded(child: _buildMiniMetric('المزاج', 'مستقر', const Color(0xFFdbeafe), const Color(0xFF1e4ed8))),
+        Expanded(
+            child: _buildMetricBox('التفاعل', 'ممتاز', const Color(0xFFf0fdf4),
+                const Color(0xFF16a34a))),
+        const SizedBox(width: 16),
+        Expanded(
+            child: _buildMetricBox('المزاج', 'مستقر', const Color(0xFFeff6ff),
+                const Color(0xFF2563eb))),
       ],
     );
   }
 
-  Widget _buildMiniMetric(String label, String val, Color bg, Color fg) {
+  Widget _buildMetricBox(String label, String value, Color bg, Color fg) {
     return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: bg.withOpacity(0.4), borderRadius: BorderRadius.circular(16)),
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration:
+          BoxDecoration(color: bg, borderRadius: BorderRadius.circular(24)),
       child: Column(
         children: [
-          Text(label, style: TextStyle(color: fg, fontSize: 10, fontWeight: FontWeight.bold)),
+          Text(label,
+              style: TextStyle(
+                  color: fg, fontSize: 13, fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
-          Text(val, style: TextStyle(color: fg, fontSize: 14, fontWeight: FontWeight.bold)),
+          Text(value,
+              style: TextStyle(
+                  color: fg, fontSize: 20, fontWeight: FontWeight.bold)),
         ],
       ),
     );
   }
 
-  Widget _buildContactButton() {
+  Widget _buildBottomAction(BuildContext context) {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1f2937),
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 10)],
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 40),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
       ),
-      child: const Center(
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-             Text('تواصل مع الأخصائي', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-             SizedBox(width: 12),
-             Icon(Icons.chat_outlined, color: Colors.white, size: 20),
+      child: Container(
+        width: double.infinity,
+        height: 64,
+        decoration: BoxDecoration(
+          color: const Color(0xFF1e293b),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+                color: const Color(0xFF1e293b).withOpacity(0.3),
+                blurRadius: 15,
+                offset: const Offset(0, 8))
           ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('سيتم فتح المحادثة مع الأخصائي')),
+              );
+            },
+            borderRadius: BorderRadius.circular(20),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.chat_bubble_outline_rounded,
+                    color: Colors.white, size: 24),
+                SizedBox(width: 12),
+                Text('تواصل مع الأخصائي',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ),
         ),
       ),
     );

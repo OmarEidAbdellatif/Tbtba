@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/app_models.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 final appRiverpod = ChangeNotifierProvider((ref) => AppRiverpod());
 
@@ -12,6 +13,28 @@ class AppRiverpod extends ChangeNotifier {
   bool isAuthenticated = false; // Changed from true to false to force login after onboarding
   double fontScaleFactor = 1.0; // Accessibility
   bool isHighContrast = false; // Accessibility
+  bool isDarkMode = false; // Night Mode
+  
+  void toggleDarkMode() {
+    isDarkMode = !isDarkMode;
+    notifyListeners();
+  }
+  
+  // Shift Handoff State
+  List<ShiftHandoff> handoffs = [
+    ShiftHandoff(
+      nurseName: 'أ. منى زكي',
+      shiftType: 'الوردية المسائية',
+      notes: 'جميع المقيمين استلموا أدويتهم. الحاج محمود ارتفع ضغطه قليلاً الساعة ٨ م وتم إعطاؤه الدواء اللازم.',
+      timestamp: DateTime.now().subtract(const Duration(hours: 4)),
+      criticalCases: ['محمود Salem'],
+    ),
+  ];
+
+  void submitHandoff(ShiftHandoff h) {
+    handoffs.insert(0, h);
+    notifyListeners();
+  }
   
 
   // Real Notification State
@@ -74,6 +97,68 @@ class AppRiverpod extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Nursing Notes State
+  List<NursingNote> nursingNotes = [
+    NursingNote(
+      id: 'n1',
+      residentName: 'الحاج محمود سالم',
+      title: 'وجبة الغداء',
+      content: 'تناول الوجبة كاملة مع شهية جيدة. مستوى السكر كان مستقراً قبل الوجبة.',
+      author: 'أ. منى (مشرف)',
+      timestamp: DateTime.now().subtract(const Duration(hours: 2)),
+    ),
+    NursingNote(
+      id: 'n2',
+      residentName: 'الحاجة فاطمة علي',
+      title: 'متابعة الضغط',
+      content: 'الضغط في انخفاض تدريجي بعد تناول الجرعة الصباحية. الحالة مستقرة الآن.',
+      author: 'أ. منى (مشرف)',
+      timestamp: DateTime.now().subtract(const Duration(hours: 5)),
+    ),
+  ];
+
+  void addNursingNote(NursingNote note) {
+    nursingNotes.insert(0, note);
+    notifyListeners();
+  }
+
+  List<NursingNote> getNotesForResident(String residentName) {
+    return nursingNotes.where((n) => n.residentName == residentName).toList();
+  }
+
+  // Resident Medical Info State
+  List<ResidentMedicalInfo> residentMedicalInfos = [
+    ResidentMedicalInfo(
+      residentName: 'الحاج محمود سالم',
+      medications: ['ميتفورمين ٥٠٠ ملغ', 'أسبرين حماية', 'كونكور ٥ ملغ'],
+      allergies: ['حساسية من البنسلين'],
+      chronicDiseases: ['ضغط الدم المرتفع', 'سكري من النوع الثاني'],
+    ),
+    ResidentMedicalInfo(
+      residentName: 'الحاجة فاطمة علي',
+      medications: ['أملوديبين ٥ ملغ', 'أوميغا ٣'],
+      allergies: ['حساسية من اللاكتوز'],
+      chronicDiseases: ['أمراض القلب التاجية'],
+    ),
+  ];
+
+  ResidentMedicalInfo getMedicalInfo(String residentName) {
+    return residentMedicalInfos.firstWhere(
+      (info) => info.residentName == residentName,
+      orElse: () => ResidentMedicalInfo(residentName: residentName),
+    );
+  }
+
+  void updateMedicalInfo(ResidentMedicalInfo newInfo) {
+    final index = residentMedicalInfos.indexWhere((info) => info.residentName == newInfo.residentName);
+    if (index != -1) {
+      residentMedicalInfos[index] = newInfo;
+    } else {
+      residentMedicalInfos.add(newInfo);
+    }
+    notifyListeners();
+  }
+
   void login(String role) {
     currentRole = role;
     isAuthenticated = true;
@@ -109,16 +194,20 @@ class AppRiverpod extends ChangeNotifier {
   );
 
   List<Medication> medications = [
-    Medication(id: 'm1', name: 'كونكور ٥ مجم', dosage: 'قرص واحد', timeDescription: 'بعد الإفطار', timeOfDay: 'الصباح', isTaken: true),
-    Medication(id: 'm2', name: 'أسبرين بروتكت', dosage: 'قرص واحد', timeDescription: 'بعد الغداء', timeOfDay: 'الظهر'),
-    Medication(id: 'm3', name: 'أوميجا ٣', dosage: 'كبسولة واحدة', timeDescription: 'قبل النوم', timeOfDay: 'المساء'),
+    Medication(id: 'm1', name: 'كونكور ٥ مجم', dosage: 'قرص واحد', timeDescription: 'بعد الإفطار', timeOfDay: 'الصباح', isTaken: true, dayTag: 'اليوم'),
+    Medication(id: 'm2', name: 'أسبرين بروتكت', dosage: 'قرص واحد', timeDescription: 'بعد الغداء', timeOfDay: 'الظهر', dayTag: 'اليوم'),
+    Medication(id: 'm3', name: 'أوميجا ٣', dosage: 'كبسولة واحدة', timeDescription: 'قبل النوم', timeOfDay: 'المساء', dayTag: 'اليوم'),
+    Medication(id: 'm4', name: 'بانادول اكسترا', dosage: 'قرصين', timeDescription: 'عند الألم', timeOfDay: 'الظهر', dayTag: 'أمس', isTaken: true),
+    Medication(id: 'm5', name: 'فيتامين د', dosage: 'نقط', timeDescription: 'مع الإفطار', timeOfDay: 'الصباح', dayTag: 'غداً'),
   ];
 
   List<Activity> activities = [
-    Activity(id: 'a1', name: 'جلسة قراءة جماعية', emoji: '📚', location: 'المكتبة', time: '١٠:٠٠ ص', status: 'done', badges: 'تحفيز', pointsReward: 20),
-    Activity(id: 'a2', name: 'رياضة صباحية خفيفة', emoji: '🧘', location: 'الحديقة', time: '٠٨:٣٠ ص', status: 'done', badges: 'نشاط', pointsReward: 15),
-    Activity(id: 'a3', name: 'مسابقة الذاكرة', emoji: '🧩', location: 'قاعة الأنشطة', time: '٠٤:٠٠ م', status: 'active', badges: 'تحدي', pointsReward: 50),
-    Activity(id: 'a4', name: 'اتصال فيديو مع الأسرة', emoji: '📱', location: 'غرفتي', time: '٠٦:٠٠ م', status: 'later', badges: 'تواصل', pointsReward: 10),
+    Activity(id: 'a1', name: 'جلسة قراءة جماعية', emoji: '📚', location: 'المكتبة', time: '١٠:٠٠ ص', status: 'done', badges: 'تحفيز', pointsReward: 20, dayTag: 'اليوم'),
+    Activity(id: 'a2', name: 'رياضة صباحية خفيفة', emoji: '🧘', location: 'الحديقة', time: '٠٨:٣٠ ص', status: 'done', badges: 'نشاط', pointsReward: 15, dayTag: 'اليوم'),
+    Activity(id: 'a3', name: 'مسابقة الذاكرة', emoji: '🧩', location: 'قاعة الأنشطة', time: '٠٤:٠٠ م', status: 'active', badges: 'تحدي', pointsReward: 50, dayTag: 'اليوم'),
+    Activity(id: 'a4', name: 'اتصال فيديو مع الأسرة', emoji: '📱', location: 'غرفتي', time: '٠٦:٠٠ م', status: 'later', badges: 'تواصل', pointsReward: 10, dayTag: 'اليوم'),
+    Activity(id: 'a5', name: 'نزهة في الحديقة', emoji: '🌳', location: 'الخارج', time: '٠٥:٠٠ م', status: 'done', badges: 'ترفيه', pointsReward: 30, dayTag: 'أمس'),
+    Activity(id: 'a6', name: 'فحص ضغط روتيني', emoji: '🩺', location: 'العيادة', time: '٠٩:٠٠ ص', status: 'coming', badges: 'صحة', pointsReward: 5, dayTag: 'غداً'),
   ];
 
   List<FamilyMember> familyMembersList = [
@@ -134,12 +223,24 @@ class AppRiverpod extends ChangeNotifier {
   
   // Call State
   bool isVideoCallActive = false;
-  String activeCallerName = '';
-  String activeCallerInitials = '';
+  bool isIncomingCall = false;
+  String activeCallerName = 'سارة';
+  String activeCallerInitials = 'سا';
+
+  // New Features State
+  bool isEmergencyActive = false;
+  String currentMood = ''; // 'happy', 'calm', 'tired', 'active'
+  bool isReadingAudio = false;
+  String readingText = '';
+
+  List<String> deviceGalleryImages = []; // Simulated fetched device images
 
   List<MemoryItem> memoriesList = [
     MemoryItem(id: 'mem1', category: 'أسرة', title: 'عيد ميلاد يحيى', date: '١٥ يناير ٢٠٢٤', type: 'image', assetPath: ''),
     MemoryItem(id: 'mem2', category: 'رحلات', title: 'رحلة الإسكندرية', date: '١٠ سبتمبر ٢٠٢٣', type: 'video', assetPath: ''),
+    MemoryItem(id: 'mem3', category: 'مناسبات', title: 'حفل الزفاف', date: '٥ مارس ٢٠٢٤', type: 'image', assetPath: ''),
+    MemoryItem(id: 'mem4', category: 'أسرة', title: 'الغداء الأسبوعي', date: '٢٠ أبريل ٢٠٢٤', type: 'image', assetPath: ''),
+    MemoryItem(id: 'mem5', category: 'رحلات', title: 'يوم الشاطئ', date: '١٢ أغسطس ٢٠٢٣', type: 'image', assetPath: ''),
   ];
 
   // --- VOLUNTEER STATE ---
@@ -498,7 +599,12 @@ class AppRiverpod extends ChangeNotifier {
   }
 
 
-  List<Activity> getActivitiesForDay(dynamic date) => activities;
+  List<Activity> getActivitiesForDay(int index) {
+    final daysMapping = ['أمس', 'اليوم', 'غداً', 'الأسبوع'];
+    String tag = daysMapping[index];
+    if (tag == 'الأسبوع') return activities;
+    return activities.where((a) => a.dayTag == tag).toList();
+  }
   void completeActivity(String id) {
     final idx = activities.indexWhere((a) => a.id == id);
     if (idx != -1) {
@@ -516,10 +622,43 @@ class AppRiverpod extends ChangeNotifier {
     }
   }
 
-  List<Medication> getMedicationsForDay(dynamic date) => medications;
+  List<Medication> getMedicationsForDay(int index) {
+    final daysMapping = ['أمس', 'اليوم', 'غداً', 'الأسبوع'];
+    String tag = daysMapping[index];
+    if (tag == 'الأسبوع') return medications;
+    return medications.where((m) => m.dayTag == tag).toList();
+  }
   void addPoints(int p) {
     currentUser.points += p;
     notifyListeners();
+  }
+
+  // --- NEW FEATURES METHODS ---
+  void triggerSOS() {
+    isEmergencyActive = true;
+    notifyListeners();
+  }
+
+  void cancelSOS() {
+    isEmergencyActive = false;
+    notifyListeners();
+  }
+
+  void setMood(String mood) {
+    currentMood = mood;
+    addPoints(5); // Reward for check-in
+    notifyListeners();
+  }
+
+  void startReading(String text) {
+    readingText = text;
+    isReadingAudio = true;
+    notifyListeners();
+    // Simulate reading end after 3 seconds
+    Future.delayed(const Duration(seconds: 3), () {
+      isReadingAudio = false;
+      notifyListeners();
+    });
   }
 
   void toggleVoiceMessage(String id) {
@@ -569,17 +708,25 @@ class AppRiverpod extends ChangeNotifier {
 
   List<dynamic> getMemoriesByCategory(String category) {
     List<dynamic> results = [];
+    
+    // Helper to strip emoji
+    String cleanCategory = category.replaceAll(RegExp(r'[^\w\s\u0600-\u06FF]'), '').trim();
+
     if (category == 'الكل') {
       results.addAll(memoriesList);
       results.addAll(memoryMoments);
-    } else if (category == '👨‍👩‍👧 أسرة' || category == 'أسرة') {
-      results.addAll(memoriesList.where((m) => m.type == 'image' || m.type == 'video'));
-    } else if (category == '🎬 فيديو') {
+    } else if (cleanCategory == 'أسرة') {
+      results.addAll(memoriesList.where((m) => m.category == 'أسرة'));
+    } else if (category == '🎬 فيديو' || cleanCategory == 'فيديو') {
       results.addAll(memoriesList.where((m) => m.type == 'video'));
-    } else if (category == '🏠 المسكن' || category == 'المسكن') {
+    } else if (cleanCategory == 'المسكن') {
       results.addAll(memoryMoments);
+    } else if (cleanCategory == 'رحلات') {
+      results.addAll(memoriesList.where((m) => m.category == 'رحلات'));
+    } else if (cleanCategory == 'مناسبات') {
+      results.addAll(memoriesList.where((m) => m.category == 'مناسبات'));
     } else {
-      results.addAll(memoriesList.where((m) => m.type == category));
+      results.addAll(memoriesList.where((m) => m.category == cleanCategory));
     }
     return results;
   }
@@ -760,6 +907,12 @@ class AppRiverpod extends ChangeNotifier {
     notifyListeners();
   }
 
+  void clearUnpaidBills() {
+    // Mark all bills as paid for simulation
+    familyBills = familyBills.map((b) => b.copyWith(isPaid: true)).toList();
+    notifyListeners();
+  }
+
   void addSocialNeed(SocialSpecialistNeed need) {
     socialNeeds.insert(0, need);
     
@@ -934,6 +1087,21 @@ class AppRiverpod extends ChangeNotifier {
   MemoryMoment? get latestMemoryMoment => memoryMoments.isNotEmpty ? memoryMoments.first : null;
 
   bool hasGalleryPermission = false;
+  
+  Future<void> requestGalleryPermission() async {
+    final status = await Permission.photos.request();
+    hasGalleryPermission = status.isGranted;
+    if (hasGalleryPermission) {
+      // Simulate fetching images from gallery
+      deviceGalleryImages = [
+        'https://images.unsplash.com/photo-1511895426328-dc8714191300?q=80&w=1000',
+        'https://images.unsplash.com/photo-1516733725897-1aa73b87c8e8?q=80&w=1000',
+        'https://images.unsplash.com/photo-1472289065668-ce650ac443d2?q=80&w=1000',
+      ];
+    }
+    notifyListeners();
+  }
+
   void setGalleryPermission(bool val) {
     hasGalleryPermission = val;
     notifyListeners();
@@ -981,6 +1149,18 @@ class AppRiverpod extends ChangeNotifier {
     activeCallerName = name;
     activeCallerInitials = initials;
     isVideoCallActive = true;
+    isIncomingCall = false; // Close incoming banner if we start a call
+    notifyListeners();
+  }
+
+  void acceptCall() {
+    isVideoCallActive = true;
+    isIncomingCall = false;
+    notifyListeners();
+  }
+
+  void rejectCall() {
+    isIncomingCall = false;
     notifyListeners();
   }
 
@@ -1008,6 +1188,72 @@ class AppRiverpod extends ChangeNotifier {
       targetRole: 'مسن',
     );
     
+    notifyListeners();
+  }
+
+  // --- NURSING OPERATIONS STATE ---
+  List<CareTask> careTasks = [
+    CareTask(id: 'c1', residentName: 'الحاج محمود سالم', title: 'تغيير ملابس الصباح', category: 'شخصية', time: '٠٧:٠٠ ص'),
+    CareTask(id: 'c2', residentName: 'الحاج محمود سالم', title: 'رياضة تنفس خفيفة', category: 'ترفيهية', time: '٠٩:٠٠ ص'),
+    CareTask(id: 'c3', residentName: 'الحاجة فاطمة علي', title: 'استحمام دوري', category: 'فندقية', time: '٠٨:٣٠ ص'),
+    CareTask(id: 'c4', residentName: 'الحاجة فاطمة علي', title: 'تمارين حركة للأطراف', category: 'شخصية', time: '١٠:٠٠ ص'),
+  ];
+
+  List<InventoryItem> inventoryItems = [
+    InventoryItem(id: 'i1', name: 'أسبوسيد ٧٥ مجم', category: 'أدوية', currentStock: 12, minRequired: 20, unit: 'شريط'),
+    InventoryItem(id: 'i2', name: 'حفاضات كبار (L)', category: 'شخصي', currentStock: 45, minRequired: 30, unit: 'عبوة'),
+    InventoryItem(id: 'i3', name: 'شاش معقم', category: 'مستلزمات', currentStock: 5, minRequired: 15, unit: 'علبة'),
+    InventoryItem(id: 'i4', name: 'كونكور ٥ مجم', category: 'أدوية', currentStock: 25, minRequired: 10, unit: 'شريط'),
+  ];
+
+  List<DoctorVisit> doctorVisits = [
+    DoctorVisit(id: 'v1', doctorName: 'د. يحيى الفخراني', specialty: 'باطنة وقلب', date: DateTime.now().subtract(const Duration(days: 2)), purpose: 'متابعة ضغط دورية', results: 'استقرار الحالة مع تعديل بسيط في جرعة الصباح', residentName: 'الحاج محمود سالم'),
+    DoctorVisit(id: 'v2', doctorName: 'د. سميحة أيوب', specialty: 'عظام ومفاصل', date: DateTime.now().add(const Duration(days: 1)), purpose: 'فحص آلام الركبة', residentName: 'الحاجة فاطمة علي'),
+  ];
+
+  List<MealPlan> mealPlans = [
+    MealPlan(residentName: 'الحاج محمود سالم', breakfast: 'فول بالزيت الحار، بيض مسلوق', lunch: 'فراخ مشوية، خضار سوتيه، أرز بني', dinner: 'زبادي بالعسل، ثمرة فاكهة', specialInstructions: 'قليل الملح جداً، منع السكريات'),
+    MealPlan(residentName: 'الحاجة فاطمة علي', breakfast: 'جبنة قريش، توست سن', lunch: 'سمك مشوي، سلطة خضراء', dinner: 'شوربة خضار دافئة', specialInstructions: 'تقطيع الطعام قطع صغيرة جداً لتسهيل البلع'),
+  ];
+
+  List<ActivitySession> activitySessions = [
+    ActivitySession(id: 's1', title: 'حلقة قراءة الصالون', description: 'قراءة مقتطفات من الأدب العربي ومناقشتها', startTime: DateTime.now().add(const Duration(hours: 2)), location: 'القاعة الرئيسية', participants: ['الحاج محمود', 'الحاجة فاطمة']),
+    ActivitySession(id: 's2', title: 'عرض سينمائي كلاسيكي', description: 'فيلم "غزل البنات" - نجيب الريحاني', startTime: DateTime.now().add(const Duration(hours: 6)), location: 'غرفة العرض', participants: ['جميع المقيمين']),
+  ];
+
+  // Nursing Operations Methods
+  void toggleCareTask(String id) {
+    final idx = careTasks.indexWhere((t) => t.id == id);
+    if (idx != -1) {
+      careTasks[idx].isCompleted = !careTasks[idx].isCompleted;
+      notifyListeners();
+    }
+  }
+
+  void updateInventoryStock(String id, int change) {
+    final idx = inventoryItems.indexWhere((i) => i.id == id);
+    if (idx != -1) {
+      final newItem = InventoryItem(
+        id: inventoryItems[idx].id,
+        name: inventoryItems[idx].name,
+        category: inventoryItems[idx].category,
+        currentStock: inventoryItems[idx].currentStock + change,
+        minRequired: inventoryItems[idx].minRequired,
+        unit: inventoryItems[idx].unit,
+      );
+      inventoryItems[idx] = newItem;
+      notifyListeners();
+    }
+  }
+
+  void updateMealPlan(MealPlan plan) {
+    final idx = mealPlans.indexWhere((p) => p.residentName == plan.residentName);
+    if (idx != -1) {
+      mealPlans[idx] = plan;
+      notifyListeners();
+    } else {
+      mealPlans.add(plan);
+    }
     notifyListeners();
   }
 }

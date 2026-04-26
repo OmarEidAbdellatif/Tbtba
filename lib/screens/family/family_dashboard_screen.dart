@@ -100,13 +100,13 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
             ],
           ),
           const SizedBox(height: 24),
-          _buildWellnessPulse(),
+          _buildWellnessPulse(provider),
         ],
       ),
     );
   }
 
-  Widget _buildWellnessPulse() {
+  Widget _buildWellnessPulse(AppRiverpod provider) {
     return FadeTransition(
       opacity: _fadeAnimations[1],
       child: Container(
@@ -127,7 +127,13 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      const Text('مستقر ومطمئن', style: TextStyle(color: Colors.white70, fontSize: 10)),
+                      Text(
+                        provider.currentMood == 'happy' ? 'سعيد ومبتهج 😊' :
+                        provider.currentMood == 'calm' ? 'هادئ ومستقر 😌' :
+                        provider.currentMood == 'tired' ? 'يحتاج للراحة 😴' :
+                        provider.currentMood == 'active' ? 'نشيط وحيوي 🔥' : 'مستقر ومطمئن',
+                        style: const TextStyle(color: Colors.white70, fontSize: 10)
+                      ),
                       const SizedBox(width: 6),
                       AnimatedBuilder(
                         animation: _pulseController,
@@ -135,9 +141,9 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
                           return Container(
                             width: 8, height: 8,
                             decoration: BoxDecoration(
-                              color: const Color(0xFF4ade80),
+                              color: provider.currentMood == 'tired' ? const Color(0xFFfbbf24) : const Color(0xFF4ade80),
                               shape: BoxShape.circle,
-                              boxShadow: [BoxShadow(color: const Color(0xFF4ade80).withOpacity(0.6), blurRadius: 4 + _pulseController.value * 8, spreadRadius: _pulseController.value * 4)],
+                              boxShadow: [BoxShadow(color: (provider.currentMood == 'tired' ? const Color(0xFFfbbf24) : const Color(0xFF4ade80)).withOpacity(0.6), blurRadius: 4 + _pulseController.value * 8, spreadRadius: _pulseController.value * 4)],
                             ),
                           );
                         },
@@ -239,6 +245,8 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
         children: [
           _buildHealthMetricsGrid(provider),
           const SizedBox(height: 24),
+          _buildVirtualVisitSection(),
+          const SizedBox(height: 24),
           _buildMemoryWall(provider),
           const SizedBox(height: 24),
           _buildNextmedCard(provider),
@@ -330,6 +338,67 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
                 ),
               );
             },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVirtualVisitSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            const Text('الزيارة الافتراضية (AR) 🕶️', style: TextStyle(color: Color(0xFF1f2937), fontSize: 14, fontWeight: FontWeight.bold)),
+            const SizedBox(width: 8),
+            Container(width: 4, height: 16, decoration: BoxDecoration(color: const Color(0xFFa855f7), borderRadius: BorderRadius.circular(2))),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Container(
+          height: 180,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            image: const DecorationImage(
+              image: NetworkImage('https://images.unsplash.com/photo-1513161455079-7dc1de15ef3e?q=80&w=1000'),
+              fit: BoxFit.cover,
+            ),
+          ),
+          child: Stack(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.black.withOpacity(0.1), Colors.black.withOpacity(0.6)]),
+                ),
+              ),
+              const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.view_in_ar_rounded, color: Colors.white, size: 48),
+                    SizedBox(height: 8),
+                    Text('ابدأ جولة ٣٦٠ درجة في الغرفة', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+              Positioned(
+                bottom: 15, right: 15,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(10)),
+                  child: const Row(
+                    children: [
+                      Text('مباشر الآن', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                      SizedBox(width: 5),
+                      Icon(Icons.circle, color: Colors.red, size: 8),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -567,69 +636,211 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
   Widget _buildVisitsView(AppRiverpod provider) {
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.all(20),
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [Color(0xFFea580c), Color(0xFFf97316)]),
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [BoxShadow(color: const Color(0xFFea580c).withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 5))],
-            ),
-            child: const Column(
+        _buildVisitsHeader(),
+        Expanded(
+          child: DefaultTabController(
+            length: 2,
+            child: Column(
               children: [
-                Icon(Icons.calendar_month, color: Colors.white, size: 32),
-                SizedBox(height: 12),
-                Text('جدولة زيارة جديدة', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                Text('اختر الموعد المناسب لرؤية أحبائك', style: TextStyle(color: Colors.white70, fontSize: 11)),
+                TabBar(
+                  labelColor: const Color(0xFFea580c),
+                  unselectedLabelColor: const Color(0xFF94a3b8),
+                  indicatorColor: const Color(0xFFea580c),
+                  indicatorSize: TabBarIndicatorSize.label,
+                  tabs: [
+                    Tab(child: Text('الزيارات القادمة (${provider.familyVisits.where((v) => v.status == 'upcoming').length})', style: const TextStyle(fontWeight: FontWeight.bold))),
+                    Tab(child: Text('السجل السابق', style: const TextStyle(fontWeight: FontWeight.bold))),
+                  ],
+                ),
+                Expanded(
+                  child: TabBarView(
+                    children: [
+                      _buildVisitsList(provider.familyVisits.where((v) => v.status == 'upcoming').toList()),
+                      _buildVisitsList(provider.familyVisits.where((v) => v.status != 'upcoming').toList()),
+                    ],
+                  ),
+                ),
               ],
             ),
-          ),
-        ),
-        Expanded(
-          child: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            children: [
-              const Text('السجل الزمني', textAlign: TextAlign.right, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 12),
-              ...provider.familyVisits.map((v) => _buildVisitCard(v)).toList(),
-            ],
           ),
         ),
       ],
     );
   }
 
+  Widget _buildVisitsHeader() {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: GestureDetector(
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VisitBookingScreen())),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFFea580c), Color(0xFFf97316)],
+            ),
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                  color: const Color(0xFFea580c).withOpacity(0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10))
+            ],
+          ),
+          child: const Row(
+            children: [
+              Icon(Icons.add_circle_outline_rounded, color: Colors.white, size: 40),
+              SizedBox(width: 16),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('حجز موعد زيارة جديد',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold)),
+                  Text('اختر الوقت المناسب لرؤية أحبائك',
+                      style: TextStyle(color: Colors.white70, fontSize: 12)),
+                ],
+              ),
+              Spacer(),
+              Icon(Icons.chevron_right_rounded, color: Colors.white, size: 24),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVisitsList(List<FamilyVisit> visits) {
+    if (visits.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.calendar_today_outlined,
+                size: 64, color: const Color(0xFFcbd5e1)),
+            const SizedBox(height: 16),
+            const Text('لا توجد زيارات حالياً',
+                style: TextStyle(color: Color(0xFF94a3b8), fontSize: 16)),
+          ],
+        ),
+      );
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.all(20),
+      itemCount: visits.length,
+      itemBuilder: (context, i) => _buildVisitCard(visits[i]),
+    );
+  }
+
   Widget _buildVisitCard(FamilyVisit v) {
+    bool isUpcoming = v.status == 'upcoming';
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(color: const Color(0xFFf1f5f9)),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 4))
+        ],
       ),
-      child: Row(
+      child: Column(
         children: [
-          _buildVisitBadge(v.status),
-          const Spacer(),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          Row(
             children: [
-              Text('${v.type == 'physical' ? 'زيارة واقعية' : 'مكالمة فيديو'} — ${v.visitorName}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                   _buildVisitInfo(Icons.access_time, v.time),
-                   const SizedBox(width: 12),
-                   _buildVisitInfo(Icons.calendar_month, v.date),
-                ],
+              _buildVisitBadge(v.status),
+              const Spacer(),
+              Text(
+                  v.type == 'physical' ? '🏠 زيارة واقعية' : '📹 مكالمة فيديو',
+                  style: const TextStyle(
+                      color: Color(0xFF64748b),
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                    color: const Color(0xFFf8fafc),
+                    borderRadius: BorderRadius.circular(12)),
+                child: Icon(
+                    v.type == 'physical'
+                        ? Icons.people_alt_rounded
+                        : Icons.videocam_rounded,
+                    color: const Color(0xFFea580c)),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text('الزائر: ${v.visitorName}',
+                        style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1e293b))),
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        _buildVisitInfo(Icons.access_time_rounded, v.time),
+                        const SizedBox(width: 12),
+                        _buildVisitInfo(Icons.calendar_month_rounded, v.date),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
-          const SizedBox(width: 12),
-          Icon(v.type == 'physical' ? Icons.people_outline_rounded : Icons.videocam_outlined, color: const Color(0xFF94a3b8)),
+          if (isUpcoming) ...[
+            const SizedBox(height: 20),
+            const Divider(color: Color(0xFFf1f5f9)),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Color(0xFFcbd5e1)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12))),
+                    onPressed: () {},
+                    child: const Text('إلغاء',
+                        style: TextStyle(color: Color(0xFF64748b))),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFfff7ed),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12))),
+                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VisitBookingScreen())),
+                    child: const Text('تعديل الموعد',
+                        style: TextStyle(
+                            color: Color(0xFFea580c),
+                            fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -639,13 +850,27 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
     Color col = const Color(0xFF64748b);
     Color bg = const Color(0xFFf1f5f9);
     String label = 'غير محدد';
-    if (status == 'upcoming') { col = const Color(0xFF1d4ed8); bg = const Color(0xFFdbeafe); label = 'قادمة'; }
-    if (status == 'completed') { col = const Color(0xFF166534); bg = const Color(0xFFdcfce7); label = 'تمت'; }
+    if (status == 'upcoming') {
+      col = const Color(0xFF1d4ed8);
+      bg = const Color(0xFFdbeafe);
+      label = 'قادمة';
+    } else if (status == 'completed') {
+      col = const Color(0xFF166534);
+      bg = const Color(0xFFdcfce7);
+      label = 'تمت';
+    } else if (status == 'cancelled') {
+      col = const Color(0xFFef4444);
+      bg = const Color(0xFFfee2e2);
+      label = 'ملغاة';
+    }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(8)),
-      child: Text(label, style: TextStyle(color: col, fontSize: 9, fontWeight: FontWeight.bold)),
+      decoration:
+          BoxDecoration(color: bg, borderRadius: BorderRadius.circular(8)),
+      child: Text(label,
+          style: TextStyle(
+              color: col, fontSize: 10, fontWeight: FontWeight.bold)),
     );
   }
 
@@ -653,59 +878,370 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        Container(
-           padding: const EdgeInsets.all(20),
-           decoration: BoxDecoration(color: const Color(0xFF1e1b4b), borderRadius: BorderRadius.circular(24)),
-           child: Column(
-             children: [
-               const Text('إجمالي المستحقات غير المدفوعة', style: TextStyle(color: Colors.white70, fontSize: 11)),
-               const SizedBox(height: 8),
-               Text('${provider.unpaidBillsAmount.toString().replaceAllMapped(RegExp(r"(\d{1,3})(?=(\d{3})+(?!\d))"), (Match m) => "${m[1]},")} ج.م', style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
-               const SizedBox(height: 16),
-               Container(
-                 width: double.infinity,
-                 padding: const EdgeInsets.symmetric(vertical: 12),
-                 decoration: BoxDecoration(color: const Color(0xFFea580c), borderRadius: BorderRadius.circular(14)),
-                 child: const Center(child: Text('ادفع الآن', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold))),
-               ),
-             ],
-           ),
-        ),
-        const SizedBox(height: 24),
-        const Text('الفواتير المتاحة', textAlign: TextAlign.right, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 12),
+        _buildBillingSummary(provider),
+        const SizedBox(height: 32),
+        _buildSectionHeaderWithAction('الفواتير المتاحة', 'رؤية الكل'),
+        const SizedBox(height: 16),
         ...provider.familyBills.map((b) => _buildBillCard(b)).toList(),
+        const SizedBox(height: 32),
+        _buildSectionHeader('طرق الدفع'),
+        const SizedBox(height: 16),
+        _buildPaymentMethodCard(),
+        const SizedBox(height: 40),
+      ],
+    );
+  }
+
+  Widget _buildBillingSummary(AppRiverpod provider) {
+    return Container(
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0f172a),
+        borderRadius: BorderRadius.circular(32),
+        boxShadow: [
+          BoxShadow(
+              color: const Color(0xFF0f172a).withOpacity(0.3),
+              blurRadius: 20,
+              offset: const Offset(0, 10))
+        ],
+        image: const DecorationImage(
+          image: NetworkImage(
+              'https://www.transparenttextures.com/patterns/cubes.png'),
+          opacity: 0.05,
+          repeat: ImageRepeat.repeat,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('المستحقات الحالية',
+                  style: TextStyle(color: Colors.white60, fontSize: 14)),
+              Icon(Icons.account_balance_wallet_rounded,
+                  color: Colors.white24, size: 24),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+              '${provider.unpaidBillsAmount.toString().replaceAllMapped(RegExp(r"(\d{1,3})(?=(\d{3})+(?!\d))"), (Match m) => "${m[1]},")} ج.م',
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 36,
+                  fontWeight: FontWeight.bold)),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                        colors: [Color(0xFFea580c), Color(0xFFf97316)]),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                          color: const Color(0xFFea580c).withOpacity(0.3),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4))
+                    ],
+                  ),
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16))),
+                    onPressed: () => _showPaymentSheet(provider),
+                    child: const Text('ادفع الآن',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              GestureDetector(
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('جاري تجهيز وتحميل الفاتورة بصيغة PDF...'),
+                      backgroundColor: Color(0xFF1e293b),
+                    ),
+                  );
+                },
+                child: Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(16)),
+                  child: const Icon(Icons.download_rounded, color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPaymentSheet(AppRiverpod provider) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(32),
+        decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(40))),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                  color: const Color(0xFFe2e8f0),
+                  borderRadius: BorderRadius.circular(2)),
+            ),
+            const SizedBox(height: 32),
+            const Text('تأكيد الدفع',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            Text('سيتم خصم المبلغ من بطاقتك المسجلة المنتهية بـ 4242',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Color(0xFF64748b), fontSize: 16)),
+            const SizedBox(height: 32),
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                  color: const Color(0xFFf8fafc),
+                  borderRadius: BorderRadius.circular(24)),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                      '${provider.unpaidBillsAmount.toString().replaceAllMapped(RegExp(r"(\d{1,3})(?=(\d{3})+(?!\d))"), (Match m) => "${m[1]},")} ج.م',
+                      style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1e293b))),
+                  const Text('إجمالي المبلغ',
+                      style: TextStyle(
+                          color: Color(0xFF64748b),
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              height: 64,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFea580c),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20))),
+                onPressed: () async {
+                  Navigator.pop(context); // Close sheet
+                  _processPayment(provider);
+                },
+                child: const Text('تأكيد وإتمام الدفع',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('إلغاء العملية',
+                  style: TextStyle(color: Color(0xFF94a3b8))),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _processPayment(AppRiverpod provider) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: Card(
+          child: Padding(
+            padding: EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(color: Color(0xFFea580c)),
+                SizedBox(height: 24),
+                Text('جاري معالجة الدفع...',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    Future.delayed(const Duration(seconds: 2), () {
+      if (!mounted) return;
+      Navigator.pop(context); // Close loading
+      provider.clearUnpaidBills();
+      _showSuccessPayment();
+    });
+  }
+
+  void _showSuccessPayment() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.white),
+            SizedBox(width: 12),
+            Text('تمت عملية الدفع بنجاح! شكراً لك.'),
+          ],
+        ),
+        backgroundColor: const Color(0xFF16a34a),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(20),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeaderWithAction(String title, String action) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(action,
+            style: const TextStyle(
+                color: Color(0xFFea580c),
+                fontSize: 14,
+                fontWeight: FontWeight.bold)),
+        _buildSectionHeader(title),
+      ],
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Text(title,
+            style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1e293b))),
+        const SizedBox(width: 10),
+        Container(
+            width: 4,
+            height: 18,
+            decoration: BoxDecoration(
+                color: const Color(0xFFea580c),
+                borderRadius: BorderRadius.circular(2))),
       ],
     );
   }
 
   Widget _buildBillCard(FamilyBill b) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: b.isPaid ? const Color(0xFFdcfce7) : const Color(0xFFfee2e2)),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+            color: b.isPaid ? const Color(0xFFdcfce7) : const Color(0xFFf1f5f9)),
       ),
       child: Row(
         children: [
-          if (b.isPaid)
-           const Icon(Icons.check_circle, color: Color(0xFF10b981), size: 22)
-          else
-           const Icon(Icons.error_outline_rounded, color: Color(0xFFef4444), size: 22),
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+                color: b.isPaid ? const Color(0xFFf0fdf4) : const Color(0xFFfff1f2),
+                shape: BoxShape.circle),
+            child: Icon(
+                b.isPaid ? Icons.check_rounded : Icons.priority_high_rounded,
+                color: b.isPaid ? const Color(0xFF16a34a) : const Color(0xFFe11d48),
+                size: 20),
+          ),
           const Spacer(),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(b.title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-              Text(b.month, style: const TextStyle(fontSize: 10, color: Color(0xFF64748b))),
-              const SizedBox(height: 4),
-              Text(b.isPaid ? 'تم الدفع في ٣١ مارس' : 'تاريخ الاستحقاق: ${b.dueDate}', style: TextStyle(color: b.isPaid ? const Color(0xFF10b981) : const Color(0xFFef4444), fontSize: 9, fontWeight: FontWeight.w500)),
+              Text(b.title,
+                  style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1e293b))),
+              Text(b.month,
+                  style:
+                      const TextStyle(fontSize: 12, color: Color(0xFF64748b))),
+              const SizedBox(height: 6),
+              Text(
+                  b.isPaid
+                      ? 'تم الدفع بنجاح'
+                      : 'تاريخ الاستحقاق: ${b.dueDate}',
+                  style: TextStyle(
+                      color: b.isPaid
+                          ? const Color(0xFF16a34a)
+                          : const Color(0xFFe11d48),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500)),
+            ],
+          ),
+          const SizedBox(width: 20),
+          Text('${b.amount.toInt()} ج.م',
+              style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1e293b))),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPaymentMethodCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFf1f5f9)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.chevron_left_rounded, color: Color(0xFF94a3b8)),
+          const Spacer(),
+          const Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text('Visa **** 4242',
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold, color: Color(0xFF1e293b))),
+              Text('بطاقة الدفع الأساسية',
+                  style: TextStyle(color: Color(0xFF64748b), fontSize: 11)),
             ],
           ),
           const SizedBox(width: 16),
-          Text('${b.amount.toInt()} ج.م', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1e1b4b))),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+                color: const Color(0xFFf8fafc),
+                borderRadius: BorderRadius.circular(10)),
+            child: const Icon(Icons.credit_card_rounded,
+                color: Color(0xFF1e293b)),
+          ),
         ],
       ),
     );

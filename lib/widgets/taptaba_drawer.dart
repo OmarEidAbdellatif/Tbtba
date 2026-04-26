@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/app_riverpod.dart';
 import '../screens/common/profile_screen.dart';
+import '../screens/nurse/nurse_profile_screen.dart';
 import 'accessibility_dialog.dart';
 
 class TaptabaDrawer extends ConsumerWidget {
@@ -16,6 +17,7 @@ class TaptabaDrawer extends ConsumerWidget {
     final role = overrideRole ?? provider.currentRole;
     final themeColor = _getRoleColor(role);
     final hc = provider.isHighContrast;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Drawer(
       width: MediaQuery.of(context).size.width * 0.85,
@@ -29,7 +31,7 @@ class TaptabaDrawer extends ConsumerWidget {
               filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
               child: Container(
                 decoration: BoxDecoration(
-                  color: themeColor
+                  color: (isDark ? const Color(0xFF0F172A) : themeColor)
                       .withOpacity(0.05)
                       .withAlpha(240), // Subtle tint
                   borderRadius: const BorderRadius.only(
@@ -39,9 +41,9 @@ class TaptabaDrawer extends ConsumerWidget {
                     left: BorderSide(
                         color: themeColor.withOpacity(0.3), width: 1.5),
                     top: BorderSide(
-                        color: Colors.white.withOpacity(0.2), width: 1.5),
+                        color: Colors.white.withOpacity(isDark ? 0.05 : 0.2), width: 1.5),
                     bottom: BorderSide(
-                        color: Colors.white.withOpacity(0.2), width: 1.5),
+                        color: Colors.white.withOpacity(isDark ? 0.05 : 0.2), width: 1.5),
                   ),
                 ),
               ),
@@ -62,7 +64,7 @@ class TaptabaDrawer extends ConsumerWidget {
               Expanded(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: hc ? const Color(0xFF1E1E1E) : Colors.white,
+                    color: (hc || isDark) ? const Color(0xFF1E293B) : Colors.white,
                     borderRadius: const BorderRadius.only(
                       bottomLeft: Radius.circular(35),
                     ),
@@ -77,10 +79,17 @@ class TaptabaDrawer extends ConsumerWidget {
                         'الحساب الشخصي',
                         () {
                           Navigator.pop(context);
+                          Widget targetScreen;
+                          if (role == 'ممرض') {
+                            targetScreen = const NurseProfileScreen();
+                          } else {
+                            targetScreen = const ProfileScreen();
+                          }
+                          
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const ProfileScreen(),
+                              builder: (context) => targetScreen,
                             ),
                           );
                         },
@@ -330,10 +339,11 @@ class TaptabaDrawer extends ConsumerWidget {
 
   Widget _buildPremiumMenuItem(BuildContext context, IconData icon,
       String label, VoidCallback onTap, Color themeColor, bool hc) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: hc ? Color(0xFF2D2D2D) : Colors.transparent,
+        color: (hc || isDark) ? const Color(0xFF2D3748).withOpacity(0.3) : Colors.transparent,
         borderRadius: BorderRadius.circular(20),
       ),
       child: ListTile(
@@ -344,23 +354,24 @@ class TaptabaDrawer extends ConsumerWidget {
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: (hc ? Colors.white : themeColor).withOpacity(0.1),
+            color: (hc || isDark ? Colors.white : themeColor).withOpacity(0.1),
             borderRadius: BorderRadius.circular(15),
           ),
-          child: Icon(icon, color: hc ? Colors.white : themeColor, size: 26),
+          child: Icon(icon, color: (hc || isDark) ? Colors.white : themeColor, size: 26),
         ),
         title: Text(label,
             style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: hc ? Colors.white : const Color(0xFF1e293b))),
+                color: (hc || isDark) ? Colors.white : const Color(0xFF1e293b))),
         trailing: Icon(Icons.arrow_forward_ios_rounded,
-            size: 14, color: hc ? Colors.white24 : const Color(0xFFcbd5e1)),
+            size: 14, color: (hc || isDark) ? Colors.white24 : const Color(0xFFcbd5e1)),
       ),
     );
   }
 
   Widget _buildPremiumLogoutBtn(BuildContext context, WidgetRef ref, bool hc) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.all(28.0),
       child: InkWell(
@@ -370,7 +381,7 @@ class TaptabaDrawer extends ConsumerWidget {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 20),
           decoration: BoxDecoration(
-            color: hc ? const Color(0xFF421515) : const Color(0xFFFFFBFA),
+            color: (hc || isDark) ? const Color(0xFF421515).withOpacity(0.4) : const Color(0xFFFFFBFA),
             borderRadius: BorderRadius.circular(25),
             border: Border.all(
               color: const Color(0xFFEF4444).withOpacity(0.2),
@@ -395,20 +406,21 @@ class TaptabaDrawer extends ConsumerWidget {
   }
 
   void _showLogoutDialog(BuildContext context, WidgetRef ref, bool hc) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: hc ? const Color(0xFF252525) : Colors.white,
+        backgroundColor: (hc || isDark) ? const Color(0xFF1E293B) : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
         title: Text('تأكيد الخروج',
             textAlign: TextAlign.center,
             style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: hc ? Colors.white : Colors.black)),
+                color: (hc || isDark) ? Colors.white : Colors.black)),
         content: Text('هل أنت متأكد أنك تريد تسجيل الخروج؟',
             textAlign: TextAlign.center,
             style: TextStyle(
-                fontSize: 16, color: hc ? Colors.white70 : Colors.black87)),
+                fontSize: 16, color: (hc || isDark) ? Colors.white70 : Colors.black87)),
         actionsPadding: const EdgeInsets.all(25),
         actions: [
           Row(

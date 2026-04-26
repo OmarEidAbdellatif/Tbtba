@@ -13,6 +13,7 @@ class BottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final items = [
       BottomNavItem(icon: Icons.home, label: 'الرئيسية', index: 0),
       BottomNavItem(icon: Icons.medication, label: 'دواء', index: 1),
@@ -23,20 +24,21 @@ class BottomNavBar extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFede9fe), width: 2)),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        border: Border(top: BorderSide(color: isDark ? Colors.white12 : const Color(0xFFede9fe), width: 1)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: items.map((item) => _buildNavItem(item)).toList(),
+        children: items.map((item) => _buildNavItem(context, item)).toList(),
       ),
     );
   }
 
-  Widget _buildNavItem(BottomNavItem item) {
+  Widget _buildNavItem(BuildContext context, BottomNavItem item) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isActive = currentIndex == item.index;
-    final color = isActive ? const Color(0xFF6C63FF) : const Color(0xFF9ca3af);
+    final color = isActive ? const Color(0xFF6C63FF) : (isDark ? Colors.white38 : const Color(0xFF9ca3af));
 
     return GestureDetector(
       onTap: () => onTap(item.index),

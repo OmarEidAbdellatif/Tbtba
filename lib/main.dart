@@ -56,6 +56,7 @@ class MyApp extends ConsumerWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'طبطبة',
+      themeMode: (provider.isDarkMode || provider.isHighContrast) ? ThemeMode.dark : ThemeMode.light,
       builder: (context, child) {
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(provider.fontScaleFactor)),
@@ -65,11 +66,21 @@ class MyApp extends ConsumerWidget {
       theme: ThemeData(
         fontFamily: 'Cairo',
         useMaterial3: true,
-        brightness: provider.isHighContrast ? Brightness.dark : Brightness.light,
-        scaffoldBackgroundColor: provider.isHighContrast ? const Color(0xFF000000) : const Color(0xFFF8FAFC),
+        brightness: Brightness.light,
+        scaffoldBackgroundColor: const Color(0xFFF8FAFC),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white,
+          foregroundColor: Color(0xFF6C63FF),
+        ),
+      ),
+      darkTheme: ThemeData(
+        fontFamily: 'Cairo',
+        useMaterial3: true,
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: provider.isHighContrast ? const Color(0xFF000000) : const Color(0xFF0F172A),
         appBarTheme: AppBarTheme(
-          backgroundColor: provider.isHighContrast ? const Color(0xFF000000) : Colors.white,
-          foregroundColor: provider.isHighContrast ? Colors.white : const Color(0xFF6C63FF),
+          backgroundColor: provider.isHighContrast ? const Color(0xFF000000) : const Color(0xFF1E293B),
+          foregroundColor: Colors.white,
         ),
       ),
       home: getHomeWidget(),

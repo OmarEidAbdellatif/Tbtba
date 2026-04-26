@@ -77,18 +77,32 @@ class _VideoCallOverlayState extends ConsumerState<VideoCallOverlay> with Ticker
                             ],
                           ),
                           child: Center(
-                            child: Text(
-                              provider.activeCallerInitials,
-                              style: const TextStyle(color: Colors.white, fontSize: 42, fontWeight: FontWeight.bold),
+                            child: Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  provider.activeCallerInitials,
+                                  style: const TextStyle(color: Colors.white, fontSize: 42, fontWeight: FontWeight.bold),
+                                ),
+                              ),
                             ),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 32),
-                    Text(
-                      provider.activeCallerName,
-                      style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          provider.activeCallerName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 8),
                     const Text(
@@ -102,16 +116,21 @@ class _VideoCallOverlayState extends ConsumerState<VideoCallOverlay> with Ticker
             const Spacer(),
             // Controls Area
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 60),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _circleButton(Icons.mic_off_rounded, Colors.white.withOpacity(0.2), Colors.white),
-                  _circleButton(Icons.call_end_rounded, Colors.redAccent, Colors.white, size: 85, iconSize: 42, onTap: () {
-                    provider.endVideoCall();
-                  }),
-                  _circleButton(Icons.videocam_off_rounded, Colors.white.withOpacity(0.2), Colors.white),
-                ],
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _circleButton(Icons.mic_off_rounded, Colors.white.withOpacity(0.2), Colors.white),
+                    const SizedBox(width: 20),
+                    _circleButton(Icons.call_end_rounded, Colors.redAccent, Colors.white, size: 85, iconSize: 42, onTap: () {
+                      provider.endVideoCall();
+                    }),
+                    const SizedBox(width: 20),
+                    _circleButton(Icons.videocam_off_rounded, Colors.white.withOpacity(0.2), Colors.white),
+                  ],
+                ),
               ),
             ),
           ],

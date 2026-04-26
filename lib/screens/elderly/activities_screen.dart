@@ -139,11 +139,14 @@ class _ActivitiesScreenState extends ConsumerState<ActivitiesScreen>
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
 
-                          const Text('🏆 أنشطتي ونقاطي',
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.bold)),
+                          const FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text('🏆 أنشطتي ونقاطي',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold)),
+                          ),
                           const SizedBox(height: 4),
                           FittedBox(
                             fit: BoxFit.scaleDown,
@@ -381,32 +384,27 @@ class _ActivitiesScreenState extends ConsumerState<ActivitiesScreen>
       ),
       child: Row(
         children: [
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: isDone
-                  ? const Color(0xFFd1fae5)
-                  : (isLater
-                      ? const Color(0xFFf5f5f5)
-                      : const Color(0xFFede9fe)),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Center(
-                child: Text(emoji, style: const TextStyle(fontSize: 22))),
+          const SizedBox(width: 8),
+          IconButton(
+            icon: const Icon(Icons.volume_up_rounded, color: Color(0xFF6C63FF), size: 24),
+            onPressed: () => ref.read(appRiverpod).startReading('نشاط $name، المكان $location، الساعة $time'),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 4),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: hc ? Colors.white : const Color(0xFF0f172a))),
                 const SizedBox(height: 4),
                 Text(location,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(fontSize: 16, color: hc ? Colors.white70 : Colors.grey[600], fontWeight: FontWeight.w500)),
                 const SizedBox(height: 6),
                 Row(
@@ -525,6 +523,8 @@ class _ActivitiesScreenState extends ConsumerState<ActivitiesScreen>
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(act.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,

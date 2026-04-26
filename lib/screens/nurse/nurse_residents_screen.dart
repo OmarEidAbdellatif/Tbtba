@@ -1,22 +1,29 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/app_riverpod.dart';
+import '../../models/app_models.dart';
 import 'nurse_dashboard_screen.dart';
 import 'nurse_medications_screen.dart';
-import 'nurse_reports_screen.dart';
+import 'nurse_resident_detail_screen.dart';
 
-class NurseResidentsScreen extends StatefulWidget {
+class NurseResidentsScreen extends ConsumerStatefulWidget {
   const NurseResidentsScreen({super.key});
 
   @override
-  State<NurseResidentsScreen> createState() => _NurseResidentsScreenState();
+  ConsumerState<NurseResidentsScreen> createState() => _NurseResidentsScreenState();
 }
 
-class _NurseResidentsScreenState extends State<NurseResidentsScreen>
+class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
     with TickerProviderStateMixin {
   late AnimationController _blinkController;
   late AnimationController _pulseRedController;
   late AnimationController _pulseGrnController;
   late AnimationController _floatController;
   late AnimationController _spinController;
+
+  String _searchQuery = '';
+  String _selectedFilter = 'الكل (٢٤)';
 
   @override
   void initState() {
@@ -57,24 +64,35 @@ class _NurseResidentsScreenState extends State<NurseResidentsScreen>
     super.dispose();
   }
 
+  String _getShiftName() {
+    final hour = DateTime.now().hour;
+    if (hour >= 6 && hour < 14) return 'الوردية الصباحية (٦ ص - ٢ ظ)';
+    if (hour >= 14 && hour < 22) return 'الوردية المسائية (٢ ظ - ١٠ م)';
+    return 'الوردية الليلية (١٠ م - ٦ ص)';
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Expanded(
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: Column(
-              children: [
-                _buildHero(),
-                _buildSearchAndFilter(),
-                _buildBody(),
-                const SizedBox(height: 100), // Space for parent's bottom nav
-              ],
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Scaffold(
+      backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                children: [
+                  _buildHero(),
+                  _buildSearchAndFilter(isDark),
+                  _buildBody(isDark),
+                  const SizedBox(height: 100), // Space for parent's bottom nav
+                ],
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -91,77 +109,25 @@ class _NurseResidentsScreenState extends State<NurseResidentsScreen>
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       child: Stack(
         children: [
-          Positioned(
-            right: -35,
-            top: -45,
-            child: Container(
-              width: 130,
-              height: 130,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.08),
-              ),
-            ),
-          ),
-          Positioned(
-            left: 14,
-            top: 10,
-            child: RotationTransition(
-              turns: _spinController,
-              child: Container(
-                width: 30,
-                height: 30,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.06),
-                ),
-              ),
-            ),
-          ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        '📋 ملفات المقيمين',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        '٢٤ مقيم — الوردية الصباحية',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.8),
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ),
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.18),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.arrow_forward_ios_rounded,
-                          color: Colors.white, size: 16),
-                    ),
-                  ),
-                ],
+              const SizedBox(height: 30),
+              const Text(
+                'ملفات المقيمين 📋',
+                style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white),
               ),
-              const SizedBox(height: 14),
+              Text(
+                '٢٤ مقيم — ${_getShiftName()}',
+                style: const TextStyle(fontSize: 13, color: Color(0xFFE0F2FE)),
+              ),
+              const SizedBox(height: 16),
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
+                reverse: true,
                 child: Row(
                   children: [
                     _heroChip('حرجة ٢', const Color(0xFFEF4444), blink: true),
@@ -171,6 +137,7 @@ class _NurseResidentsScreenState extends State<NurseResidentsScreen>
                   ],
                 ),
               ),
+              const SizedBox(height: 20),
             ],
           ),
         ],
@@ -216,126 +183,141 @@ class _NurseResidentsScreenState extends State<NurseResidentsScreen>
     );
   }
 
-  Widget _buildSearchAndFilter() {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-          color: Colors.white,
-          child: Row(
+  Widget _buildSearchAndFilter(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+      child: Column(
+        children: [
+          Row(
             children: [
-              const Text('🔍', style: TextStyle(fontSize: 14)),
-              const SizedBox(width: 8),
               Expanded(
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+                  height: 45,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF0F9FF),
-                    border: Border.all(color: const Color(0xFFBAE6FD)),
-                    borderRadius: BorderRadius.circular(10),
+                    color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
                   ),
-                  child: const Text(
-                    'ابحث بالاسم أو رقم الغرفة...',
-                    style: TextStyle(color: Color(0xFF94A3B8), fontSize: 11),
+                  child: TextField(
+                    textAlign: TextAlign.right,
+                    onChanged: (v) => setState(() => _searchQuery = v),
+                    style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 13),
+                    decoration: InputDecoration(
+                      hintText: '...ابحث بالاسم أو رقم الغرفة',
+                      hintStyle:
+                          TextStyle(fontSize: 12, color: isDark ? Colors.white38 : const Color(0xFF94A3B8)),
+                      prefixIcon:
+                          Icon(Icons.search, color: isDark ? Colors.white38 : const Color(0xFF94A3B8), size: 20),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
               Container(
-                width: 34,
-                height: 34,
+                height: 45,
+                width: 45,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF0F9FF),
-                  border: Border.all(color: const Color(0xFFBAE6FD)),
-                  borderRadius: BorderRadius.circular(10),
+                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
                 ),
-                child: const Icon(Icons.sort_rounded,
-                    color: Color(0xFF0369A1), size: 18),
+                child: const Icon(Icons.filter_list_rounded,
+                    color: Color(0xFF0369A1)),
               ),
             ],
           ),
-        ),
-        Container(
-          height: 44,
-          decoration: const BoxDecoration(
-            color: Color(0xFFF8FAFC),
-            border: Border(bottom: BorderSide(color: Color(0xFFE0F2FE))),
-          ),
-          child: ListView(
+          const SizedBox(height: 16),
+          SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            children: [
-              _filterTab('الكل (٢٤)', true),
-              _filterTab('🔴 حرجة', false),
-              _filterTab('🟡 تحذير', false),
-              _filterTab('✅ مستقرة', false),
-              _filterTab('🆕 جديد', false),
-            ],
+            reverse: true,
+            child: Row(
+              children: [
+                _filterChip(isDark, '🆕 جديد', 'جديد'),
+                _filterChip(isDark, '✅ مستقرة', 'مستقرة ✅'),
+                _filterChip(isDark, '🟡 تحذير', 'تحذير 🟡'),
+                _filterChip(isDark, '🔴 حرجة', 'حرجة 🔴'),
+                _filterChip(isDark, 'الكل (٢٤)', 'الكل (٢٤)'),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
-  Widget _filterTab(String label, bool active) {
-    return Container(
-      margin: const EdgeInsets.only(left: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 4),
-      decoration: BoxDecoration(
-        gradient: active
-            ? const LinearGradient(
-                colors: [Color(0xFF0369A1), Color(0xFF0EA5E9)])
-            : null,
-        color: active ? null : Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: active ? null : Border.all(color: const Color(0xFFBAE6FD)),
-      ),
-      child: Center(
+  Widget _filterChip(bool isDark, String label, String value) {
+    bool isSelected = _selectedFilter == value;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedFilter = value),
+      child: Container(
+        margin: const EdgeInsets.only(left: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF0369A1) : (isDark ? const Color(0xFF1E293B) : Colors.white),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+              color: isSelected ? const Color(0xFF0369A1) : (isDark ? Colors.white12 : const Color(0xFFE2E8F0))),
+        ),
         child: Text(
           label,
           style: TextStyle(
-            color: active ? Colors.white : const Color(0xFF0369A1),
-            fontSize: 10,
+            fontSize: 11,
             fontWeight: FontWeight.bold,
+            color: isSelected ? Colors.white : (isDark ? Colors.white70 : const Color(0xFF64748B)),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(bool isDark) {
+    final provider = ref.watch(appRiverpod);
+    
+    String getLatestNote(String name) {
+      final notes = provider.getNotesForResident(name);
+      return notes.isNotEmpty ? '${notes.first.title}: ${notes.first.content}' : '';
+    }
+
     return Padding(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         children: [
-          _buildCriticalSection(),
-          const SizedBox(height: 18),
-          _buildWarningSection(),
-          const SizedBox(height: 18),
-          _buildStableSection(),
-          const SizedBox(height: 18),
+          if ((_selectedFilter == 'الكل (٢٤)' || _selectedFilter == 'حرجة 🔴') &&
+              ('الحاج محمود سالم'.contains(_searchQuery) || '١٠٣'.contains(_searchQuery)))
+            _buildCriticalSection(getLatestNote('الحاج محمود سالم')),
+          if ((_selectedFilter == 'الكل (٢٤)' || _selectedFilter == 'تحذير 🟡') &&
+              ('الحاجة فاطمة علي'.contains(_searchQuery) || '١٠٧'.contains(_searchQuery)))
+            _buildWarningSection(getLatestNote('الحاجة فاطمة علي')),
+          if ((_selectedFilter == 'الكل (٢٤)' || _selectedFilter == 'مستقرة ✅') &&
+              ('الحاج أحمد كمال'.contains(_searchQuery) || '١١٢'.contains(_searchQuery) ||
+               'الحاجة سمية إبراهيم'.contains(_searchQuery) || '١١٥'.contains(_searchQuery)))
+            _buildStableSection(
+              getLatestNote('الحاج أحمد كمال'),
+              getLatestNote('الحاجة سمية إبراهيم'),
+            ),
+          const SizedBox(height: 12),
           _buildMoreIndicator(),
         ],
       ),
     );
   }
 
-  Widget _buildCriticalSection() {
+
+  Widget _buildCriticalSection(String latestNote) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            FadeTransition(
-              opacity: _blinkController,
-              child: Container(
-                width: 7,
-                height: 7,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Color(0xFFEF4444),
-                ),
+            Container(
+              width: 7,
+              height: 7,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Color(0xFFEF4444),
               ),
             ),
             const SizedBox(width: 6),
@@ -344,63 +326,51 @@ class _NurseResidentsScreenState extends State<NurseResidentsScreen>
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF0369A1),
+                color: Color(0xFFEF4444),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 6),
-        AnimatedBuilder(
-          animation: _floatController,
-          builder: (context, child) {
-            return Transform.translate(
-              offset: Offset(0, -3 * _floatController.value),
-              child: _buildResidentCard(
-                name: 'الحاج محمود سالم',
-                age: '٧٨ سنة',
-                room: 'غرفة ١٠٣',
-                diagnoses: 'ضغط + سكري',
-                statusLabel: '🔴 حرجة',
-                statusColor: const Color(0xFF7F1D1D),
-                statusBg: const Color(0xFFFEE2E2),
-                type: 'critical',
-                vitals: [
-                  _vitalItem('❤️', '١٦٠/١٠٠', 'ضغط', true),
-                  _vitalItem('🩸', '٢٤٠', 'سكر', false, warning: true),
-                  _vitalItem('🌡️', '٣٧.١', 'حرارة', false),
-                  _vitalItem('💧', '٩٧٪', 'أكسجين', false),
-                ],
-                meds: [
-                  _medDot('✓', true),
-                  _medDot('!', false, critical: true),
-                  _medDot('!', false, critical: true),
-                  _medDot('—', false, empty: true),
-                ],
-                medPercentage: '٣٣٪',
-                note: 'آخر ملاحظة: ارتفاع حاد في الضغط — يحتاج مراجعة الطبيب فوراً',
-                actions: [
-                  _actionBtn('🚨 طوارئ',
-                      color: const Color(0xFFEF4444),
-                      bg: const Color(0xFFFFF5F5),
-                      border: const Color(0xFFFCA5A5)),
-                  _actionBtn('📋 الملف الكامل',
-                      color: Colors.white,
-                      isPrimary: true,
-                      bg: const Color(0xFF0369A1)),
-                  _actionBtn('📥 قراءة',
-                      color: const Color(0xFF0369A1),
-                      bg: const Color(0xFFF0F9FF),
-                      border: const Color(0xFFBAE6FD)),
-                ],
-              ),
-            );
-          },
+        const SizedBox(height: 12),
+        _buildResidentCard(
+          name: 'الحاج محمود سالم',
+          age: '٧٨ سنة',
+          room: 'غرفة ١٠٣',
+          diagnoses: 'ضغط + سكري',
+          statusLabel: '🔴 حرجة',
+          statusColor: const Color(0xFFEF4444),
+          statusBg: const Color(0xFFFEF2F2),
+          type: 'critical',
+          meds: [
+            _medDot('✓', true),
+            _medDot('!', false, warning: true),
+            _medDot('!', false, warning: true),
+            _medDot('—', false, empty: true),
+          ],
+          medPercentage: '٣٣٪',
+          note: latestNote,
+          actions: [
+            _actionBtn('🚑 طوارئ',
+                color: const Color(0xFF7F1D1D),
+                bg: const Color(0xFFFEE2E2),
+                onTap: () => _showEmergencyAlert('الحاج محمود سالم')),
+            _actionBtn('📋 الملف الكامل',
+                color: Colors.white,
+                isPrimary: true,
+                bg: const Color(0xFF0369A1),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NurseResidentDetailScreen(residentName: 'الحاج محمود سالم', roomNumber: '١٠٣')))),
+            _actionBtn('💬 ملاحظة',
+                color: const Color(0xFF0369A1),
+                bg: const Color(0xFFF0F9FF),
+                onTap: () => _showNoteDialog('الحاج محمود سالم')),
+          ],
         ),
+        const SizedBox(height: 20),
       ],
     );
   }
 
-  Widget _buildWarningSection() {
+  Widget _buildWarningSection(String latestNote) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -425,50 +395,47 @@ class _NurseResidentsScreenState extends State<NurseResidentsScreen>
             ),
           ],
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 12),
         _buildResidentCard(
           name: 'الحاجة فاطمة علي',
           age: '٧٢ سنة',
           room: 'غرفة ١٠٧',
-          diagnoses: 'قلب وأوعية',
+          diagnoses: 'أمراض قلب',
           statusLabel: '🟡 تحذير',
           statusColor: const Color(0xFF92400E),
           statusBg: const Color(0xFFFEF3C7),
           type: 'warning',
-          vitals: [
-            _vitalItem('❤️', '١٤٥/٩٢', 'ضغط', false, warning: true),
-            _vitalItem('🩸', '١٢٠', 'سكر', false),
-            _vitalItem('🌡️', '٣٦.٨', 'حرارة', false),
-            _vitalItem('💧', '٩٨٪', 'أكسجين', false),
-          ],
           meds: [
             _medDot('✓', true),
-            _medDot('⏰', false, warning: true),
+            _medDot('—', false, empty: true),
             _medDot('—', false, empty: true),
             _medDot('—', false, empty: true),
           ],
           medPercentage: '٥٠٪',
-          note: 'الضغط في ارتفاع تدريجي — تحتاج مراقبة كل ساعتين',
+          note: latestNote,
           actions: [
+            _actionBtn('🚑 طوارئ',
+                color: const Color(0xFF7F1D1D),
+                bg: const Color(0xFFFEE2E2),
+                onTap: () => _showEmergencyAlert('الحاجة فاطمة علي')),
             _actionBtn('📋 الملف الكامل',
                 color: const Color(0xFF0369A1),
                 bg: const Color(0xFFF0F9FF),
-                border: const Color(0xFFBAE6FD)),
-            _actionBtn('📥 قراءة',
-                color: const Color(0xFF0369A1),
-                bg: const Color(0xFFF0F9FF),
-                border: const Color(0xFFBAE6FD)),
+                border: const Color(0xFFBAE6FD),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NurseResidentDetailScreen(residentName: 'الحاجة فاطمة علي', roomNumber: '١٠٧')))),
             _actionBtn('💬 ملاحظة',
                 color: const Color(0xFF0369A1),
                 bg: const Color(0xFFF0F9FF),
-                border: const Color(0xFFBAE6FD)),
+                border: const Color(0xFFBAE6FD),
+                onTap: () => _showNoteDialog('الحاجة فاطمة علي')),
           ],
         ),
+        const SizedBox(height: 20),
       ],
     );
   }
 
-  Widget _buildStableSection() {
+  Widget _buildStableSection(String note1, String note2) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -503,12 +470,6 @@ class _NurseResidentsScreenState extends State<NurseResidentsScreen>
           statusColor: const Color(0xFF065F46),
           statusBg: const Color(0xFFD1FAE5),
           type: 'stable',
-          vitals: [
-            _vitalItem('❤️', '١٢٠/٨٠', 'ضغط', false),
-            _vitalItem('🩸', '١١٠', 'سكر', false),
-            _vitalItem('🌡️', '٣٦.٦', 'حرارة', false),
-            _vitalItem('💧', '٩٩٪', 'أكسجين', false),
-          ],
           meds: [
             _medDot('✓', true),
             _medDot('—', false, empty: true),
@@ -516,20 +477,18 @@ class _NurseResidentsScreenState extends State<NurseResidentsScreen>
             _medDot('○', false, warning: true),
           ],
           medPercentage: '٨٠٪',
-          note: 'جميع القراءات طبيعية — نشاط بدني ممتاز هذا الأسبوع',
+          note: note1,
           actions: [
-            _actionBtn('📋 الملف الكامل',
-                color: const Color(0xFF0369A1),
-                bg: const Color(0xFFF0F9FF),
-                border: const Color(0xFFBAE6FD)),
-            _actionBtn('📥 قراءة',
-                color: const Color(0xFF0369A1),
-                bg: const Color(0xFFF0F9FF),
-                border: const Color(0xFFBAE6FD)),
             _actionBtn('💬 ملاحظة',
                 color: const Color(0xFF0369A1),
                 bg: const Color(0xFFF0F9FF),
-                border: const Color(0xFFBAE6FD)),
+                border: const Color(0xFFBAE6FD),
+                onTap: () => _showNoteDialog('الحاج أحمد كمال')),
+            _actionBtn('📋 الملف الكامل',
+                color: const Color(0xFF0369A1),
+                bg: const Color(0xFFF0F9FF),
+                border: const Color(0xFFBAE6FD),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NurseResidentDetailScreen(residentName: 'الحاج أحمد كمال', roomNumber: '١١٢')))),
           ],
         ),
         const SizedBox(height: 8),
@@ -542,29 +501,26 @@ class _NurseResidentsScreenState extends State<NurseResidentsScreen>
           statusColor: const Color(0xFF065F46),
           statusBg: const Color(0xFFD1FAE5),
           type: 'stable',
-          vitals: [
-            _vitalItem('❤️', '١٢٥/٨٢', 'ضغط', false),
-            _vitalItem('🩸', '١٠٥', 'سكر', false),
-            _vitalItem('🌡️', '٣٦.٧', 'حرارة', false),
-            _vitalItem('💧', '٩٨٪', 'أكسجين', false),
-          ],
           meds: [],
           medPercentage: '',
-          note: '',
+          note: note2,
           actions: [
             _actionBtn('📋 الملف الكامل',
                 color: const Color(0xFF0369A1),
                 bg: const Color(0xFFF0F9FF),
-                border: const Color(0xFFBAE6FD)),
-            _actionBtn('📥 قراءة',
+                border: const Color(0xFFBAE6FD),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NurseResidentDetailScreen(residentName: 'الحاجة سمية إبراهيم', roomNumber: '١١٥')))),
+            _actionBtn('💬 ملاحظة',
                 color: const Color(0xFF0369A1),
                 bg: const Color(0xFFF0F9FF),
-                border: const Color(0xFFBAE6FD)),
+                border: const Color(0xFFBAE6FD),
+                onTap: () => _showNoteDialog('الحاجة سمية إبراهيم')),
           ],
         ),
       ],
     );
   }
+
 
   Widget _buildResidentCard({
     required String name,
@@ -574,13 +530,13 @@ class _NurseResidentsScreenState extends State<NurseResidentsScreen>
     required String statusLabel,
     required Color statusColor,
     required Color statusBg,
-    required List<Widget> vitals,
     required String type,
     List<Widget>? meds,
     String? medPercentage,
     String? note,
     required List<Widget> actions,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     Color cardBorder;
     Color headerBg;
     Color avBg;
@@ -589,29 +545,29 @@ class _NurseResidentsScreenState extends State<NurseResidentsScreen>
     bool showPulse = false;
 
     if (type == 'critical') {
-      cardBorder = const Color(0xFFFCA5A5);
-      headerBg = const Color(0xFFFFF5F5);
-      avBg = const Color(0xFFFFE4E6);
-      avFg = const Color(0xFF9F1239);
+      cardBorder = isDark ? const Color(0xFF991B1B) : const Color(0xFFFCA5A5);
+      headerBg = isDark ? const Color(0xFF7F1D1D).withOpacity(0.2) : const Color(0xFFFFF5F5);
+      avBg = isDark ? const Color(0xFF7F1D1D).withOpacity(0.3) : const Color(0xFFFFE4E6);
+      avFg = isDark ? const Color(0xFFFECACA) : const Color(0xFF9F1239);
       pipColor = const Color(0xFFEF4444);
       showPulse = true;
     } else if (type == 'warning') {
-      cardBorder = const Color(0xFFFDE68A);
-      headerBg = const Color(0xFFFFFBEB);
-      avBg = const Color(0xFFFEF3C7);
-      avFg = const Color(0xFF92400E);
+      cardBorder = isDark ? const Color(0xFF92400E) : const Color(0xFFFDE68A);
+      headerBg = isDark ? const Color(0xFF78350F).withOpacity(0.2) : const Color(0xFFFFFBEB);
+      avBg = isDark ? const Color(0xFF78350F).withOpacity(0.3) : const Color(0xFFFEF3C7);
+      avFg = isDark ? const Color(0xFFFDE68A) : const Color(0xFF92400E);
       pipColor = const Color(0xFFF59E0B);
     } else {
-      cardBorder = const Color(0xFFE0F2FE);
-      headerBg = const Color(0xFFF0FDF4);
-      avBg = const Color(0xFFD1FAE5);
-      avFg = const Color(0xFF065F46);
+      cardBorder = isDark ? const Color(0xFF075985) : const Color(0xFFE0F2FE);
+      headerBg = isDark ? const Color(0xFF0C4A6E).withOpacity(0.2) : const Color(0xFFF0FDF4);
+      avBg = isDark ? const Color(0xFF0C4A6E).withOpacity(0.3) : const Color(0xFFD1FAE5);
+      avFg = isDark ? const Color(0xFFBAE6FD) : const Color(0xFF065F46);
       pipColor = const Color(0xFF10B981);
     }
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: cardBorder, width: 1.5),
       ),
@@ -732,80 +688,59 @@ class _NurseResidentsScreenState extends State<NurseResidentsScreen>
               ],
             ),
           ),
-          // Vitals Strip
-          Container(
-            height: 1,
-            color: const Color(0xFFF0F9FF),
-          ),
-          Container(
-            color: Colors.white,
-            child: Row(
-              children: vitals,
-            ),
-          ),
-          // Meds Row
-          if (meds != null && meds.isNotEmpty) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-              decoration: const BoxDecoration(
-                  border: Border(top: BorderSide(color: Color(0xFFF0F9FF))),
-                  color: Colors.white),
+          // Info Section (Medication Progress)
+          if (meds != null && meds.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.all(13),
               child: Row(
                 children: [
-                  const Text('💊 أدوية اليوم',
-                      style: TextStyle(fontSize: 10, color: Color(0xFF64748B))),
+                  Text(
+                    medPercentage!,
+                    style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0369A1)),
+                  ),
                   const Spacer(),
-                  Row(children: meds),
+                  ...meds,
                   const SizedBox(width: 8),
-                  Text(medPercentage ?? '',
-                      style: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF0369A1))),
-                ],
-              ),
-            ),
-          ],
-          // Note Preview
-          if (note != null && note.isNotEmpty) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-              decoration: const BoxDecoration(
-                  border: Border(top: BorderSide(color: Color(0xFFF0F9FF))),
-                  color: Color(0xFFF8FAFC)),
-              child: Row(
-                children: [
-                  const Text('📝', style: TextStyle(fontSize: 12)),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      note,
-                      style: const TextStyle(
-                          fontSize: 10, color: Color(0xFF64748B)),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                  const Text(
+                    'أدوية اليوم 💊',
+                    style: TextStyle(fontSize: 10, color: Color(0xFF64748B)),
                   ),
                 ],
               ),
             ),
-          ],
+          if (note != null && note.isNotEmpty)
+            Container(
+              margin: const EdgeInsets.only(left: 13, right: 13, bottom: 13),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      note,
+                      textAlign: TextAlign.right,
+                      style: const TextStyle(fontSize: 10, color: Color(0xFF475569)),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.edit_note_rounded,
+                      color: Color(0xFF0EA5E9), size: 16),
+                ],
+              ),
+            ),
           // Actions
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: const BoxDecoration(
-                border: Border(top: BorderSide(color: Color(0xFFF0F9FF))),
-                color: Colors.white),
+            padding: const EdgeInsets.all(13),
+            color: const Color(0xFFF8FAFC).withOpacity(0.5),
             child: Row(
-              children: actions
-                  .map((a) => Expanded(
-                        child: Padding(
-                          padding: EdgeInsets.only(
-                              left: a == actions.last ? 0 : 6),
-                          child: a,
-                        ),
-                      ))
-                  .toList(),
+              children: actions.map((a) => Expanded(child: Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: a))).toList(),
             ),
           ),
         ],
@@ -813,51 +748,19 @@ class _NurseResidentsScreenState extends State<NurseResidentsScreen>
     );
   }
 
-  Widget _vitalItem(String icon, String val, String lbl, bool isCritical,
-      {bool warning = false}) {
-    Color valColor = const Color(0xFF10B981);
-    if (isCritical) {
-      valColor = const Color(0xFFEF4444);
-    } else if (warning) {
-      valColor = const Color(0xFFF59E0B);
-    }
-
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 5),
-        decoration: const BoxDecoration(
-          border: Border(left: BorderSide(color: Color(0xFFF0F9FF))),
-        ),
-        child: Column(
-          children: [
-            Text(icon, style: const TextStyle(fontSize: 13)),
-            const SizedBox(height: 2),
-            Text(val,
-                style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: valColor)),
-            Text(lbl, style: const TextStyle(fontSize: 8, color: Color(0xFF94A3B8))),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _medDot(String txt, bool success,
-      {bool critical = false, bool warning = false, bool empty = false}) {
+  Widget _medDot(String txt, bool success, {bool warning = false, bool empty = false}) {
     Color bg = const Color(0xFFF1F5F9);
     Color fg = const Color(0xFF94A3B8);
 
     if (success) {
       bg = const Color(0xFFD1FAE5);
       fg = const Color(0xFF065F46);
-    } else if (critical) {
-      bg = const Color(0xFFFEE2E2);
-      fg = const Color(0xFF7F1D1D);
     } else if (warning) {
       bg = const Color(0xFFFEF3C7);
       fg = const Color(0xFF92400E);
+    } else if (empty) {
+      bg = const Color(0xFFF1F5F9);
+      fg = const Color(0xFF94A3B8);
     }
 
     Widget content = Container(
@@ -872,9 +775,6 @@ class _NurseResidentsScreenState extends State<NurseResidentsScreen>
       ),
     );
 
-    if (critical) {
-      return FadeTransition(opacity: _blinkController, child: content);
-    }
     return content;
   }
 
@@ -882,27 +782,135 @@ class _NurseResidentsScreenState extends State<NurseResidentsScreen>
       {required Color color,
       required Color bg,
       Color? border,
-      bool isPrimary = false}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 7),
-      decoration: BoxDecoration(
-        gradient: isPrimary
-            ? const LinearGradient(
-                colors: [Color(0xFF0369A1), Color(0xFF0EA5E9)])
-            : null,
-        color: isPrimary ? null : bg,
-        borderRadius: BorderRadius.circular(10),
-        border: border != null ? Border.all(color: border) : null,
-      ),
-      child: Center(
-        child: Text(
-          label,
-          style: TextStyle(
-            color: color,
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
+      bool isPrimary = false,
+      VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 7),
+        decoration: BoxDecoration(
+          gradient: isPrimary
+              ? const LinearGradient(
+                  colors: [Color(0xFF0369A1), Color(0xFF0EA5E9)])
+              : null,
+          color: isPrimary ? null : bg,
+          borderRadius: BorderRadius.circular(10),
+          border: border != null ? Border.all(color: border) : null,
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
+      ),
+    );
+  }
+
+  // --- DIALOGS ---
+
+  void _showNoteDialog(String residentName) {
+    final titleController = TextEditingController();
+    final contentController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Column(
+          children: [
+            Text('إضافة ملاحظة تمريضية', textAlign: TextAlign.right, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0369A1))),
+            Text('المقيم: $residentName', textAlign: TextAlign.right, style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: titleController,
+              textAlign: TextAlign.right,
+              decoration: InputDecoration(
+                hintText: 'عنوان الملاحظة (مثال: وجبة الغداء)',
+                filled: true,
+                fillColor: const Color(0xFFF8FAFC),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: const Color(0xFFE2E8F0))),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: const Color(0xFFE2E8F0))),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: contentController,
+              maxLines: 4,
+              textAlign: TextAlign.right,
+              decoration: InputDecoration(
+                hintText: 'اكتب تفاصيل الملاحظة هنا...',
+                filled: true,
+                fillColor: const Color(0xFFF8FAFC),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: const Color(0xFFE2E8F0))),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: const Color(0xFFE2E8F0))),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                const Text('بواسطة: أ. منى (مشرف)', style: TextStyle(fontSize: 10, color: Color(0xFF94A3B8), fontWeight: FontWeight.bold)),
+                const SizedBox(width: 4),
+                const Icon(Icons.person_pin_rounded, size: 14, color: Color(0xFF94A3B8)),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('إلغاء')),
+          ElevatedButton(
+            onPressed: () {
+              if (titleController.text.isNotEmpty && contentController.text.isNotEmpty) {
+                final newNote = NursingNote(
+                  id: DateTime.now().millisecondsSinceEpoch.toString(),
+                  residentName: residentName,
+                  title: titleController.text,
+                  content: contentController.text,
+                  author: 'أ. منى (مشرف)',
+                  timestamp: DateTime.now(),
+                );
+                ref.read(appRiverpod).addNursingNote(newNote);
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم تسجيل الملاحظة بنجاح ✅')));
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0EA5E9), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+            child: const Text('حفظ الملاحظة', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEmergencyAlert(String residentName) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: const Color(0xFF7F1D1D),
+        title: const Text('🚨 تأكيد استغاثة', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        content: Text('هل أنت متأكد من تفعيل حالة الطوارئ لـ $residentName؟ سيتم تنبيه الفريق الطبي فوراً.', 
+          textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 14)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('إلغاء', style: TextStyle(color: Colors.white70))),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.red, content: Text('تم إرسال إشارة الطوارئ! 🚑')));
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
+            child: const Text('تأكيد الطوارئ', style: TextStyle(color: Color(0xFF7F1D1D), fontWeight: FontWeight.bold)),
+          ),
+        ],
       ),
     );
   }
@@ -924,5 +932,4 @@ class _NurseResidentsScreenState extends State<NurseResidentsScreen>
       ),
     );
   }
-
 }

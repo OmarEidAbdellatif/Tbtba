@@ -12,7 +12,8 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStateMixin {
+class _HomeScreenState extends ConsumerState<HomeScreen>
+    with TickerProviderStateMixin {
   late AnimationController _bgController;
   late AnimationController _pillController;
   late AnimationController _ringController;
@@ -88,6 +89,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
       children: [
         // Hero Section
         _buildHero(provider),
+        if (provider.currentMood.isEmpty) _buildMoodTracker(provider),
 
         // Cards Section
         Expanded(
@@ -121,14 +123,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
         } else {
           PermissionDialog.show(
             context,
-            onGranted: () {
-              provider.setGalleryPermission(true);
-              provider.setElderlyTabIndex(3);
+            onGranted: () async {
+              await provider.requestGalleryPermission();
+              if (provider.hasGalleryPermission) {
+                provider.setElderlyTabIndex(3);
+              }
             },
             onDenied: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('نحتاج للإذن لعرض معرض الصور', textAlign: TextAlign.right),
+                  content: Text('نحتاج للإذن لعرض معرض الصور',
+                      textAlign: TextAlign.right),
                   behavior: SnackBarBehavior.floating,
                 ),
               );
@@ -139,34 +144,54 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(colors: [Color(0xFF312e81), Color(0xFF4338ca)]),
+          gradient: const LinearGradient(
+              colors: [Color(0xFF312e81), Color(0xFF4338ca)]),
           borderRadius: BorderRadius.circular(28),
           boxShadow: [
-            BoxShadow(color: const Color(0xFF4338ca).withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 5)),
+            BoxShadow(
+                color: const Color(0xFF4338ca).withOpacity(0.3),
+                blurRadius: 15,
+                offset: const Offset(0, 5)),
           ],
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
-              child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 16),
+              decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
+              child: const Icon(Icons.arrow_back_ios_new_rounded,
+                  color: Colors.white, size: 16),
             ),
-            const Spacer(),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                const Text('صندوق الذكريات ✨', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                Text(moment.activityTitle, style: const TextStyle(color: Colors.white70, fontSize: 13)),
-              ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text('صندوق الذكريات ✨',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold)),
+                  Text(moment.activityTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style:
+                          const TextStyle(color: Colors.white70, fontSize: 13)),
+                ],
+              ),
             ),
             const SizedBox(width: 16),
             Container(
-              width: 65, height: 65,
+              width: 65,
+              height: 65,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
-                image: DecorationImage(image: NetworkImage(moment.imageUrl), fit: BoxFit.cover),
+                border:
+                    Border.all(color: Colors.white.withOpacity(0.3), width: 2),
+                image: DecorationImage(
+                    image: NetworkImage(moment.imageUrl), fit: BoxFit.cover),
               ),
             ),
           ],
@@ -205,17 +230,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-
                     // Greeting
                     Padding(
-                      padding: const EdgeInsets.only(right: 22, top: 8, bottom: 8),
-                      child: Text('😊 صباح الخير يا ${provider.currentUser.name} ',
-                          textAlign: TextAlign.right,
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              height: 1.2)),
+                      padding:
+                          const EdgeInsets.only(right: 22, top: 8, bottom: 8),
+                      child: FittedBox(
+                        alignment: Alignment.centerRight,
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                            '😊 صباح الخير يا ${provider.currentUser.name} ',
+                            textAlign: TextAlign.right,
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                height: 1.2)),
+                      ),
                     ),
 
                     // Chips
@@ -225,13 +255,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          _buildChip('❤️', 'الحالة', 0),
+                          _buildChip('${provider.todayMedications.length}',
+                              'أدوية', 1),
                           const SizedBox(width: 8),
-                          _buildChip('${provider.todayMedications.length}', 'أدوية', 1),
+                          _buildChip(
+                              '${provider.currentUser.points}', 'نقاطي', 2),
                           const SizedBox(width: 8),
-                          _buildChip('${provider.currentUser.points}', 'نقاطي', 2),
-                          const SizedBox(width: 8),
-                          _buildChip('${provider.currentUser.completedActivities}', 'نشاطات', 3),
+                          _buildChip(
+                              '${provider.currentUser.completedActivities}',
+                              'نشاطات',
+                              3),
                         ],
                       ),
                     ),
@@ -242,6 +275,70 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
           ),
         );
       },
+    );
+  }
+
+  Widget _buildMoodTracker(AppRiverpod provider) {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+              color: const Color(0xFF6C63FF).withOpacity(0.1),
+              blurRadius: 20,
+              offset: const Offset(0, 8)),
+        ],
+      ),
+      child: Column(
+        children: [
+          const Text('كيف تشعر اليوم يا بطل؟ ✨',
+              style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1e293b))),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _moodItem(provider, 'happy', '😊', 'سعيد'),
+              _moodItem(provider, 'calm', '😌', 'هادئ'),
+              _moodItem(provider, 'tired', '😴', 'متعب'),
+              _moodItem(provider, 'active', '🔥', 'نشيط'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _moodItem(
+      AppRiverpod provider, String mood, String emoji, String label) {
+    return GestureDetector(
+      onTap: () => provider.setMood(mood),
+      child: Column(
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: const Color(0xFFf8fafc),
+              shape: BoxShape.circle,
+              border: Border.all(color: const Color(0xFFede9fe)),
+            ),
+            child: Center(
+                child: Text(emoji, style: const TextStyle(fontSize: 30))),
+          ),
+          const SizedBox(height: 8),
+          Text(label,
+              style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF64748b))),
+        ],
+      ),
     );
   }
 
@@ -374,11 +471,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      const Text('💊 الجرعة القادمة',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold)),
+                      const FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text('💊 الجرعة القادمة',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold)),
+                      ),
                       const SizedBox(height: 6),
                       Row(
                         children: [
@@ -386,10 +486,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
                           GestureDetector(
                             onTap: () {
                               if (nextMed != null) {
-                                ref.read(appRiverpod).takeMedication(nextMed.id);
+                                ref
+                                    .read(appRiverpod)
+                                    .takeMedication(nextMed.id);
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                    content: Text('تم تسجيل الجرعة بنجاح! +10 نقاط 🌟', style: TextStyle(fontSize: 18, fontFamily: 'Cairo')),
+                                    content: Text(
+                                        'تم تسجيل الجرعة بنجاح! +10 نقاط 🌟',
+                                        style: TextStyle(
+                                            fontSize: 18, fontFamily: 'Cairo')),
                                     backgroundColor: Color(0xFF10b981),
                                     duration: Duration(seconds: 2),
                                   ),
@@ -407,7 +512,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
                                     animation: _ringController,
                                     builder: (context, child) {
                                       return Transform.scale(
-                                        scale: 1 + (_ringController.value * 0.3),
+                                        scale:
+                                            1 + (_ringController.value * 0.3),
                                         child: Container(
                                           width: 56,
                                           height: 56,
@@ -429,8 +535,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
                                     animation: _pillController,
                                     builder: (context, child) {
                                       return Transform.translate(
-                                        offset:
-                                            Offset(0, -6 * _pillController.value),
+                                        offset: Offset(
+                                            0, -6 * _pillController.value),
                                         child: Container(
                                           width: 44,
                                           height: 44,
@@ -439,13 +545,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
                                             color: Colors.white,
                                             boxShadow: [
                                               BoxShadow(
-                                                  color: Colors.black.withOpacity(0.15),
+                                                  color: Colors.black
+                                                      .withOpacity(0.15),
                                                   blurRadius: 8,
                                                   offset: const Offset(0, 3))
                                             ],
                                           ),
                                           child: const Icon(Icons.touch_app,
-                                              color: Color(0xFF6C63FF), size: 26),
+                                              color: Color(0xFF6C63FF),
+                                              size: 26),
                                         ),
                                       );
                                     },
@@ -459,7 +567,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                Text(nextMed != null ? '${nextMed.name}\n${nextMed.dosage}' : 'كل الأدوية تم أخذها',
+                                Text(
+                                    nextMed != null
+                                        ? '${nextMed.name}\n${nextMed.dosage}'
+                                        : 'كل الأدوية تم أخذها',
                                     style: const TextStyle(
                                         color: Colors.white,
                                         fontSize: 26,
@@ -467,7 +578,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
                                         height: 1.2),
                                     textAlign: TextAlign.right),
                                 const SizedBox(height: 4),
-                                Text(nextMed != null ? nextMed.timeDescription : 'ممتاز!',
+                                Text(
+                                    nextMed != null
+                                        ? nextMed.timeDescription
+                                        : 'ممتاز!',
                                     style: TextStyle(
                                         color: Colors.white.withOpacity(0.9),
                                         fontSize: 16)),
@@ -506,7 +620,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
                             provider.takeMedication(nextMed.id);
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text('تم تسجيل الجرعة بنجاح! +10 نقاط 🌟', style: TextStyle(fontSize: 18, fontFamily: 'Cairo')),
+                                content: Text(
+                                    'تم تسجيل الجرعة بنجاح! +10 نقاط 🌟',
+                                    style: TextStyle(
+                                        fontSize: 18, fontFamily: 'Cairo')),
                                 backgroundColor: Color(0xFF10b981),
                                 duration: Duration(seconds: 2),
                               ),
@@ -579,8 +696,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
     return LayoutBuilder(
       builder: (context, constraints) {
         final bool isLargeText = provider.fontScaleFactor >= 1.25;
-        final cardWidth = isLargeText 
-            ? constraints.maxWidth 
+        final cardWidth = isLargeText
+            ? constraints.maxWidth
             : ((constraints.maxWidth - 46) / 2).floorToDouble();
         return Container(
           width: double.infinity,
@@ -593,7 +710,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
                   blurRadius: 20,
                   offset: const Offset(0, 4))
             ],
-            border: Border.all(color: hc ? const Color(0xFF333333) : const Color(0xFFede9fe), width: 1.5),
+            border: Border.all(
+                color: hc ? const Color(0xFF333333) : const Color(0xFFede9fe),
+                width: 1.5),
           ),
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -604,7 +723,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
                   onTap: () => provider.setElderlyTabIndex(2),
                   child: Row(
                     children: [
-                      const Icon(Icons.phone, color: Color(0xFF6C63FF), size: 24),
+                      const Icon(Icons.phone,
+                          color: Color(0xFF6C63FF), size: 24),
                       const SizedBox(width: 8),
                       const Text('اتصل بالأسرة',
                           style: TextStyle(
@@ -617,22 +737,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
                 const SizedBox(height: 12),
                 Column(
                   children: [
-                    for (int i = 0; i < provider.familyMembers.length; i += (isLargeText ? 1 : 2))
+                    for (int i = 0;
+                        i < provider.familyMembers.length;
+                        i += (isLargeText ? 1 : 2))
                       Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: Row(
                           children: [
-                            if (!isLargeText && i + 1 < provider.familyMembers.length) ...[
+                            if (!isLargeText &&
+                                i + 1 < provider.familyMembers.length) ...[
                               Expanded(
                                 child: _buildPerson(
                                   provider.familyMembers[i + 1].name,
                                   provider.familyMembers[i + 1].relation,
-                                  provider.familyMembers[i + 1].name.length >= 2 ? provider.familyMembers[i + 1].name.substring(0, 2) : provider.familyMembers[i + 1].name,
+                                  provider.familyMembers[i + 1].name.length >= 2
+                                      ? provider.familyMembers[i + 1].name
+                                          .substring(0, 2)
+                                      : provider.familyMembers[i + 1].name,
                                   provider.familyMembers[i + 1].isAvailable,
                                   [
-                                    const [Color(0xFFf472b6), Color(0xFFdb2777)],
-                                    const [Color(0xFF34d399), Color(0xFF059669)],
-                                    const [Color(0xFF818cf8), Color(0xFF4f46e5)],
+                                    const [
+                                      Color(0xFFf472b6),
+                                      Color(0xFFdb2777)
+                                    ],
+                                    const [
+                                      Color(0xFF34d399),
+                                      Color(0xFF059669)
+                                    ],
+                                    const [
+                                      Color(0xFF818cf8),
+                                      Color(0xFF4f46e5)
+                                    ],
                                     const [Color(0xFFfbbf24), Color(0xFFd97706)]
                                   ][(i + 1) % 4],
                                   provider,
@@ -640,14 +775,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
                               ),
                               const SizedBox(width: 12),
                             ] else if (!isLargeText) ...[
-                              Expanded(child: const SizedBox()), // Empty slot for balance
+                              Expanded(
+                                  child:
+                                      const SizedBox()), // Empty slot for balance
                               const SizedBox(width: 12),
                             ],
                             Expanded(
                               child: _buildPerson(
                                 provider.familyMembers[i].name,
                                 provider.familyMembers[i].relation,
-                                provider.familyMembers[i].name.length >= 2 ? provider.familyMembers[i].name.substring(0, 2) : provider.familyMembers[i].name,
+                                provider.familyMembers[i].name.length >= 2
+                                    ? provider.familyMembers[i].name
+                                        .substring(0, 2)
+                                    : provider.familyMembers[i].name,
                                 provider.familyMembers[i].isAvailable,
                                 [
                                   const [Color(0xFFf472b6), Color(0xFFdb2777)],
@@ -681,7 +821,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
           provider.addPoints(5);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('$name غير متاح حالياً، يمكنك ترك رسالة صوتية.', style: const TextStyle(fontSize: 18, fontFamily: 'Cairo'))),
+            SnackBar(
+                content: Text('$name غير متاح حالياً، يمكنك ترك رسالة صوتية.',
+                    style: const TextStyle(fontSize: 18, fontFamily: 'Cairo'))),
           );
         }
       },
@@ -693,7 +835,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
           decoration: BoxDecoration(
             color: hc ? const Color(0xFF252525) : const Color(0xFFf5f3ff),
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: hc ? const Color(0xFF444444) : const Color(0xFFede9fe), width: 1.5),
+            border: Border.all(
+                color: hc ? const Color(0xFF444444) : const Color(0xFFede9fe),
+                width: 1.5),
           ),
           child: Stack(
             children: [
@@ -775,13 +919,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
                         style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: hc ? Colors.white : const Color(0xFF1f2937))),
+                            color:
+                                hc ? Colors.white : const Color(0xFF1f2937))),
                     const SizedBox(height: 2),
                     Text(relation,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                            fontSize: 13, color: hc ? Colors.white70 : const Color(0xFF6b7280))),
+                            fontSize: 13,
+                            color:
+                                hc ? Colors.white70 : const Color(0xFF6b7280))),
                   ],
                 ),
               ),
@@ -807,7 +954,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
               blurRadius: 20,
               offset: const Offset(0, 4))
         ],
-        border: Border.all(color: hc ? const Color(0xFF333333) : const Color(0xFFede9fe), width: 1.5),
+        border: Border.all(
+            color: hc ? const Color(0xFF333333) : const Color(0xFFede9fe),
+            width: 1.5),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -855,7 +1004,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
               child: Container(
                 height: 12,
                 decoration: BoxDecoration(
-                    color: hc ? const Color(0xFF333333) : const Color(0xFFede9fe),
+                    color:
+                        hc ? const Color(0xFF333333) : const Color(0xFFede9fe),
                     borderRadius: BorderRadius.circular(10)),
                 child: FractionallySizedBox(
                   alignment: Alignment.centerRight,
@@ -896,4 +1046,3 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
 }
 
 // Custom painter for pill icon
-

@@ -12,34 +12,41 @@ class VisitBookingScreen extends ConsumerStatefulWidget {
 
 class _VisitBookingScreenState extends ConsumerState<VisitBookingScreen> {
   int _selectedType = 0; // 0: Physical, 1: Video
-  DateTime _selectedDate = DateTime.now().add(const Duration(days: 1));
+  int _selectedDay = 25;
   String? _selectedSlot;
 
-  final List<String> _slots = ['١٠:٠٠ ص', '١١:٣٠ ص', '٠١:٠٠ م', '٠٤:٠٠ م', '٠٥:٣٠ م', '٠٧:٠٠ م'];
+  final List<String> _slots = [
+    '١٠:٠٠ ص',
+    '١١:٣٠ ص',
+    '٠١:٠٠ م',
+    '٠٤:٠٠ م',
+    '٠٥:٣٠ م',
+    '٠٧:٠٠ م'
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFfdfcfb),
-      body: CustomScrollView(
-        slivers: [
-          _buildSliverAppBar(),
-          SliverToBoxAdapter(
-            child: Padding(
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: Column(
+        children: [
+          _buildHeader(),
+          Expanded(
+            child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   _buildSectionTitle('نوع الزيارة'),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
                   _buildVisitTypeTabs(),
                   const SizedBox(height: 32),
                   _buildSectionTitle('تحديد التاريخ'),
-                  const SizedBox(height: 12),
-                  _buildCalendarMock(),
+                  const SizedBox(height: 16),
+                  _buildCalendar(),
                   const SizedBox(height: 32),
                   _buildSectionTitle('الأوقات المتاحة'),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
                   _buildSlotsGrid(),
                   const SizedBox(height: 40),
                   _buildConfirmButton(),
@@ -53,29 +60,28 @@ class _VisitBookingScreenState extends ConsumerState<VisitBookingScreen> {
     );
   }
 
-  Widget _buildSliverAppBar() {
-    return SliverAppBar(
-      expandedHeight: 140,
-      floating: false,
-      pinned: true,
-      backgroundColor: const Color(0xFFea580c),
-      elevation: 0,
-      flexibleSpace: FlexibleSpaceBar(
-        centerTitle: true,
-        title: const Text('جدولة زيارة', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-        background: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xFFea580c), Color(0xFFf97316)],
-            ),
-          ),
-        ),
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
+      decoration: const BoxDecoration(
+        color: Color(0xFFea580c),
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
       ),
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
-        onPressed: () => Navigator.pop(context),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                color: Colors.white, size: 22),
+            onPressed: () => Navigator.pop(context),
+          ),
+          const Text('جدولة زيارة',
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold)),
+          const SizedBox(width: 48), // Spacer for balance
+        ],
       ),
     );
   }
@@ -84,9 +90,18 @@ class _VisitBookingScreenState extends ConsumerState<VisitBookingScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1f2937))),
-        const SizedBox(width: 8),
-        Container(width: 4, height: 16, decoration: BoxDecoration(color: const Color(0xFFea580c), borderRadius: BorderRadius.circular(2))),
+        Text(title,
+            style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1e293b))),
+        const SizedBox(width: 10),
+        Container(
+            width: 4,
+            height: 20,
+            decoration: BoxDecoration(
+                color: const Color(0xFFea580c),
+                borderRadius: BorderRadius.circular(2))),
       ],
     );
   }
@@ -94,9 +109,13 @@ class _VisitBookingScreenState extends ConsumerState<VisitBookingScreen> {
   Widget _buildVisitTypeTabs() {
     return Row(
       children: [
-        Expanded(child: _buildTypeCard(1, 'مكالمة فيديو', Icons.videocam_rounded)),
-        const SizedBox(width: 12),
-        Expanded(child: _buildTypeCard(0, 'زيارة واقعية', Icons.people_alt_rounded)),
+        Expanded(
+            child:
+                _buildTypeCard(1, 'مكالمة فيديو', Icons.videocam_rounded)),
+        const SizedBox(width: 16),
+        Expanded(
+            child: _buildTypeCard(
+                0, 'زيارة واقعية', Icons.people_alt_rounded)),
       ],
     );
   }
@@ -106,65 +125,101 @@ class _VisitBookingScreenState extends ConsumerState<VisitBookingScreen> {
     return GestureDetector(
       onTap: () => setState(() => _selectedType = index),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: 24),
         decoration: BoxDecoration(
           color: isSel ? const Color(0xFFfff7ed) : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isSel ? const Color(0xFFea580c) : const Color(0xFFf1f5f9), width: 1.5),
-          boxShadow: isSel ? [BoxShadow(color: const Color(0xFFea580c).withOpacity(0.1), blurRadius: 10)] : null,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+              color: isSel ? const Color(0xFFea580c) : const Color(0xFFf1f5f9),
+              width: 2),
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withOpacity(isSel ? 0.05 : 0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 4))
+          ],
         ),
         child: Column(
           children: [
-            Icon(icon, color: isSel ? const Color(0xFFea580c) : const Color(0xFF94a3b8), size: 28),
-            const SizedBox(height: 8),
-            Text(label, style: TextStyle(color: isSel ? const Color(0xFFea580c) : const Color(0xFF64748b), fontSize: 12, fontWeight: isSel ? FontWeight.bold : FontWeight.w500)),
+            Icon(icon,
+                color: isSel ? const Color(0xFFea580c) : const Color(0xFF94a3b8),
+                size: 32),
+            const SizedBox(height: 12),
+            Text(label,
+                style: TextStyle(
+                    color: isSel
+                        ? const Color(0xFFea580c)
+                        : const Color(0xFF64748b),
+                    fontSize: 16,
+                    fontWeight: isSel ? FontWeight.bold : FontWeight.w500)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildCalendarMock() {
+  Widget _buildCalendar() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(28),
         border: Border.all(color: const Color(0xFFf1f5f9)),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 20,
+              offset: const Offset(0, 10))
+        ],
       ),
       child: Column(
         children: [
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(Icons.chevron_left, color: Color(0xFF94a3b8)),
-              Text('أبريل ٢٠٢٤', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1f2937))),
-              Icon(Icons.chevron_right, color: Color(0xFF94a3b8)),
+              const Icon(Icons.chevron_left, color: Color(0xFF94a3b8)),
+              const Text('أبريل ٢٠٢٤',
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1e293b))),
+              const Icon(Icons.chevron_right, color: Color(0xFF94a3b8)),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 7, childAspectRatio: 1),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 7, childAspectRatio: 1),
             itemCount: 30,
             itemBuilder: (context, i) {
               int day = i + 1;
-              bool isSelected = day == 25;
+              bool isSelected = day == _selectedDay;
               bool isPast = day < 21;
-              return Container(
-                margin: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: isSelected ? const Color(0xFFea580c) : Colors.transparent,
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    '$day',
-                    style: TextStyle(
-                      color: isSelected ? Colors.white : (isPast ? const Color(0xFFcbd5e1) : const Color(0xFF475569)),
-                      fontSize: 12,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              return GestureDetector(
+                onTap: isPast ? null : () => setState(() => _selectedDay = day),
+                child: Container(
+                  margin: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? const Color(0xFFea580c)
+                        : Colors.transparent,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(
+                      '$day',
+                      style: TextStyle(
+                        color: isSelected
+                            ? Colors.white
+                            : (isPast
+                                ? const Color(0xFFcbd5e1)
+                                : const Color(0xFF475569)),
+                        fontSize: 16,
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.normal,
+                      ),
                     ),
                   ),
                 ),
@@ -177,30 +232,42 @@ class _VisitBookingScreenState extends ConsumerState<VisitBookingScreen> {
   }
 
   Widget _buildSlotsGrid() {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, childAspectRatio: 2.2, crossAxisSpacing: 10, mainAxisSpacing: 10),
-      itemCount: _slots.length,
-      itemBuilder: (context, i) {
-        bool isSel = _selectedSlot == _slots[i];
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      alignment: WrapAlignment.end,
+      children: _slots.map((slot) {
+        bool isSel = _selectedSlot == slot;
         return GestureDetector(
-          onTap: () => setState(() => _selectedSlot = _slots[i]),
+          onTap: () => setState(() => _selectedSlot = slot),
           child: Container(
+            width: (MediaQuery.of(context).size.width - 64) / 3,
+            padding: const EdgeInsets.symmetric(vertical: 16),
             decoration: BoxDecoration(
               color: isSel ? const Color(0xFFea580c) : Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: isSel ? Colors.transparent : const Color(0xFFf1f5f9)),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                  color: isSel ? Colors.transparent : const Color(0xFFf1f5f9),
+                  width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                    color: Colors.black.withOpacity(isSel ? 0.1 : 0.02),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2))
+              ],
             ),
             child: Center(
               child: Text(
-                _slots[i],
-                style: TextStyle(color: isSel ? Colors.white : const Color(0xFF64748b), fontSize: 11, fontWeight: isSel ? FontWeight.bold : FontWeight.w500),
+                slot,
+                style: TextStyle(
+                    color: isSel ? Colors.white : const Color(0xFF64748b),
+                    fontSize: 14,
+                    fontWeight: isSel ? FontWeight.bold : FontWeight.w500),
               ),
             ),
           ),
         );
-      },
+      }).toList(),
     );
   }
 
@@ -208,29 +275,47 @@ class _VisitBookingScreenState extends ConsumerState<VisitBookingScreen> {
     bool canConfirm = _selectedSlot != null;
     return Container(
       width: double.infinity,
-      height: 56,
+      height: 64,
       decoration: BoxDecoration(
-        gradient: canConfirm ? const LinearGradient(colors: [Color(0xFFea580c), Color(0xFFf97316)]) : null,
-        color: canConfirm ? null : const Color(0xFFf1f5f9),
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: canConfirm ? [BoxShadow(color: const Color(0xFFea580c).withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 5))] : null,
+        gradient: canConfirm
+            ? const LinearGradient(colors: [Color(0xFFea580c), Color(0xFFf97316)])
+            : null,
+        color: canConfirm ? null : const Color(0xFFe2e8f0),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: canConfirm
+            ? [
+                BoxShadow(
+                    color: const Color(0xFFea580c).withOpacity(0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8))
+              ]
+            : null,
       ),
       child: ElevatedButton(
-        style: ElevatedButton.styleFrom(backgroundColor: Colors.transparent, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18))),
-        onPressed: canConfirm ? () {
-           // Save to state
-           final provider = ref.read(appRiverpod);
-           provider.addFamilyVisit(FamilyVisit(
-             id: 'v${DateTime.now().millisecondsSinceEpoch}',
-             visitorName: 'سارة',
-             date: '٢٥ أبريل', // In a real app, use formatted _selectedDate
-             time: _selectedSlot!,
-             type: _selectedType == 0 ? 'physical' : 'video',
-             status: 'upcoming',
-           ));
-           _showSuccessSheet();
-        } : null,
-        child: const Text('تأكيد الطلب', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+        style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20))),
+        onPressed: canConfirm
+            ? () {
+                final provider = ref.read(appRiverpod);
+                provider.addFamilyVisit(FamilyVisit(
+                  id: 'v${DateTime.now().millisecondsSinceEpoch}',
+                  visitorName: 'سارة',
+                  date: '$_selectedDay أبريل',
+                  time: _selectedSlot!,
+                  type: _selectedType == 0 ? 'physical' : 'video',
+                  status: 'upcoming',
+                ));
+                _showSuccessSheet();
+              }
+            : null,
+        child: const Text('تأكيد الموعد',
+            style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold)),
       ),
     );
   }
@@ -239,31 +324,51 @@ class _VisitBookingScreenState extends ConsumerState<VisitBookingScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (context) => Container(
         padding: const EdgeInsets.all(32),
-        decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
+        decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(40))),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(20),
-              decoration: const BoxDecoration(color: Color(0xFFdcfce7), shape: BoxShape.circle),
-              child: const Icon(Icons.check_rounded, color: Color(0xFF166534), size: 40),
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                  color: const Color(0xFFf0fdf4),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFFdcfce7), width: 4)),
+              child: const Icon(Icons.check_rounded,
+                  color: Color(0xFF22c55e), size: 50),
             ),
-            const SizedBox(height: 20),
-            const Text('تم تأكيد طلب الزيارة!', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            const Text('سنكون في انتظاركم في الموعد المحدد. تم إرسال رسالة تأكيد لهاتفك.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF64748b))),
+            const SizedBox(height: 24),
+            const Text('تم تأكيد الموعد بنجاح!',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            const Text(
+                'تم إرسال تفاصيل الزيارة إلى هاتفك وإلى إدارة المركز. نحن بانتظارك! ✨',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Color(0xFF64748b), fontSize: 16)),
             const SizedBox(height: 32),
             SizedBox(
               width: double.infinity,
+              height: 56,
               child: ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFea580c), padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFea580c),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16))),
                 onPressed: () {
                   Navigator.pop(context); // close sheet
                   Navigator.pop(context); // back to dashboard
                 },
-                child: const Text('فهمت', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                child: const Text('رجوع للرئيسية',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold)),
               ),
             ),
           ],

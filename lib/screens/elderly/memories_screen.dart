@@ -29,7 +29,8 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
     '👨‍👩‍👧 أسرة',
     '🌊 رحلات',
     '🎬 فيديو',
-    '🎉 مناسبات'
+    '🎉 مناسبات',
+    '🖼️ الاستوديو'
   ];
 
   @override
@@ -142,11 +143,14 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          const Text('📸 ذكرياتي الحلوة',
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.bold)),
+                          const FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text('📸 ذكرياتي الحلوة',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold)),
+                          ),
                           const SizedBox(height: 4),
                           Text('من الأسرة بكل الحب 💜',
                               style: TextStyle(
@@ -215,15 +219,21 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: Colors.white.withOpacity(0.1))),
           child: Column(children: [
-            Text(value,
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold)),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(value,
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold)),
+            ),
             const SizedBox(height: 4),
-            Text(label,
-                style: TextStyle(
-                    color: Colors.white.withOpacity(0.9), fontSize: 16)),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(label,
+                  style: TextStyle(
+                      color: Colors.white.withOpacity(0.9), fontSize: 16)),
+            ),
           ]),
         ),
       ),
@@ -480,12 +490,16 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text('عيد ميلاد خالد ٢٠٢٤',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
                                     color: hc ? Colors.white : const Color(0xFF0f172a))),
                             const SizedBox(height: 6),
                             Text('أرسلته سارة · ٥ مارس ٢٠٢٤',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                     fontSize: 14, color: hc ? Colors.white70 : Colors.grey[500], fontWeight: FontWeight.w500)),
                           ],
@@ -633,7 +647,11 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
 
   Widget _buildPhotoGrid(AppRiverpod provider) {
     final activeCategory = categories[selectedCategory];
-    final items = provider.getMemoriesByCategory(activeCategory);
+    List<dynamic> items = provider.getMemoriesByCategory(activeCategory);
+    
+    if (activeCategory == '🖼️ الاستوديو') {
+      items = provider.deviceGalleryImages;
+    }
 
     return Wrap(
       spacing: 8,
@@ -655,6 +673,9 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
             type = 'image';
             url = mem.imageUrl;
             label = mem.activityTitle;
+          } else if (mem is String) {
+            type = 'image';
+            url = mem;
           }
 
           return SizedBox(

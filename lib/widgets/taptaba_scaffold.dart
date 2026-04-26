@@ -9,7 +9,8 @@ class TaptabaScaffold extends StatefulWidget {
   final Color? titleColor;
   final List<Widget>? actions;
   final Widget? bottomNavigationBar;
-  final String? overrideRole; 
+  final Widget? floatingActionButton;
+  final String? overrideRole;
 
   const TaptabaScaffold({
     super.key,
@@ -19,6 +20,7 @@ class TaptabaScaffold extends StatefulWidget {
     this.titleColor,
     this.actions,
     this.bottomNavigationBar,
+    this.floatingActionButton,
     this.overrideRole,
   });
 
@@ -89,6 +91,7 @@ class _TaptabaScaffoldState extends State<TaptabaScaffold>
       ),
       body: widget.body,
       bottomNavigationBar: widget.bottomNavigationBar,
+      floatingActionButton: widget.floatingActionButton,
     );
   }
 }
