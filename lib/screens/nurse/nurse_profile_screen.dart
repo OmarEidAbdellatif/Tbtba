@@ -1,34 +1,34 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'; // مكتبة فلاتر الأساسية للواجهات
 
-class NurseProfileScreen extends StatelessWidget {
-  const NurseProfileScreen({super.key});
+class NurseProfileScreen extends StatelessWidget { // شاشة الملف الشخصي الخاصة بالممرض
+  const NurseProfileScreen({super.key}); // مشيد الفئة
 
   @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+  Widget build(BuildContext context) { // دالة بناء الواجهة
+    final isDark = Theme.of(context).brightness == Brightness.dark; // التحقق من النمط الليلي
     
-    return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-      body: CustomScrollView(
+    return Scaffold( // الهيكل الأساسي للشاشة
+      backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC), // خلفية متغيرة حسب النمط
+      body: CustomScrollView( // استخدام التمرير المخصص (Slivers)
         slivers: [
-          _buildSliverAppBar(context),
-          SliverToBoxAdapter(
+          _buildSliverAppBar(context), // بناء شريط العنوان المتحرك مع الهيدر
+          SliverToBoxAdapter( // محتوى الشاشة القابل للتمرير
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(20), // هوامش جانبية
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.end, // ترتيب RTL
                 children: [
-                  _buildStatsGrid(context),
+                  _buildStatsGrid(context), // شبكة الإحصائيات (ساعات، دقة، تقييم)
                   const SizedBox(height: 24),
-                  _buildSectionTitle(context, 'جدول الورديات القادمة 🗓️'),
-                  _buildShiftSchedule(context),
+                  _buildSectionTitle(context, 'جدول الورديات القادمة 🗓️'), // عنوان جدول الورديات
+                  _buildShiftSchedule(context), // عرض قائمة الورديات القادمة
                   const SizedBox(height: 24),
-                  _buildSectionTitle(context, 'الأوسمة والإنجازات 🏅'),
-                  _buildBadges(context),
+                  _buildSectionTitle(context, 'الأوسمة والإنجازات 🏅'), // عنوان الأوسمة
+                  _buildBadges(context), // عرض الأوسمة المحققة
                   const SizedBox(height: 24),
-                  _buildSectionTitle(context, 'آراء الأسر وتقييم الأداء ⭐'),
-                  _buildFeedbackCard(context),
-                  const SizedBox(height: 100),
+                  _buildSectionTitle(context, 'آراء الأسر وتقييم الأداء ⭐'), // عنوان التقييمات
+                  _buildFeedbackCard(context), // بطاقة رأي من أسرة مقيم
+                  const SizedBox(height: 100), // مسافة سفلية إضافية
                 ],
               ),
             ),
@@ -38,19 +38,19 @@ class NurseProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSliverAppBar(BuildContext context) {
+  Widget _buildSliverAppBar(BuildContext context) { // بناء شريط العنوان المتمدد
     return SliverAppBar(
-      expandedHeight: 280,
-      pinned: true,
-      backgroundColor: const Color(0xFF0369A1),
-      leading: IconButton(
+      expandedHeight: 280, // الارتفاع الأقصى عند التمدد
+      pinned: true, // يبقى شريط العنوان ظاهراً عند التمرير
+      backgroundColor: const Color(0xFF0369A1), // اللون الأزرق الطبي المميز
+      leading: IconButton( // زر العودة
         icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
         onPressed: () => Navigator.pop(context),
       ),
-      flexibleSpace: FlexibleSpaceBar(
+      flexibleSpace: FlexibleSpaceBar( // محتوى الهيدر المتغير الحجم
         background: Container(
           decoration: const BoxDecoration(
-            gradient: LinearGradient(
+            gradient: LinearGradient( // تدرج لوني أزرق احترافي
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [Color(0xFF0369A1), Color(0xFF0EA5E9)],
@@ -60,12 +60,12 @@ class NurseProfileScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const SizedBox(height: 40),
-              _buildProfileImage(),
+              _buildProfileImage(), // عرض صورة الملف الشخصي
               const SizedBox(height: 16),
-              const Text('أ. منى علي محمود', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-              const Text('مشرف تمريض — المستوى الذهبي', style: TextStyle(color: Color(0xFFE0F2FE), fontSize: 13)),
+              const Text('أ. منى علي محمود', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)), // اسم الممرض
+              const Text('مشرف تمريض — المستوى الذهبي', style: TextStyle(color: Color(0xFFE0F2FE), fontSize: 13)), // المسمى الوظيفي والمستوى
               const SizedBox(height: 12),
-              Container(
+              Container( // بطاقة تعريفية بكود الموظف
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(20)),
                 child: const Text('كود الموظف: #N-4892', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
@@ -77,31 +77,31 @@ class NurseProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileImage() {
+  Widget _buildProfileImage() { // بناء دائرة الصورة الشخصية
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
       child: CircleAvatar(
         radius: 50,
         backgroundColor: Colors.blue.shade100,
-        child: const Icon(Icons.person, size: 60, color: Color(0xFF0369A1)),
+        child: const Icon(Icons.person, size: 60, color: Color(0xFF0369A1)), // أيقونة افتراضية
       ),
     );
   }
 
-  Widget _buildStatsGrid(BuildContext context) {
+  Widget _buildStatsGrid(BuildContext context) { // بناء شبكة إحصائيات الأداء
     return Row(
       children: [
-        Expanded(child: _statCard(context, 'ساعات العمل', '١,٢٤٠', Icons.timer_outlined, const Color(0xFF0EA5E9))),
+        Expanded(child: _statCard(context, 'ساعات العمل', '١,٢٤٠', Icons.timer_outlined, const Color(0xFF0EA5E9))), // إحصائية الساعات
         const SizedBox(width: 12),
-        Expanded(child: _statCard(context, 'دقة الأدوية', '٩٩.٢٪', Icons.verified_user_outlined, const Color(0xFF10B981))),
+        Expanded(child: _statCard(context, 'دقة الأدوية', '٩٩.٢٪', Icons.verified_user_outlined, const Color(0xFF10B981))), // إحصائية الدقة
         const SizedBox(width: 12),
-        Expanded(child: _statCard(context, 'التقييم', '٤.٩/٥', Icons.star_outline_rounded, const Color(0xFFFBBF24))),
+        Expanded(child: _statCard(context, 'التقييم', '٤.٩/٥', Icons.star_outline_rounded, const Color(0xFFFBBF24))), // إحصائية التقييم
       ],
     );
   }
 
-  Widget _statCard(BuildContext context, String label, String value, IconData icon, Color color) {
+  Widget _statCard(BuildContext context, String label, String value, IconData icon, Color color) { // بناء كارت إحصائي واحد
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -115,14 +115,14 @@ class NurseProfileScreen extends StatelessWidget {
         children: [
           Icon(icon, color: color, size: 20),
           const SizedBox(height: 8),
-          Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF0F172A))),
-          Text(label, style: TextStyle(fontSize: 10, color: isDark ? Colors.white60 : const Color(0xFF64748B))),
+          Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF0F172A))), // القيمة بالأرقام
+          Text(label, style: TextStyle(fontSize: 10, color: isDark ? Colors.white60 : const Color(0xFF64748B))), // المسمى بالعربية
         ],
       ),
     );
   }
 
-  Widget _buildSectionTitle(BuildContext context, String title) {
+  Widget _buildSectionTitle(BuildContext context, String title) { // بناء عنوان جانبي للأقسام
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.only(bottom: 12, top: 8),
@@ -130,7 +130,7 @@ class NurseProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildShiftSchedule(BuildContext context) {
+  Widget _buildShiftSchedule(BuildContext context) { // بناء قائمة جدول الورديات
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(16),
@@ -141,21 +141,21 @@ class NurseProfileScreen extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _shiftRow(context, 'الإثنين - ٢٧ أبريل', '٠٦:٠٠ ص - ٠٢:٠٠ ظ', 'صباحية', true),
+          _shiftRow(context, 'الإثنين - ٢٧ أبريل', '٠٦:٠٠ ص - ٠٢:٠٠ ظ', 'صباحية', true), // وردية صباحية
           const Divider(height: 20, color: Colors.white10),
-          _shiftRow(context, 'الثلاثاء - ٢٨ أبريل', '٠٦:٠٠ ص - ٠٢:٠٠ ظ', 'صباحية', true),
+          _shiftRow(context, 'الثلاثاء - ٢٨ أبريل', '٠٦:٠٠ ص - ٠٢:٠٠ ظ', 'صباحية', true), // وردية صباحية
           const Divider(height: 20, color: Colors.white10),
-          _shiftRow(context, 'الأربعاء - ٢٩ أبريل', 'راحة أسبوعية', '-', false),
+          _shiftRow(context, 'الأربعاء - ٢٩ أبريل', 'راحة أسبوعية', '-', false), // يوم راحة
         ],
       ),
     );
   }
 
-  Widget _shiftRow(BuildContext context, String date, String time, String type, bool active) {
+  Widget _shiftRow(BuildContext context, String date, String time, String type, bool active) { // بناء سطر وردية واحدة
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Row(
       children: [
-        Container(
+        Container( // شارة نوع الوردية
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
             color: active ? (isDark ? const Color(0xFF0369A1).withOpacity(0.2) : const Color(0xFFF0F9FF)) : (isDark ? Colors.white10 : const Color(0xFFF1F5F9)),
@@ -164,7 +164,7 @@ class NurseProfileScreen extends StatelessWidget {
           child: Text(type, style: TextStyle(color: active ? (isDark ? const Color(0xFF38BDF8) : const Color(0xFF0369A1)) : (isDark ? Colors.white38 : const Color(0xFF64748B)), fontSize: 10, fontWeight: FontWeight.bold)),
         ),
         const Spacer(),
-        Column(
+        Column( // تفاصيل التاريخ والوقت
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(date, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
@@ -175,10 +175,10 @@ class NurseProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBadges(BuildContext context) {
+  Widget _buildBadges(BuildContext context) { // بناء قسم الأوسمة الجمالية بشكل أفقي
     return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      reverse: true,
+      scrollDirection: Axis.horizontal, // تمرير أفقي
+      reverse: true, // يبدأ من اليمين (RTL)
       child: Row(
         children: [
           _badge('مسعف محترف', '🩺', const Color(0xFFEF4444)),
@@ -190,7 +190,7 @@ class NurseProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _badge(String name, String emoji, Color color) {
+  Widget _badge(String name, String emoji, Color color) { // بناء وسام واحد
     return Container(
       margin: const EdgeInsets.only(left: 12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -201,15 +201,15 @@ class NurseProfileScreen extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 24)),
+          Text(emoji, style: const TextStyle(fontSize: 24)), // رمز الإيموجي للوسام
           const SizedBox(height: 4),
-          Text(name, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: color)),
+          Text(name, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: color)), // اسم الوسام بالعربية
         ],
       ),
     );
   }
 
-  Widget _buildFeedbackCard(BuildContext context) {
+  Widget _buildFeedbackCard(BuildContext context) { // بناء بطاقة التقييمات وآراء الأسر
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(20),
@@ -226,16 +226,16 @@ class NurseProfileScreen extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('سارة أحمد (ابنة الحاج يحيى)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
-                  Text('منذ ٣ أيام', style: TextStyle(fontSize: 10, color: isDark ? Colors.white38 : const Color(0xFF94A3B8))),
+                  Text('سارة أحمد (ابنة الحاج يحيى)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)), // اسم صاحب الرأي
+                  Text('منذ ٣ أيام', style: TextStyle(fontSize: 10, color: isDark ? Colors.white38 : const Color(0xFF94A3B8))), // توقيت الرأي
                 ],
               ),
               const SizedBox(width: 12),
-              CircleAvatar(backgroundColor: Colors.blue.shade50, child: const Text('س', style: TextStyle(color: Color(0xFF0369A1)))),
+              CircleAvatar(backgroundColor: Colors.blue.shade50, child: const Text('س', style: TextStyle(color: Color(0xFF0369A1)))), // حرف تعريفي
             ],
           ),
           const SizedBox(height: 12),
-          Text(
+          Text( // نص الرأي أو التقييم بالعربية
             '"ممرضة منى ممتازة جداً في التعامل، وتهتم بأدق التفاصيل الطبية والجانب النفسي لوالدي. شكراً لجهودكم."',
             textAlign: TextAlign.right,
             style: TextStyle(fontSize: 12, color: isDark ? Colors.white70 : const Color(0xFF475569), height: 1.5, fontStyle: FontStyle.italic),

@@ -1,72 +1,72 @@
-import 'dart:async';
-import 'dart:math';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/app_riverpod.dart';
-import 'widgets/permission_dialog.dart';
+import 'dart:async'; // مكتبة المؤقتات والعمليات غير المتزامنة
+import 'dart:math'; // مكتبة العمليات الرياضية
+import 'package:flutter/material.dart'; // مكتبة فلاتر الأساسية للواجهات
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // مكتبة إدارة الحالة
+import '../../providers/app_riverpod.dart'; // مزود الحالة الرئيسي للتطبيق
+import 'widgets/permission_dialog.dart'; // حوار طلب الصلاحيات المخصص
 
-class HomeScreen extends ConsumerStatefulWidget {
-  const HomeScreen({super.key});
+class HomeScreen extends ConsumerStatefulWidget { // شاشة المسن الرئيسية
+  const HomeScreen({super.key}); // مشيد الفئة
 
   @override
-  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState(); // إنشاء حالة الشاشة
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen>
-    with TickerProviderStateMixin {
-  late AnimationController _bgController;
-  late AnimationController _pillController;
-  late AnimationController _ringController;
-  late AnimationController _starController;
-  late AnimationController _glowController;
+    with TickerProviderStateMixin { // حالة الشاشة مع دعم الأنيميشن المتعدد
+  late AnimationController _bgController; // متحكم أنيميشن الخلفية المتحركة
+  late AnimationController _pillController; // متحكم أنيميشن طفو حبة الدواء
+  late AnimationController _ringController; // متحكم أنيميشن نبض الحلقة
+  late AnimationController _starController; // متحكم أنيميشن قفز النجوم
+  late AnimationController _glowController; // متحكم أنيميشن توهج الأزرار
 
-  int remainingSeconds = 22 * 60; // 22 minutes
-  Timer? _timer;
+  int remainingSeconds = 22 * 60; // الوقت المتبقي للدواء (22 دقيقة افتراضياً)
+  Timer? _timer; // مؤقت للعد التنازلي
 
   @override
-  void initState() {
+  void initState() { // دالة التهيئة الأولية عند تشغيل الشاشة
     super.initState();
 
-    // Background gradient animation
+    // إعداد أنيميشن تدرج الخلفية (حركة بطيئة وهادئة)
     _bgController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 10),
     )..repeat();
 
-    // Pill floating
+    // إعداد أنيميشن طفو حبة الدواء (حركة ترددية)
     _pillController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2800),
     )..repeat(reverse: true);
 
-    // Ring pulse
+    // إعداد أنيميشن نبض الحلقة حول الزر
     _ringController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat();
 
-    // Star bounce
+    // إعداد أنيميشن قفز النجوم عند كسب النقاط
     _starController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat();
 
-    // Button glow
+    // إعداد أنيميشن توهج الأزرار للتنبيه
     _glowController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2500),
     )..repeat(reverse: true);
 
-    // Countdown timer
+    // بدء مؤقت العد التنازلي كل ثانية
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (remainingSeconds > 0) {
-        setState(() => remainingSeconds--);
+        setState(() => remainingSeconds--); // تحديث الواجهة عند نقصان الثواني
       }
     });
   }
 
   @override
-  void dispose() {
+  void dispose() { // تنظيف الموارد وإغلاق المؤقتات عند إغلاق الشاشة
     _bgController.dispose();
     _pillController.dispose();
     _ringController.dispose();
@@ -76,34 +76,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     super.dispose();
   }
 
-  String formatTime(int seconds) {
+  String formatTime(int seconds) { // دالة لتحويل الثواني إلى صيغة نصية عربية
     final m = seconds ~/ 60;
     final s = seconds % 60;
     return m > 0 ? '$m دقيقة' : '$s ثانية';
   }
 
   @override
-  Widget build(BuildContext context) {
-    final provider = ref.watch(appRiverpod);
+  Widget build(BuildContext context) { // دالة بناء واجهة الشاشة الرئيسية
+    final provider = ref.watch(appRiverpod); // مراقبة حالة التطبيق
     return Column(
       children: [
-        // Hero Section
+        // قسم الترحيب العلوي (Hero)
         _buildHero(provider),
-        if (provider.currentMood.isEmpty) _buildMoodTracker(provider),
+        if (provider.currentMood.isEmpty) _buildMoodTracker(provider), // إظهار متعقب المزاج إذا لم يحدد بعد
 
-        // Cards Section
+        // قسم البطاقات الرئيسية القابلة للتمرير
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(10),
             child: Column(
               children: [
-                _buildMedicineCard(provider),
+                _buildMedicineCard(provider), // بطاقة الدواء
                 const SizedBox(height: 12),
-                _buildMemoryBoxCard(provider), // Added here
+                _buildMemoryBoxCard(provider), // بطاقة صندوق الذكريات (جديد)
                 const SizedBox(height: 12),
-                _buildFamilyCard(provider, context),
+                _buildFamilyCard(provider, context), // بطاقة التواصل مع العائلة
                 const SizedBox(height: 12),
-                _buildPointsCard(provider),
+                _buildPointsCard(provider), // بطاقة إجمالي النقاط
               ],
             ),
           ),
@@ -112,16 +112,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
-  Widget _buildMemoryBoxCard(AppRiverpod provider) {
-    final moment = provider.latestMemoryMoment;
-    if (moment == null) return const SizedBox.shrink();
+  Widget _buildMemoryBoxCard(AppRiverpod provider) { // بناء بطاقة صندوق الذكريات السريع
+    final moment = provider.latestMemoryMoment; // الحصول على آخر لحظة مسجلة
+    if (moment == null) return const SizedBox.shrink(); // لا يظهر شيء إذا لم تكن هناك ذكريات
 
     return GestureDetector(
-      onTap: () {
+      onTap: () { // معالجة الضغط للانتقال لقسم الذكريات
         if (provider.hasGalleryPermission) {
-          provider.setElderlyTabIndex(3); // Navigate to Memories
+          provider.setElderlyTabIndex(3); // الانتقال لتبويب الذكريات
         } else {
-          PermissionDialog.show(
+          PermissionDialog.show( // طلب إذن الوصول للصور إذا لم يكن متاحاً
             context,
             onGranted: () async {
               await provider.requestGalleryPermission();
@@ -129,7 +129,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 provider.setElderlyTabIndex(3);
               }
             },
-            onDenied: () {
+            onDenied: () { // إظهار رسالة تنبيه عند الرفض
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('نحتاج للإذن لعرض معرض الصور',
@@ -141,7 +141,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           );
         }
       },
-      child: Container(
+      child: Container( // تصميم بطاقة الذكريات بتدرج لوني كحلي
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
@@ -156,7 +156,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         ),
         child: Row(
           children: [
-            Container(
+            Container( // أيقونة سهم الانتقال
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
@@ -167,14 +167,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('صندوق الذكريات ✨',
+                  Text('صندوق الذكريات ✨', // عنوان البطاقة
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                           color: Colors.white,
                           fontSize: 18,
                           fontWeight: FontWeight.bold)),
-                  Text(moment.activityTitle,
+                  Text(moment.activityTitle, // اسم النشاط المرتبط بالذكرى
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style:
@@ -183,7 +183,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               ),
             ),
             const SizedBox(width: 16),
-            Container(
+            Container( // عرض مصغر للصورة المرتبطة بالذكرى
               width: 65,
               height: 65,
               decoration: BoxDecoration(
@@ -200,13 +200,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
-  Widget _buildHero(AppRiverpod provider) {
+  Widget _buildHero(AppRiverpod provider) { // بناء قسم الترحيب العلوي (الـ Hero)
     return AnimatedBuilder(
       animation: _bgController,
       builder: (context, child) {
         return Container(
           decoration: const BoxDecoration(
-            gradient: LinearGradient(
+            gradient: LinearGradient( // تدرج أرجواني عميق
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
@@ -219,7 +219,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           ),
           child: Stack(
             children: [
-              // Animated blobs
+              // كرات ملونة متحركة في الخلفية (Blobs) للحيوية
               _buildBlob(180, const Color(0xFF6C63FF), -50, -50, 7),
               _buildBlob(130, const Color(0xFFf472b6), -35, 30, 9),
               _buildBlob(90, const Color(0xFF0ea5e9), 80, -10, 6),
@@ -230,7 +230,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    // Greeting
+                    // نص الترحيب الصباحي باسم المستخدم
                     Padding(
                       padding:
                           const EdgeInsets.only(right: 22, top: 8, bottom: 8),
@@ -248,7 +248,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       ),
                     ),
 
-                    // Chips
+                    // شرائح إحصائية سريعة (أدوية، نقاط، نشاطات)
                     Padding(
                       padding: const EdgeInsets.only(
                           left: 16, right: 16, top: 8, bottom: 24),
@@ -256,15 +256,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           _buildChip('${provider.todayMedications.length}',
-                              'أدوية', 1),
+                              'أدوية', 1), // عدد الأدوية اليوم
                           const SizedBox(width: 8),
                           _buildChip(
-                              '${provider.currentUser.points}', 'نقاطي', 2),
+                              '${provider.currentUser.points}', 'نقاطي', 2), // إجمالي النقاط
                           const SizedBox(width: 8),
                           _buildChip(
                               '${provider.currentUser.completedActivities}',
                               'نشاطات',
-                              3),
+                              3), // عدد النشاطات المكتملة
                         ],
                       ),
                     ),

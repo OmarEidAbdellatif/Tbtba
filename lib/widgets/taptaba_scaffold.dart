@@ -1,21 +1,21 @@
-import 'package:flutter/material.dart';
-import 'taptaba_drawer.dart';
-import 'taptaba_bell.dart';
+import 'package:flutter/material.dart'; // مكتبة فلاتر الأساسية
+import 'taptaba_drawer.dart'; // استيراد القائمة الجانبية
+import 'taptaba_bell.dart'; // استيراد أيقونة الإشعارات
 
-class TaptabaScaffold extends StatefulWidget {
-  final Widget body;
-  final String title;
-  final Color appBarColor;
-  final Color? titleColor;
-  final List<Widget>? actions;
-  final Widget? bottomNavigationBar;
-  final Widget? floatingActionButton;
-  final String? overrideRole;
-  final bool extendBodyBehindAppBar;
-  final bool transparentAppBar;
-  final bool hideAppBar;
+class TaptabaScaffold extends StatefulWidget { // فئة الهيكل الموحد للتطبيق (Scaffold)
+  final Widget body; // محتوى الشاشة الأساسي
+  final String title; // عنوان الشاشة
+  final Color appBarColor; // لون شريط العنوان
+  final Color? titleColor; // لون نص العنوان
+  final List<Widget>? actions; // أيقونات جانبية في شريط العنوان
+  final Widget? bottomNavigationBar; // شريط التنقل السفلي
+  final Widget? floatingActionButton; // الزر العائم
+  final String? overrideRole; // تحديد دور المستخدم لتخصيص القائمة
+  final bool extendBodyBehindAppBar; // تمديد المحتوى خلف شريط العنوان
+  final bool transparentAppBar; // جعل شريط العنوان شفافاً
+  final bool hideAppBar; // إخفاء شريط العنوان بالكامل
 
-  const TaptabaScaffold({
+  const TaptabaScaffold({ // مشيد الفئة مع البارامترات المطلوبة والاختيارية
     super.key,
     required this.body,
     this.title = 'طبطبـة',
@@ -31,73 +31,73 @@ class TaptabaScaffold extends StatefulWidget {
   });
 
   @override
-  State<TaptabaScaffold> createState() => _TaptabaScaffoldState();
+  State<TaptabaScaffold> createState() => _TaptabaScaffoldState(); // إنشاء حالة الهيكل
 }
 
 class _TaptabaScaffoldState extends State<TaptabaScaffold>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _drawerController;
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+    with SingleTickerProviderStateMixin { // حالة الهيكل مع دعم متحكم الأنيميشن
+  late AnimationController _drawerController; // متحكم أنيميشن القائمة الجانبية
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>(); // مفتاح الوصول للهيكل
 
   @override
-  void initState() {
+  void initState() { // دالة التهيئة الأولية
     super.initState();
-    _drawerController = AnimationController(
+    _drawerController = AnimationController( // إعداد متحكم الأنيميشن
       vsync: this,
       duration: const Duration(milliseconds: 400),
     );
   }
 
   @override
-  void dispose() {
+  void dispose() { // تنظيف الموارد عند إغلاق الشاشة
     _drawerController.dispose();
     super.dispose();
   }
 
-  void _toggleDrawer() {
+  void _toggleDrawer() { // دالة لفتح وإغلاق القائمة الجانبية
     if (_drawerController.isCompleted) {
-      _drawerController.reverse();
+      _drawerController.reverse(); // إغلاق
       _scaffoldKey.currentState?.closeDrawer();
     } else {
-      _drawerController.forward();
+      _drawerController.forward(); // فتح
       _scaffoldKey.currentState?.openDrawer();
     }
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      key: _scaffoldKey,
-      extendBodyBehindAppBar: widget.extendBodyBehindAppBar,
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      drawer: TaptabaDrawer(overrideRole: widget.overrideRole),
-      appBar: widget.hideAppBar ? null : AppBar(
-        backgroundColor: widget.transparentAppBar ? Colors.transparent : Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        iconTheme: const IconThemeData(color: Color(0xFF64748b)),
-        leading: IconButton(
+  Widget build(BuildContext context) { // دالة بناء الواجهة
+    return Scaffold( // المكون الأساسي للهيكل في فلاتر
+      key: _scaffoldKey, // ربط المفتاح
+      extendBodyBehindAppBar: widget.extendBodyBehindAppBar, // ضبط تمديد المحتوى
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor, // لون خلفية التطبيق
+      drawer: TaptabaDrawer(overrideRole: widget.overrideRole), // القائمة الجانبية الموحدة
+      appBar: widget.hideAppBar ? null : AppBar( // شريط العنوان (إذا لم يتم إخفاؤه)
+        backgroundColor: widget.transparentAppBar ? Colors.transparent : Colors.white, // شفافية الشريط
+        elevation: 0, // إخفاء الظل الافتراضي لجمالية Glassmorphism
+        centerTitle: true, // توسيط العنوان
+        iconTheme: const IconThemeData(color: Color(0xFF64748b)), // لون الأيقونات
+        leading: IconButton( // زر فتح القائمة الجانبية (الهامبرغر)
           icon: const Icon(Icons.menu_rounded, color: Color(0xFF64748b)),
-          onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+          onPressed: () => _scaffoldKey.currentState?.openDrawer(), // فتح القائمة عند الضغط
         ),
-        title: Text(
+        title: Text( // نص العنوان (طبطبـة)
           'طبطبـة',
           style: TextStyle(
-            color: widget.titleColor ?? const Color(0xFF6C63FF),
-            fontWeight: FontWeight.w900,
-            fontSize: 24,
-            letterSpacing: 1.2,
+            color: widget.titleColor ?? const Color(0xFF6C63FF), // اللون الموف المميز لطبطبة
+            fontWeight: FontWeight.w900, // خط عريض جداً
+            fontSize: 24, // حجم كبير للعنوان
+            letterSpacing: 1.2, // تباعد خفيف بين الحروف
           ),
         ),
-        actions: widget.actions ??
+        actions: widget.actions ?? // أيقونات الأكشن (أو الجرس الافتراضي)
             [
-              const TaptabaBell(),
-              const SizedBox(width: 8),
+              const TaptabaBell(), // جرس التنبيهات
+              const SizedBox(width: 8), // مسافة جانبية
             ],
       ),
-      body: widget.body,
-      bottomNavigationBar: widget.bottomNavigationBar,
-      floatingActionButton: widget.floatingActionButton,
+      body: widget.body, // المحتوى الرئيسي للشاشة
+      bottomNavigationBar: widget.bottomNavigationBar, // شريط التنقل السفلي إن وجد
+      floatingActionButton: widget.floatingActionButton, // الزر العائم إن وجد
     );
   }
 }

@@ -1,77 +1,77 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/app_riverpod.dart';
-import '../../models/app_models.dart';
+import 'package:flutter/material.dart'; // مكتبة فلاتر الأساسية للواجهات
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // مكتبة إدارة الحالة
+import '../../providers/app_riverpod.dart'; // مزود الحالة الرئيسي للتطبيق
+import '../../models/app_models.dart'; // نماذج البيانات (المقيمين، الملاحظات)
 
-class NurseResidentDetailScreen extends ConsumerStatefulWidget {
-  final String residentName;
-  final String roomNumber;
+class NurseResidentDetailScreen extends ConsumerStatefulWidget { // شاشة تفاصيل المقيم الخاصة بالتمريض
+  final String residentName; // اسم المقيم
+  final String roomNumber; // رقم الغرفة
 
-  const NurseResidentDetailScreen({
+  const NurseResidentDetailScreen({ // مشيد الفئة مع البيانات المطلوبة
     super.key,
     required this.residentName,
     required this.roomNumber,
   });
 
   @override
-  ConsumerState<NurseResidentDetailScreen> createState() => _NurseResidentDetailScreenState();
+  ConsumerState<NurseResidentDetailScreen> createState() => _NurseResidentDetailScreenState(); // إنشاء حالة المكون
 }
 
-class _NurseResidentDetailScreenState extends ConsumerState<NurseResidentDetailScreen> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  final TextEditingController _noteTitleController = TextEditingController();
-  final TextEditingController _noteContentController = TextEditingController();
+class _NurseResidentDetailScreenState extends ConsumerState<NurseResidentDetailScreen> with SingleTickerProviderStateMixin { // حالة الشاشة مع دعم التبويبات
+  late TabController _tabController; // متحكم التبويبات (الملف الطبي / الملاحظات)
+  final TextEditingController _noteTitleController = TextEditingController(); // متحكم عنوان الملاحظة الجديدة
+  final TextEditingController _noteContentController = TextEditingController(); // متحكم محتوى الملاحظة الجديدة
   
-  // Dynamic data for the demo
+  // بيانات تجريبية للأدوية (للعرض فقط في العرض التوضيحي)
   final List<String> _meds = ['ميتفورمين ٥٠٠ ملغ', 'أسبرين حماية', 'فيتامين د٣'];
 
   @override
-  void initState() {
+  void initState() { // دالة التهيئة الأولية
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 2, vsync: this); // إعداد تبويبين
   }
 
   @override
-  void dispose() {
+  void dispose() { // تنظيف الموارد عند إغلاق الشاشة
     _tabController.dispose();
     _noteTitleController.dispose();
     _noteContentController.dispose();
     super.dispose();
   }
 
-  Widget build(BuildContext context) {
-    final provider = ref.watch(appRiverpod);
-    final residentNotes = provider.getNotesForResident(widget.residentName);
-    final medicalInfo = provider.getMedicalInfo(widget.residentName);
+  Widget build(BuildContext context) { // بناء واجهة تفاصيل المقيم
+    final provider = ref.watch(appRiverpod); // مراقبة حالة التطبيق
+    final residentNotes = provider.getNotesForResident(widget.residentName); // جلب الملاحظات التمريضية للمقيم
+    final medicalInfo = provider.getMedicalInfo(widget.residentName); // جلب المعلومات الطبية (حساسية، أمراض)
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
+    return Scaffold( // الهيكل الأساسي للشاشة
+      backgroundColor: const Color(0xFFF8FAFC), // خلفية رمادية فاتحة جداً
+      appBar: AppBar( // شريط العنوان العلوي
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
         title: const Text('الملف الطبي المتكامل', style: TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.bold, fontSize: 18)),
-        leading: IconButton(
+        leading: IconButton( // زر العودة للخلف
           icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF0F172A), size: 20),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
-          IconButton(
+          IconButton( // زر محاكاة طباعة الملف الطبي
             icon: const Icon(Icons.print_rounded, color: Color(0xFF0369A1)),
             onPressed: _simulatePrint,
           ),
         ],
       ),
-      body: Column(
+      body: Column( // ترتيب المحتوى بشكل رأسي
         children: [
-          _buildResidentHeader(),
-          _buildTabBar(),
-          Expanded(
+          _buildResidentHeader(), // بناء هيدر معلومات المقيم الأساسية
+          _buildTabBar(), // بناء شريط التنقل بين الملف والملاحظات
+          Expanded( // عرض المحتوى بناءً على التبويب المختار
             child: TabBarView(
               controller: _tabController,
               children: [
-                _buildMedicalFileTab(medicalInfo),
-                _buildNotesTab(residentNotes),
+                _buildMedicalFileTab(medicalInfo), // واجهة الملف الطبي
+                _buildNotesTab(residentNotes), // واجهة الملاحظات التمريضية
               ],
             ),
           ),
@@ -80,16 +80,16 @@ class _NurseResidentDetailScreenState extends ConsumerState<NurseResidentDetailS
     );
   }
 
-  Widget _buildResidentHeader() {
+  Widget _buildResidentHeader() { // بناء الجزء العلوي الذي يحتوي على اسم وصورة المقيم
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
       child: Row(
         children: [
-          Column(
+          Column( // بيانات المقيم جهة اليمين
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Container(
+              Container( // شارة توضح الحالة الصحية (مثال: حالة حرجة)
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFEF2F2),
@@ -98,12 +98,12 @@ class _NurseResidentDetailScreenState extends ConsumerState<NurseResidentDetailS
                 child: const Text('حالة حرجة 🔴', style: TextStyle(color: Color(0xFFEF4444), fontSize: 10, fontWeight: FontWeight.bold)),
               ),
               const SizedBox(height: 8),
-              Text(widget.residentName, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
-              Text('غرفة ${widget.roomNumber} · ٧٨ سنة', style: const TextStyle(color: Color(0xFF64748B), fontSize: 14)),
+              Text(widget.residentName, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))), // اسم المقيم
+              Text('غرفة ${widget.roomNumber} · ٧٨ سنة', style: const TextStyle(color: Color(0xFF64748B), fontSize: 14)), // الغرفة والسن
             ],
           ),
           const Spacer(),
-          Hero(
+          Hero( // أنيميشن انتقال الصورة بين الشاشات
             tag: widget.residentName,
             child: CircleAvatar(
               radius: 40,
@@ -116,29 +116,29 @@ class _NurseResidentDetailScreenState extends ConsumerState<NurseResidentDetailS
     );
   }
 
-  Widget _buildTabBar() {
+  Widget _buildTabBar() { // بناء شريط التبويبات المخصص
     return Container(
       color: Colors.white,
       child: TabBar(
         controller: _tabController,
-        indicatorColor: const Color(0xFF0369A1),
+        indicatorColor: const Color(0xFF0369A1), // لون مؤشر الاختيار (أزرق طبي)
         indicatorWeight: 3,
         labelColor: const Color(0xFF0369A1),
         unselectedLabelColor: const Color(0xFF94A3B8),
         labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, fontFamily: 'Cairo'),
         tabs: const [
-          Tab(text: 'الملف الطبي'),
-          Tab(text: 'الملاحظات'),
+          Tab(text: 'الملف الطبي'), // التبويب الأول
+          Tab(text: 'الملاحظات'), // التبويب الثاني
         ],
       ),
     );
   }
 
-  Widget _buildMedicalFileTab(ResidentMedicalInfo info) {
+  Widget _buildMedicalFileTab(ResidentMedicalInfo info) { // محتوى تبويب الملف الطبي (أدوية، حساسية، أمراض)
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        _buildSectionTitleWithAdd('الأمراض المزمنة', () => _showAddItemDialog('مرض مزمن', (v) {
+        _buildSectionTitleWithAdd('الأمراض المزمنة', () => _showAddItemDialog('مرض مزمن', (v) { // قسم الأمراض المزمنة
           final newDiseases = List<String>.from(info.chronicDiseases)..add(v);
           ref.read(appRiverpod).updateMedicalInfo(ResidentMedicalInfo(
             residentName: info.residentName,
@@ -149,7 +149,7 @@ class _NurseResidentDetailScreenState extends ConsumerState<NurseResidentDetailS
         })),
         _buildInfoCard(Icons.medical_information_rounded, info.chronicDiseases.isEmpty ? 'لا توجد أمراض مسجلة' : info.chronicDiseases.join('، ')),
         const SizedBox(height: 20),
-        _buildSectionTitleWithAdd('الحساسية', () => _showAddItemDialog('حساسية', (v) {
+        _buildSectionTitleWithAdd('الحساسية', () => _showAddItemDialog('حساسية', (v) { // قسم الحساسية
           final newAllergies = List<String>.from(info.allergies)..add(v);
           ref.read(appRiverpod).updateMedicalInfo(ResidentMedicalInfo(
             residentName: info.residentName,
@@ -160,13 +160,13 @@ class _NurseResidentDetailScreenState extends ConsumerState<NurseResidentDetailS
         })),
         _buildInfoCard(Icons.warning_amber_rounded, info.allergies.isEmpty ? 'لا توجد حساسية مسجلة' : info.allergies.join('، '), color: const Color(0xFFEF4444)),
         const SizedBox(height: 24),
-        _buildSectionTitleWithAdd('الأدوية الحالية', _showAddMedicationDialog),
+        _buildSectionTitleWithAdd('الأدوية الحالية', _showAddMedicationDialog), // قسم الأدوية
         _buildMedicineList(info.medications),
       ],
     );
   }
 
-  Widget _buildSectionTitleWithAdd(String title, VoidCallback onAdd) {
+  Widget _buildSectionTitleWithAdd(String title, VoidCallback onAdd) { // عنوان قسم مع زر إضافة (RTL)
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -184,7 +184,7 @@ class _NurseResidentDetailScreenState extends ConsumerState<NurseResidentDetailS
     );
   }
 
-  Widget _buildInfoCard(IconData icon, String text, {Color color = const Color(0xFF0369A1)}) {
+  Widget _buildInfoCard(IconData icon, String text, {Color color = const Color(0xFF0369A1)}) { // بطاقة عرض معلومات طبية بسيطة
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -202,7 +202,7 @@ class _NurseResidentDetailScreenState extends ConsumerState<NurseResidentDetailS
     );
   }
 
-  Widget _buildMedicineList(List<String> meds) {
+  Widget _buildMedicineList(List<String> meds) { // عرض قائمة الأدوية المسجلة للمقيم
     if (meds.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(16),
@@ -226,7 +226,7 @@ class _NurseResidentDetailScreenState extends ConsumerState<NurseResidentDetailS
     );
   }
 
-  Widget _buildNotesTab(List<NursingNote> notes) {
+  Widget _buildNotesTab(List<NursingNote> notes) { // محتوى تبويب الملاحظات التمريضية
     return Column(
       children: [
         Expanded(
@@ -237,16 +237,16 @@ class _NurseResidentDetailScreenState extends ConsumerState<NurseResidentDetailS
                 itemCount: notes.length,
                 itemBuilder: (context, index) {
                   final note = notes[index];
-                  return _buildNoteItem(note);
+                  return _buildNoteItem(note); // بناء عنصر ملاحظة فردي
                 },
               ),
         ),
-        _buildNoteInput(),
+        _buildNoteInput(), // حقل إدخال ملاحظة جديدة في الأسفل
       ],
     );
   }
 
-  Widget _buildNoteItem(NursingNote note) {
+  Widget _buildNoteItem(NursingNote note) { // بطاقة عرض ملاحظة تمريضية واحدة
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
@@ -262,8 +262,8 @@ class _NurseResidentDetailScreenState extends ConsumerState<NurseResidentDetailS
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('منذ فترة قريبة', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 11)),
-              Container(
+              const Text('منذ فترة قريبة', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 11)), // الوقت التقريبي
+              Container( // اسم كاتب الملاحظة (الممرض المسئول)
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(color: const Color(0xFFF0F9FF), borderRadius: BorderRadius.circular(6)),
                 child: Text(note.author, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF0369A1), fontSize: 11)),
@@ -271,15 +271,15 @@ class _NurseResidentDetailScreenState extends ConsumerState<NurseResidentDetailS
             ],
           ),
           const SizedBox(height: 10),
-          Text(note.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF1E293B))),
+          Text(note.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF1E293B))), // عنوان الملاحظة
           const SizedBox(height: 4),
-          Text(note.content, textAlign: TextAlign.right, style: const TextStyle(fontSize: 13, color: Color(0xFF475569))),
+          Text(note.content, textAlign: TextAlign.right, style: const TextStyle(fontSize: 13, color: Color(0xFF475569))), // تفاصيل الملاحظة
         ],
       ),
     );
   }
 
-  Widget _buildNoteInput() {
+  Widget _buildNoteInput() { // حقول إدخال الملاحظة الجديدة (عنوان + محتوى)
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -292,7 +292,7 @@ class _NurseResidentDetailScreenState extends ConsumerState<NurseResidentDetailS
           Row(
             children: [
               Expanded(
-                child: TextField(
+                child: TextField( // حقل العنوان
                   controller: _noteTitleController,
                   textAlign: TextAlign.right,
                   decoration: InputDecoration(
@@ -313,7 +313,7 @@ class _NurseResidentDetailScreenState extends ConsumerState<NurseResidentDetailS
           const SizedBox(height: 8),
           Row(
             children: [
-              Container(
+              Container( // زر الإرسال والحفظ
                 decoration: const BoxDecoration(color: Color(0xFF0369A1), shape: BoxShape.circle),
                 child: IconButton(
                   onPressed: () {
@@ -326,7 +326,7 @@ class _NurseResidentDetailScreenState extends ConsumerState<NurseResidentDetailS
                         author: 'أ. منى (مشرف)',
                         timestamp: DateTime.now(),
                       );
-                      ref.read(appRiverpod).addNursingNote(newNote);
+                      ref.read(appRiverpod).addNursingNote(newNote); // حفظ الملاحظة في الحالة
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تمت إضافة الملاحظة بنجاح ✅')));
                       _noteTitleController.clear();
                       _noteContentController.clear();
@@ -337,7 +337,7 @@ class _NurseResidentDetailScreenState extends ConsumerState<NurseResidentDetailS
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: TextField(
+                child: TextField( // حقل المحتوى التفصيلي
                   controller: _noteContentController,
                   maxLines: 2,
                   textAlign: TextAlign.right,
@@ -360,7 +360,7 @@ class _NurseResidentDetailScreenState extends ConsumerState<NurseResidentDetailS
   }
 
 
-  void _showAddItemDialog(String label, Function(String) onAdd) {
+  void _showAddItemDialog(String label, Function(String) onAdd) { // حوار منبثق لإضافة عناصر (حساسية، أمراض)
     final TextEditingController controller = TextEditingController();
     showDialog(
       context: context,
@@ -382,7 +382,7 @@ class _NurseResidentDetailScreenState extends ConsumerState<NurseResidentDetailS
           ElevatedButton(
             onPressed: () {
               if (controller.text.isNotEmpty) {
-                onAdd(controller.text);
+                onAdd(controller.text); // تنفيذ دالة الإضافة
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('تمت إضافة $label بنجاح ✅')));
               }
@@ -395,7 +395,7 @@ class _NurseResidentDetailScreenState extends ConsumerState<NurseResidentDetailS
     );
   }
 
-  void _showAddMedicationDialog() {
+  void _showAddMedicationDialog() { // حوار خاص لإضافة الأدوية
     final TextEditingController medNameController = TextEditingController();
     showDialog(
       context: context,
@@ -420,7 +420,7 @@ class _NurseResidentDetailScreenState extends ConsumerState<NurseResidentDetailS
                 final provider = ref.read(appRiverpod);
                 final info = provider.getMedicalInfo(widget.residentName);
                 final newMeds = List<String>.from(info.medications)..add(medNameController.text);
-                provider.updateMedicalInfo(ResidentMedicalInfo(
+                provider.updateMedicalInfo(ResidentMedicalInfo( // تحديث القائمة في مزود الحالة
                   residentName: info.residentName,
                   medications: newMeds,
                   allergies: info.allergies,
@@ -438,7 +438,7 @@ class _NurseResidentDetailScreenState extends ConsumerState<NurseResidentDetailS
     );
   }
 
-  void _simulatePrint() {
+  void _simulatePrint() { // محاكاة عملية الطباعة وتحويل الملف لـ PDF
     showDialog(
       context: context,
       builder: (context) => const Center(
@@ -457,8 +457,8 @@ class _NurseResidentDetailScreenState extends ConsumerState<NurseResidentDetailS
         ),
       ),
     );
-    Future.delayed(const Duration(seconds: 2), () {
-      Navigator.pop(context);
+    Future.delayed(const Duration(seconds: 2), () { // تأخير زمني لمحاكاة المعالجة
+      Navigator.pop(context); // إغلاق الحوار
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم تحميل الملف الطبي الكامل بنجاح ✅')));
     });
   }

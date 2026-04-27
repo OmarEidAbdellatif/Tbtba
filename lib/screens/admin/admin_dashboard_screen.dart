@@ -1,34 +1,34 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/app_riverpod.dart';
-import 'views/admin_home_view.dart';
-import 'views/residents_management_view.dart';
-import 'views/staff_management_view.dart';
+import 'package:flutter/material.dart'; // مكتبة فلاتر الأساسية للواجهات
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // مكتبة إدارة الحالة
+import '../../providers/app_riverpod.dart'; // استيراد مزود الحالة الرئيسي
+import 'views/admin_home_view.dart'; // واجهة الإحصائيات العامة للمدير
+import 'views/residents_management_view.dart'; // واجهة إدارة المقيمين
+import 'views/staff_management_view.dart'; // واجهة إدارة طاقم العمل
 
-import 'views/admin_reports_view.dart';
-import '../../widgets/taptaba_drawer.dart';
-import '../../widgets/taptaba_scaffold.dart';
+import 'views/admin_reports_view.dart'; // واجهة التقارير الإدارية والمالية
+import '../../widgets/taptaba_drawer.dart'; // القائمة الجانبية الموحدة
+import '../../widgets/taptaba_scaffold.dart'; // الهيكل الموحد للتطبيق
 
-class AdminDashboardScreen extends ConsumerStatefulWidget {
-  const AdminDashboardScreen({super.key});
+class AdminDashboardScreen extends ConsumerStatefulWidget { // شاشة لوحة تحكم المدير العام
+  const AdminDashboardScreen({super.key}); // مشيد الفئة
 
   @override
-  ConsumerState<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
+  ConsumerState<AdminDashboardScreen> createState() => _AdminDashboardScreenState(); // إنشاء حالة المكون
 }
 
-class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> with TickerProviderStateMixin {
-  int _currentTabIndex = 0;
-  late AnimationController _fadeController;
-  late List<Animation<double>> _fadeAnimations;
-  late AnimationController _floatController;
+class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> with TickerProviderStateMixin { // حالة الشاشة مع دعم الأنيميشن
+  int _currentTabIndex = 0; // الفهرس الحالي للتبويب المختار
+  late AnimationController _fadeController; // متحكم أنيميشن التلاشي
+  late List<Animation<double>> _fadeAnimations; // قائمة حركات التلاشي المتسلسلة
+  late AnimationController _floatController; // متحكم أنيميشن الطفو للأيقونات
 
   @override
-  void initState() {
+  void initState() { // دالة التهيئة الأولية عند تشغيل الشاشة
     super.initState();
-    _fadeController = AnimationController(vsync: this, duration: const Duration(milliseconds: 1000));
-    _floatController = AnimationController(vsync: this, duration: const Duration(seconds: 4))..repeat(reverse: true);
+    _fadeController = AnimationController(vsync: this, duration: const Duration(milliseconds: 1000)); // إعداد متحكم التلاشي
+    _floatController = AnimationController(vsync: this, duration: const Duration(seconds: 4))..repeat(reverse: true); // إعداد متحكم الطفو المستمر
 
-    _fadeAnimations = List.generate(10, (index) {
+    _fadeAnimations = List.generate(10, (index) { // إنشاء تسلسل حركات ظهور للعناصر (Staggered Animation)
       return Tween<double>(begin: 0, end: 1).animate(
         CurvedAnimation(
           parent: _fadeController,
@@ -37,42 +37,42 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
       );
     });
 
-    _fadeController.forward();
+    _fadeController.forward(); // بدء تشغيل أنيميشن الظهور
   }
 
   @override
-  void dispose() {
+  void dispose() { // تنظيف متحكمات الأنيميشن عند إغلاق الشاشة
     _fadeController.dispose();
     _floatController.dispose();
     super.dispose();
   }
 
-  void _onTabChanged(int index) {
-    setState(() => _currentTabIndex = index);
-    _fadeController.reset();
-    _fadeController.forward();
+  void _onTabChanged(int index) { // دالة معالجة تغيير التبويب
+    setState(() => _currentTabIndex = index); // تحديث التبويب الحالي
+    _fadeController.reset(); // إعادة تعيين أنيميشن التلاشي
+    _fadeController.forward(); // إعادة تشغيل الأنيميشن للتبويب الجديد
   }
 
   @override
-  Widget build(BuildContext context) {
-    final provider = ref.watch(appRiverpod);
+  Widget build(BuildContext context) { // دالة بناء واجهة المدير الرئيسية
+    final provider = ref.watch(appRiverpod); // مراقبة حالة التطبيق
 
-    return TaptabaScaffold(
-      title: 'طبطبـة',
-      titleColor: const Color(0xFF1e293b),
-      overrideRole: 'مدير',
-      bottomNavigationBar: _buildDirectorNav(),
-      body: Column(
+    return TaptabaScaffold( // استخدام الهيكل الموحد "طبطبة"
+      title: 'طبطبـة', // عنوان التطبيق
+      titleColor: const Color(0xFF1e293b), // لون العنوان (كحلي غامق رسمي)
+      overrideRole: 'مدير', // تحديد دور المدير للألوان الداكنة والاحترافية
+      bottomNavigationBar: _buildDirectorNav(), // بناء شريط التنقل السفلي المخصص للمدير
+      body: Column( // ترتيب المحتوى بشكل رأسي
         children: [
-          _buildDirectorHero(provider),
-          Expanded(
-            child: IndexedStack(
+          _buildDirectorHero(provider), // بناء الجزء العلوي (معلومات المدير)
+          Expanded( // استهلاك المساحة المتبقية لعرض الشاشة المختارة
+            child: IndexedStack( // تكديس الشاشات وعرض واحدة فقط بناءً على الفهرس
               index: _currentTabIndex,
               children: [
-                AdminHomeView(fadeAnimations: _fadeAnimations, floatController: _floatController),
-                ResidentsManagementView(fadeAnimations: _fadeAnimations),
-                StaffManagementView(fadeAnimations: _fadeAnimations),
-                AdminReportsView(fadeAnimations: _fadeAnimations),
+                AdminHomeView(fadeAnimations: _fadeAnimations, floatController: _floatController), // شاشة الإحصائيات
+                ResidentsManagementView(fadeAnimations: _fadeAnimations), // شاشة إدارة المقيمين
+                StaffManagementView(fadeAnimations: _fadeAnimations), // شاشة إدارة الموظفين
+                AdminReportsView(fadeAnimations: _fadeAnimations), // شاشة التقارير
               ],
             ),
           ),
@@ -81,11 +81,11 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
     );
   }
 
-  Widget _buildDirectorHero(AppRiverpod provider) {
+  Widget _buildDirectorHero(AppRiverpod provider) { // بناء منطقة الـ Hero الخاصة بالمدير
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 50, 24, 30),
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
+        gradient: LinearGradient( // تدرج لوني احترافي داكن (كحلي/أسود)
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [Color(0xFF0f172a), Color(0xFF1e293b), Color(0xFF334155)],
@@ -94,16 +94,16 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Spacer(),
+          const Spacer(), // دفع المحتوى لليمين (محاذاة عربية)
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              const Text('لوحة تحكم المدير المسئول', style: TextStyle(color: Color(0xFF94a3b8), fontSize: 12, fontWeight: FontWeight.bold)),
+              const Text('لوحة تحكم المدير المسئول', style: TextStyle(color: Color(0xFF94a3b8), fontSize: 12, fontWeight: FontWeight.bold)), // مسمى الوظيفة
               Row(
                 children: [
-                  const Text('م. إبراهيم الجوهري', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+                  const Text('م. إبراهيم الجوهري', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)), // اسم المدير
                   const SizedBox(width: 12),
-                  _buildAnimatedBadge(),
+                  _buildAnimatedBadge(), // عرض شارة الحماية المتحركة
                 ],
               ),
             ],
@@ -113,7 +113,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
     );
   }
 
-  Widget _buildHeaderAction(IconData icon) {
+  Widget _buildHeaderAction(IconData icon) { // دالة مساعدة لبناء أيقونات سريعة في الهيدر
     return Container(
       width: 44,
       height: 44,
@@ -122,55 +122,55 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
     );
   }
 
-  Widget _buildAnimatedBadge() {
+  Widget _buildAnimatedBadge() { // بناء شارة المدير مع أنيميشن الطفو
     return AnimatedBuilder(
       animation: _floatController,
       builder: (context, child) {
         return Transform.translate(
-          offset: Offset(0, 3 * _floatController.value),
+          offset: Offset(0, 3 * _floatController.value), // حركة رأسية خفيفة
           child: Container(
             padding: const EdgeInsets.all(6),
-            decoration: const BoxDecoration(color: Color(0xFF0ea5e9), shape: BoxShape.circle),
-            child: const Icon(Icons.shield_rounded, color: Colors.white, size: 14),
+            decoration: const BoxDecoration(color: Color(0xFF0ea5e9), shape: BoxShape.circle), // شارة زرقاء دائرية
+            child: const Icon(Icons.shield_rounded, color: Colors.white, size: 14), // أيقونة درع الحماية
           ),
         );
       },
     );
   }
 
-  Widget _buildDirectorNav() {
+  Widget _buildDirectorNav() { // بناء شريط التنقل السفلي المخصص للمدير
     return Container(
       height: 80,
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, -5))],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, -5))], // ظل خفيف للأعلى
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildNavItem(0, Icons.analytics_outlined, 'نظرة عامة'),
-          _buildNavItem(1, Icons.groups_outlined, 'المقيمين'),
-          _buildNavItem(2, Icons.badge_outlined, 'الموظفين'),
-          _buildNavItem(3, Icons.account_balance_outlined, 'التقارير'),
+          _buildNavItem(0, Icons.analytics_outlined, 'نظرة عامة'), // تبويب الإحصائيات
+          _buildNavItem(1, Icons.groups_outlined, 'المقيمين'), // تبويب المقيمين
+          _buildNavItem(2, Icons.badge_outlined, 'الموظفين'), // تبويب الموظفين
+          _buildNavItem(3, Icons.account_balance_outlined, 'التقارير'), // تبويب التقارير المالية
         ],
       ),
     );
   }
 
-  Widget _buildNavItem(int index, IconData icon, String label) {
-    final isAct = _currentTabIndex == index;
+  Widget _buildNavItem(int index, IconData icon, String label) { // قالب عنصر التنقل في الشريط السفلي
+    final isAct = _currentTabIndex == index; // هل هذا التبويب هو النشط حالياً؟
     return GestureDetector(
       onTap: () => _onTabChanged(index),
-      child: AnimatedContainer(
+      child: AnimatedContainer( // حاوية متحركة لتغيير الخلفية بسلاسة
         duration: const Duration(milliseconds: 300),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: isAct ? BoxDecoration(color: const Color(0xFFf0f9ff), borderRadius: BorderRadius.circular(20)) : null,
+        decoration: isAct ? BoxDecoration(color: const Color(0xFFf0f9ff), borderRadius: BorderRadius.circular(20)) : null, // خلفية زرقاء فاتحة للمختار
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: isAct ? const Color(0xFF0369a1) : const Color(0xFF94a3b8), size: 24),
+            Icon(icon, color: isAct ? const Color(0xFF0369a1) : const Color(0xFF94a3b8), size: 24), // تغيير لون الأيقونة
             const SizedBox(height: 4),
-            Text(label, style: TextStyle(color: isAct ? const Color(0xFF0369a1) : const Color(0xFF94a3b8), fontSize: 10, fontWeight: isAct ? FontWeight.bold : FontWeight.normal)),
+            Text(label, style: TextStyle(color: isAct ? const Color(0xFF0369a1) : const Color(0xFF94a3b8), fontSize: 10, fontWeight: isAct ? FontWeight.bold : FontWeight.normal)), // تغيير لون النص
           ],
         ),
       ),

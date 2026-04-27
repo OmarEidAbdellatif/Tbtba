@@ -1,46 +1,46 @@
-import 'dart:math';
+import 'dart:math'; // مكتبة العمليات الرياضية
 
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/app_riverpod.dart';
-import '../../widgets/taptaba_scaffold.dart';
-import 'views/assessment_view.dart';
-import 'views/complaints_view.dart';
-import 'views/kpi_view.dart';
-import 'views/files_view.dart';
-import '../common/notifications_center_screen.dart';
+import 'package:flutter/material.dart'; // مكتبة فلاتر للواجهات
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // مكتبة إدارة الحالة
+import '../../providers/app_riverpod.dart'; // مزود الحالة الرئيسي
+import '../../widgets/taptaba_scaffold.dart'; // الهيكل الموحد للتطبيق
+import 'views/assessment_view.dart'; // واجهة التقييمات الاجتماعية
+import 'views/complaints_view.dart'; // واجهة الشكاوى والاقتراحات
+import 'views/kpi_view.dart'; // واجهة مؤشرات الأداء للأخصائي
+import 'views/files_view.dart'; // واجهة الملفات والمستندات
+import '../common/notifications_center_screen.dart'; // مركز التنبيهات العام
 
-class SocialSpecialistDashboardScreen extends ConsumerStatefulWidget {
-  const SocialSpecialistDashboardScreen({super.key});
+class SocialSpecialistDashboardScreen extends ConsumerStatefulWidget { // شاشة لوحة تحكم الأخصائي الاجتماعي
+  const SocialSpecialistDashboardScreen({super.key}); // مشيد الفئة
 
   @override
   ConsumerState<SocialSpecialistDashboardScreen> createState() =>
-      _SocialSpecialistDashboardScreenState();
+      _SocialSpecialistDashboardScreenState(); // إنشاء حالة المكون
 }
 
 class _SocialSpecialistDashboardScreenState
     extends ConsumerState<SocialSpecialistDashboardScreen>
-    with TickerProviderStateMixin {
-  int _currentTabIndex = 0;
-  late AnimationController _floatController;
-  late AnimationController _shimmerController;
-  late AnimationController _popController;
-  late List<Animation<double>> _fadeAnimations;
+    with TickerProviderStateMixin { // حالة الشاشة مع دعم الأنيميشن
+  int _currentTabIndex = 0; // الفهرس الحالي للتبويبات
+  late AnimationController _floatController; // متحكم أنيميشن الطفو
+  late AnimationController _shimmerController; // متحكم أنيميشن اللمعان
+  late AnimationController _popController; // متحكم أنيميشن الظهور المفاجئ
+  late List<Animation<double>> _fadeAnimations; // قائمة حركات التلاشي للعناصر
 
   @override
-  void initState() {
+  void initState() { // دالة التهيئة الأولية
     super.initState();
-    _floatController = AnimationController(
+    _floatController = AnimationController( // إعداد حركة الطفو المستمرة
         vsync: this, duration: const Duration(milliseconds: 2000))
       ..repeat(reverse: true);
-    _shimmerController = AnimationController(
+    _shimmerController = AnimationController( // إعداد حركة اللمعان للمؤشرات
         vsync: this, duration: const Duration(milliseconds: 1500))
       ..repeat();
-    _popController = AnimationController(
+    _popController = AnimationController( // إعداد حركة دخول العناصر
         vsync: this, duration: const Duration(milliseconds: 800))
       ..forward();
 
-    _fadeAnimations = List.generate(
+    _fadeAnimations = List.generate( // إنشاء تسلسل حركات ظهور للعناصر
       15,
       (index) => Tween<double>(begin: 0, end: 1).animate(
         CurvedAnimation(
@@ -50,13 +50,13 @@ class _SocialSpecialistDashboardScreenState
         ),
       ),
     );
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) { // تحديث دور المستخدم في الحالة بعد البناء
       if (mounted) ref.read(appRiverpod).currentRole = 'specialist';
     });
   }
 
   @override
-  void dispose() {
+  void dispose() { // تنظيف متحكمات الأنيميشن عند إغلاق الشاشة
     _floatController.dispose();
     _shimmerController.dispose();
     _popController.dispose();
@@ -64,30 +64,30 @@ class _SocialSpecialistDashboardScreenState
   }
 
   @override
-  Widget build(BuildContext context) {
-    final provider = ref.watch(appRiverpod);
+  Widget build(BuildContext context) { // بناء واجهة لوحة تحكم الأخصائي
+    final provider = ref.watch(appRiverpod); // مراقبة حالة التطبيق
 
-    void navigateToTab(int index) {
+    void navigateToTab(int index) { // دالة للتنقل بين التبويبات برمجياً
       if (index >= 0 && index < 4) {
         setState(() => _currentTabIndex = index);
       }
     }
 
-    return TaptabaScaffold(
-      title: 'طبطبـة',
+    return TaptabaScaffold( // استخدام الهيكل الموحد المخصص
+      title: 'طبطبـة', // عنوان التطبيق
       titleColor: Colors.white,
-      overrideRole: 'أخصائي',
-      extendBodyBehindAppBar: true,
-      transparentAppBar: true,
-      hideAppBar: true,
-      body: NestedScrollView(
+      overrideRole: 'أخصائي', // تحديد دور الأخصائي للألوان البرتقالية
+      extendBodyBehindAppBar: true, // تمديد المحتوى خلف شريط العنوان
+      transparentAppBar: true, // جعل شريط العنوان شفافاً
+      hideAppBar: true, // إخفاء شريط العنوان الافتراضي لاستخدام المخصص
+      body: NestedScrollView( // هيكل يسمح بالتمرير المتداخل مع شريط عنوان مرن
         headerSliverBuilder: (context, innerBoxIsScrolled) => [
-          SliverAppBar(
-            expandedHeight: 220,
-            pinned: true,
+          SliverAppBar( // شريط عنوان مرن يتمدد وينكمش
+            expandedHeight: 220, // ارتفاع الشريط عند التمدد
+            pinned: true, // تثبيت الشريط عند الوصول للقمة
             automaticallyImplyLeading: false,
-            backgroundColor: const Color(0xFFea580c),
-            leading: IconButton(
+            backgroundColor: const Color(0xFFea580c), // اللون البرتقالي الأساسي للأخصائي
+            leading: IconButton( // زر فتح القائمة الجانبية
               icon: const Icon(Icons.menu_rounded, color: Colors.white),
               onPressed: () => Scaffold.of(context).openDrawer(),
             ),
@@ -95,7 +95,7 @@ class _SocialSpecialistDashboardScreenState
                 style: TextStyle(
                     color: Colors.white, fontWeight: FontWeight.bold)),
             actions: [
-              Stack(
+              Stack( // أيقونة التنبيهات مع نقطة الإشعار
                 alignment: Alignment.center,
                 children: [
                   IconButton(
@@ -110,7 +110,7 @@ class _SocialSpecialistDashboardScreenState
                       );
                     },
                   ),
-                  if (provider.hasNewNotification)
+                  if (provider.hasNewNotification) // إظهار نقطة حمراء إذا وجد إشعار جديد
                     Positioned(
                       top: 12,
                       right: 12,
@@ -125,39 +125,39 @@ class _SocialSpecialistDashboardScreenState
               ),
               const SizedBox(width: 8),
             ],
-            flexibleSpace: FlexibleSpaceBar(
-              background: _buildHero(provider, navigateToTab),
+            flexibleSpace: FlexibleSpaceBar( // الجزء المتمدد من شريط العنوان
+              background: _buildHero(provider, navigateToTab), // بناء محتوى الـ Hero
             ),
           ),
         ],
-        body: Container(
+        body: Container( // جسم الصفحة تحت شريط العنوان
           decoration: const BoxDecoration(
-            color: Color(0xFFf8fafc),
+            color: Color(0xFFf8fafc), // لون خلفية هادئ
             borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(30), topRight: Radius.circular(30)),
+                topLeft: Radius.circular(30), topRight: Radius.circular(30)), // حواف دائرية علوية
           ),
-          child: IndexedStack(
+          child: IndexedStack( // عرض المحتوى بناءً على التبويب المختار
             index: _currentTabIndex,
             children: [
-              SpecialistAssessmentView(
+              SpecialistAssessmentView( // واجهة التقييمات
                   fadeAnimations: _fadeAnimations,
                   floatController: _floatController,
                   shimmerController: _shimmerController,
                   popController: _popController,
                   onNavigate: navigateToTab),
-              SpecialistComplaintsView(
+              SpecialistComplaintsView( // واجهة الشكاوى
                   fadeAnimations: _fadeAnimations,
                   floatController: _floatController,
                   shimmerController: _shimmerController,
                   popController: _popController,
                   onNavigate: navigateToTab),
-              SpecialistKPIView(
+              SpecialistKPIView( // واجهة الأرقام والإحصائيات
                   fadeAnimations: _fadeAnimations,
                   floatController: _floatController,
                   shimmerController: _shimmerController,
                   popController: _popController,
                   onNavigate: navigateToTab),
-              SpecialistFilesView(
+              SpecialistFilesView( // واجهة المستندات
                   fadeAnimations: _fadeAnimations,
                   floatController: _floatController,
                   shimmerController: _shimmerController,
@@ -167,16 +167,16 @@ class _SocialSpecialistDashboardScreenState
           ),
         ),
       ),
-      bottomNavigationBar: _buildBottomNav(),
+      bottomNavigationBar: _buildBottomNav(), // بناء شريط التنقل السفلي المخصص
     );
   }
 
-  Widget _buildHero(AppRiverpod provider, void Function(int) navigateToTab) {
+  Widget _buildHero(AppRiverpod provider, void Function(int) navigateToTab) { // بناء منطقة الـ Hero في الأعلى
     return LayoutBuilder(
       builder: (context, constraints) {
         return Container(
           decoration: const BoxDecoration(
-            gradient: LinearGradient(
+            gradient: LinearGradient( // تدرج برتقالي حيوي
               begin: Alignment.topRight,
               end: Alignment.bottomLeft,
               colors: [Color(0xFFc2410c), Color(0xFFea580c), Color(0xFFf97316)],
@@ -184,7 +184,7 @@ class _SocialSpecialistDashboardScreenState
           ),
           padding: const EdgeInsets.fromLTRB(28, 85, 28, 15),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.end, // محاذاة لليمين (RTL)
             children: [
               FittedBox(
                 fit: BoxFit.scaleDown,
@@ -192,7 +192,7 @@ class _SocialSpecialistDashboardScreenState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    const Row(
+                    const Row( // المسمى الوظيفي
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         Text('🧠', style: TextStyle(fontSize: 24)),
@@ -205,7 +205,7 @@ class _SocialSpecialistDashboardScreenState
                                 letterSpacing: 0.5)),
                       ],
                     ),
-                    Text('أ. نور — رعاية المقيمين',
+                    Text('أ. نور — رعاية المقيمين', // اسم الأخصائي
                         style: TextStyle(
                             fontSize: 14,
                             color: Colors.white.withOpacity(0.9),
@@ -214,20 +214,20 @@ class _SocialSpecialistDashboardScreenState
                 ),
               ),
               const Spacer(),
-              SingleChildScrollView(
+              SingleChildScrollView( // شرائح إحصائية سريعة في الـ Hero
                 scrollDirection: Axis.horizontal,
                 reverse: true,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     _buildHeroChip('شكاوى مفتوحة ٢', const Color(0xFF34d399),
-                        () => navigateToTab(1)),
+                        () => navigateToTab(1)), // شريحة الشكاوى
                     const SizedBox(width: 12),
                     _buildHeroChip('تقييم مطلوب ٧', const Color(0xFFfbbf24),
-                        () => navigateToTab(0)),
+                        () => navigateToTab(0)), // شريحة التقييمات المطلوبة
                     const SizedBox(width: 12),
                     _buildHeroChip('احتياج فوري ١٣', const Color(0xFFf87171),
-                        () => navigateToTab(0)),
+                        () => navigateToTab(0)), // شريحة الاحتياجات العاجلة
                   ],
                 ),
               ),

@@ -1,20 +1,89 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/app_models.dart';
-import 'package:permission_handler/permission_handler.dart';
+import '../models/app_models.dart'; // نماذج البيانات المستخدمة في التطبيق
+import 'package:permission_handler/permission_handler.dart'; // مكتبة إدارة التصاريح
+import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // مكتبة التخزين الآمن
 
 final appRiverpod = ChangeNotifierProvider((ref) => AppRiverpod());
 
 class AppRiverpod extends ChangeNotifier {
-  // Common State
-  int selectedIndex = 0;
-  String currentRole = 'مسن'; // default
-  bool hasSeenOnboarding = false;
-  bool isAuthenticated =
-      false; // Changed from true to false to force login after onboarding
-  double fontScaleFactor = 1.0; // Accessibility
-  bool isHighContrast = false; // Accessibility
-  bool isDarkMode = false; // Night Mode
+  // الحالة العامة للتطبيق
+  int selectedIndex = 0; // الفهرس الحالي للتبويب المختار
+  String currentRole = 'مسن'; // الدور الحالي للمستخدم (ممرض، متطوع، إلخ)
+  bool hasSeenOnboarding = false; // هل شاهد المستخدم شاشات الترحيب؟
+  bool isAuthenticated = false; // هل المستخدم مسجل دخوله؟
+  double fontScaleFactor = 1.0; // حجم الخط المختار لسهولة القراءة
+  bool isHighContrast = false; // تفعيل وضع التباين العالي
+  bool isDarkMode = false; // تفعيل الوضع الليلي
+
+  // إدارة الجلسة (Session Management) - US-02-04
+  String? _sessionToken; // رمز الجلسة الحالي
+  DateTime? _sessionExpiry; // موعد انتهاء الجلسة
+  bool isRefreshingSession = false; // هل يجري حالياً تجديد الجلسة؟
+
+  final _storage = const FlutterSecureStorage(); // إنشاء كائن التخزين الآمن
+
+  AppRiverpod() {
+    _loadAuthState(); // تحميل حالة الدخول عند بدء تشغيل المزود
+  }
+
+  // تحميل بيانات الدخول والجلسة من التخزين الآمن
+  Future<void> _loadAuthState() async {
+    final auth = await _storage.read(key: 'isAuthenticated');
+    final role = await _storage.read(key: 'currentRole');
+    final onboarding = await _storage.read(key: 'hasSeenOnboarding');
+    final expiryStr = await _storage.read(key: 'sessionExpiry');
+    
+    if (auth == 'true') {
+      isAuthenticated = true;
+      if (expiryStr != null) {
+        _sessionExpiry = DateTime.parse(expiryStr);
+      }
+    }
+    if (role != null) currentRole = role;
+    if (onboarding == 'true') hasSeenOnboarding = true;
+    
+    notifyListeners();
+  }
+
+  // محاكاة انتهاء الجلسة لأغراض العرض (Demo)
+  void simulateSessionExpiry() {
+    _sessionExpiry = DateTime.now().subtract(const Duration(minutes: 1));
+    notifyListeners();
+  }
+
+  // التحقق من صحة الجلسة وتجديدها إذا لزم الأمر
+  Future<bool> checkAndRefreshSession() async {
+    if (!isAuthenticated || _sessionExpiry == null) return true;
+
+    // إذا كانت الجلسة منتهية أو ستنتهي خلال دقيقة
+    if (_sessionExpiry!.isBefore(DateTime.now())) {
+      if (isRefreshingSession) return false;
+      
+      isRefreshingSession = true;
+      notifyListeners();
+
+      // محاكاة طلب تجديد الجلسة من السيرفر
+      await Future.delayed(const Duration(seconds: 2));
+      
+      // نجاح التجديد (في ٩٠٪ من الحالات للمحاكاة)
+      bool refreshSuccess = DateTime.now().second % 10 != 0; 
+      
+      if (refreshSuccess) {
+        _sessionExpiry = DateTime.now().add(const Duration(hours: 2));
+        await _storage.write(key: 'sessionExpiry', value: _sessionExpiry!.toIso8601String());
+        isRefreshingSession = false;
+        notifyListeners();
+        return true;
+      } else {
+        // فشل التجديد -> يتطلب تسجيل دخول جديد
+        isRefreshingSession = false;
+        logout(); // تسجيل الخروج التلقائي
+        return false;
+      }
+    }
+    return true;
+  }
 
   void toggleDarkMode() {
     isDarkMode = !isDarkMode;
@@ -215,19 +284,37 @@ class AppRiverpod extends ChangeNotifier {
     notifyListeners();
   }
 
-  void login(String role) {
+  // عملية تسجيل الدخول وحفظ البيانات آمنياً مع ضبط موعد انتهاء الجلسة
+  Future<void> login(String role) async {
     currentRole = role;
     isAuthenticated = true;
-    notifyListeners();
+    _sessionExpiry = DateTime.now().add(const Duration(hours: 2)); // الجلسة صالحة لساعتين
+    
+    // حفظ البيانات في التخزين الآمن (Secure Storage)
+    await _storage.write(key: 'isAuthenticated', value: 'true');
+    await _storage.write(key: 'currentRole', value: role);
+    await _storage.write(key: 'sessionExpiry', value: _sessionExpiry!.toIso8601String());
+    
+    notifyListeners(); // إعلام الواجهات بالتغيير
   }
 
-  void logout() {
+  // عملية تسجيل الخروج ومسح البيانات الآمنة تماماً
+  Future<void> logout() async {
     isAuthenticated = false;
-    notifyListeners();
+    _sessionExpiry = null;
+    
+    // مسح التخزين الآمن تماماً
+    await _storage.delete(key: 'isAuthenticated');
+    await _storage.delete(key: 'currentRole');
+    await _storage.delete(key: 'sessionExpiry');
+    
+    notifyListeners(); // العودة لشاشة تسجيل الدخول تلقائياً
   }
 
-  void completeOnboarding() {
+  // إتمام شاشات الترحيب وحفظ الحالة
+  Future<void> completeOnboarding() async {
     hasSeenOnboarding = true;
+    await _storage.write(key: 'hasSeenOnboarding', value: 'true');
     notifyListeners();
   }
 
