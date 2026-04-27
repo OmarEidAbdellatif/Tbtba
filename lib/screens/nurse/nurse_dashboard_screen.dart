@@ -883,6 +883,17 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
   }
 
   Widget _buildMedScheduleSection() {
+    final provider = ref.watch(appRiverpod);
+    final allMeds = provider.medications;
+    
+    // Group meds by resident
+    final Map<String, List<Medication>> groupedMeds = {};
+    for (var med in allMeds) {
+      final name = med.residentName ?? 'غير محدد';
+      if (!groupedMeds.containsKey(name)) groupedMeds[name] = [];
+      groupedMeds[name]!.add(med);
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Column(
@@ -920,11 +931,27 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
                     ],
                   ),
                 ),
-                _medRow('الحاج محمود', 'ميتفورمين + أسبرين', '✓', '!', '-', '-'),
-                const Divider(height: 1, color: Color(0xFFF0F9FF)),
-                _medRow('الحاجة فاطمة', 'أملوديبين + واتس', '✓', '⏰', '-', '-'),
-                const Divider(height: 1, color: Color(0xFFF0F9FF)),
-                _medRow('الحاج أحمد', 'أتورفاستاتين', '✓', '—', '—', '-'),
+                ...groupedMeds.entries.map((entry) {
+                  final name = entry.key;
+                  final meds = entry.value;
+                  final medNames = meds.map((m) => m.name).join(' + ');
+                  
+                  // Simple logic to map timeOfDay to cells
+                  String d1 = '-', d2 = '-', d3 = '-', d4 = '-';
+                  for (var m in meds) {
+                    final status = m.isTaken ? '✓' : (m.isMissed ? '!' : '⏰');
+                    if (m.timeOfDay == 'الصباح') d1 = status;
+                    if (m.timeOfDay == 'الظهر') d2 = status;
+                    if (m.timeOfDay == 'المساء') d3 = status;
+                  }
+
+                  return Column(
+                    children: [
+                      _medRow(name, medNames, d1, d2, d3, d4),
+                      const Divider(height: 1, color: Color(0xFFF0F9FF)),
+                    ],
+                  );
+                }).toList(),
               ],
             ),
           ),

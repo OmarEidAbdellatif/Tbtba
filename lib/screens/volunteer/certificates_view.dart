@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../providers/app_riverpod.dart';
 import '../../models/app_models.dart';
 
@@ -43,7 +44,7 @@ class _VolunteerCertificatesViewState extends ConsumerState<VolunteerCertificate
               children: [
                 _buildCertificateDocument(activeCert, provider),
                 const SizedBox(height: 20),
-                _buildActionGrid(),
+                _buildActionGrid(activeCert),
                 const SizedBox(height: 24),
                 _buildSectionLabel('شهاداتي الأخرى', const Color(0xFF92400e), 0),
                 const SizedBox(height: 12),
@@ -92,24 +93,40 @@ class _VolunteerCertificatesViewState extends ConsumerState<VolunteerCertificate
       margin: const EdgeInsets.only(right: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: isSelected ? const Color(0xFFd97706) : Colors.transparent, width: 2.5)),
+        border: Border(
+            bottom: BorderSide(
+                color: isSelected ? const Color(0xFFd97706) : Colors.transparent,
+                width: 2.5)),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(icon, style: const TextStyle(fontSize: 14)),
           const SizedBox(width: 5),
-          Text(label,
-              style: TextStyle(
-                color: isSelected ? const Color(0xFF92400e) : const Color(0xFF94a3b8),
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-              )),
+          Flexible(
+            child: Text(label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: isSelected
+                      ? const Color(0xFF92400e)
+                      : const Color(0xFF94a3b8),
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                )),
+          ),
           if (isLocked) ...[
             const SizedBox(width: 6),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(color: const Color(0xFFd97706), borderRadius: BorderRadius.circular(6)),
-              child: const Text('قريباً', style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold)),
+              decoration: BoxDecoration(
+                  color: const Color(0xFFd97706),
+                  borderRadius: BorderRadius.circular(6)),
+              child: const Text('قريباً',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 8,
+                      fontWeight: FontWeight.bold)),
             ),
           ],
         ],
@@ -184,6 +201,27 @@ class _VolunteerCertificatesViewState extends ConsumerState<VolunteerCertificate
                 ],
               ),
             ),
+            Positioned(
+              top: 15,
+              left: 15,
+              child: GestureDetector(
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text('مشاركة الشهادة عبر المنصات الاجتماعية... 📲'),
+                    backgroundColor: Color(0xFFd97706),
+                  ));
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFd97706).withOpacity(0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.share,
+                      color: Color(0xFFd97706), size: 18),
+                ),
+              ),
+            ),
             _buildConfettiOverlay(),
           ],
         ),
@@ -228,13 +266,16 @@ class _VolunteerCertificatesViewState extends ConsumerState<VolunteerCertificate
   Widget _buildCertStats(AppRiverpod provider) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: const BoxDecoration(border: Border(top: BorderSide(color: Color(0xFFfef3c7)))),
+      decoration: const BoxDecoration(
+          border: Border(top: BorderSide(color: Color(0xFFfef3c7)))),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildStatColumn('${provider.volunteerHours}', 'ساعة تطوعية', isShimmer: true),
-          _buildStatColumn('١٢', 'جلسة مكتملة'),
-          _buildStatColumn('٤.٧', 'متوسط التقييم'),
+          Expanded(
+              child: _buildStatColumn('${provider.volunteerHours}', 'ساعة تطوعية',
+                  isShimmer: true)),
+          Expanded(child: _buildStatColumn('١٢', 'جلسة مكتملة')),
+          Expanded(child: _buildStatColumn('٤.٧', 'متوسط التقييم')),
         ],
       ),
     );
@@ -266,12 +307,13 @@ class _VolunteerCertificatesViewState extends ConsumerState<VolunteerCertificate
   Widget _buildSignatures() {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10),
-      decoration: const BoxDecoration(border: Border(top: BorderSide(color: Color(0xFFfef3c7)))),
+      decoration: const BoxDecoration(
+          border: Border(top: BorderSide(color: Color(0xFFfef3c7)))),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildSigBlock('أ. نور الهدى', 'المديرة التنفيذية'),
-          _buildSigBlock('أ. سمر الرشيد', 'منسقة التطوع'),
+          Expanded(child: _buildSigBlock('أ. نور الهدى', 'المديرة التنفيذية')),
+          Expanded(child: _buildSigBlock('أ. سمر الرشيد', 'منسقة التطوع')),
         ],
       ),
     );
@@ -332,7 +374,7 @@ class _VolunteerCertificatesViewState extends ConsumerState<VolunteerCertificate
     );
   }
 
-  Widget _buildActionGrid() {
+  Widget _buildActionGrid(VolunteerCertificate cert) {
     return GridView.count(
       crossAxisCount: 2,
       shrinkWrap: true,
@@ -341,22 +383,69 @@ class _VolunteerCertificatesViewState extends ConsumerState<VolunteerCertificate
       mainAxisSpacing: 10,
       childAspectRatio: 2.2,
       children: [
-        _buildActionBtn('📄 تحميل PDF', [const Color(0xFFd97706), const Color(0xFFf59e0b)]),
-        _buildActionBtn('🔗 نسخ الرابط', [const Color(0xFF059669), const Color(0xFF10b981)]),
-        _buildActionBtn('💬 واتساب', [const Color(0xFF25D366), const Color(0xFF2ecc71)]),
-        _buildActionBtn('📧 بريد إلكتروني', [const Color(0xFF4f46e5), const Color(0xFF6366f1)]),
+        _buildActionBtn('📄 تحميل PDF',
+            [const Color(0xFFd97706), const Color(0xFFf59e0b)], onTap: () {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('جاري تجهيز شهادة ${cert.name} للتحميل... 📁'),
+            backgroundColor: const Color(0xFFd97706),
+          ));
+        }),
+        _buildActionBtn('🔗 نسخ الرابط',
+            [const Color(0xFF059669), const Color(0xFF10b981)], onTap: () {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('تم نسخ رابط التوثيق الرقمي بنجاح! 🔗'),
+            backgroundColor: Color(0xFF059669),
+          ));
+        }),
+        _buildActionBtn(
+            '💬 واتساب', [const Color(0xFF25D366), const Color(0xFF2ecc71)],
+            onTap: () async {
+          final text = 'لقد حصلت على شهادة ${cert.name} من برنامج تابتيبا للتطوع! 🏆';
+          final url = Uri.parse('whatsapp://send?text=$text');
+          if (await canLaunchUrl(url)) {
+            await launchUrl(url);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('تعذر فتح واتساب، يرجى التأكد من تثبيت التطبيق 💬'),
+              backgroundColor: Color(0xFFef4444),
+            ));
+          }
+        }),
+        _buildActionBtn('📧 بريد إلكتروني',
+            [const Color(0xFF4f46e5), const Color(0xFF6366f1)],
+            onTap: () async {
+          final subject = 'شهادة تطوع: ${cert.name}';
+          final body = 'يسعدني مشاركة حصولي على شهادة ${cert.name} من برنامج تابتيبا للتطوع.\nالتاريخ: ${cert.date}';
+          final url = Uri.parse('mailto:?subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(body)}');
+          if (await canLaunchUrl(url)) {
+            await launchUrl(url);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('تعذر فتح تطبيق البريد الإلكتروني 📧'),
+              backgroundColor: Color(0xFFef4444),
+            ));
+          }
+        }),
       ],
     );
   }
 
-  Widget _buildActionBtn(String label, List<Color> colors) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(colors: colors),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Center(
-        child: Text(label, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+  Widget _buildActionBtn(String label, List<Color> colors,
+      {required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: colors),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Center(
+          child: Text(label,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold)),
+        ),
       ),
     );
   }
@@ -383,34 +472,64 @@ class _VolunteerCertificatesViewState extends ConsumerState<VolunteerCertificate
         itemCount: certs.length,
         itemBuilder: (context, index) {
           final cert = certs[index];
-          return Container(
-            width: 90,
-            margin: const EdgeInsets.only(left: 10),
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: cert.isLocked ? const Color(0xFFfde68a).withOpacity(0.5) : const Color(0xFFfde68a), width: cert.isLocked ? 1 : 2),
-            ),
-            child: Opacity(
-              opacity: cert.isLocked ? 0.5 : 1.0,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(cert.icon, style: const TextStyle(fontSize: 22)),
-                  const SizedBox(height: 4),
-                  Text(cert.name, textAlign: TextAlign.center, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFF92400e))),
-                  Text(cert.isLocked ? cert.date : cert.date, style: const TextStyle(fontSize: 8, color: Color(0xFF94a3b8))),
-                  if (cert.isLocked) ...[
-                     const SizedBox(height: 6),
-                     Container(
-                       height: 3,
-                       decoration: BoxDecoration(color: const Color(0xFFfef3c7), borderRadius: BorderRadius.circular(3)),
-                       alignment: Alignment.centerRight,
-                       child: FractionallySizedBox(widthFactor: cert.progress, child: Container(decoration: BoxDecoration(color: const Color(0xFFd97706), borderRadius: BorderRadius.circular(3)))),
-                     ),
+          final isEarned = !cert.isLocked;
+          return GestureDetector(
+            onTap: isEarned
+                ? () {
+                    final earnedIndex =
+                        certs.where((c) => !c.isLocked).toList().indexOf(cert);
+                    if (earnedIndex != -1) {
+                      setState(() => _selectedCertIndex = earnedIndex);
+                    }
+                  }
+                : null,
+            child: Container(
+              width: 90,
+              margin: const EdgeInsets.only(left: 10),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                    color: cert.isLocked
+                        ? const Color(0xFFfde68a).withOpacity(0.5)
+                        : const Color(0xFFfde68a),
+                    width: cert.isLocked ? 1 : 2),
+              ),
+              child: Opacity(
+                opacity: cert.isLocked ? 0.5 : 1.0,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(cert.icon, style: const TextStyle(fontSize: 22)),
+                    const SizedBox(height: 4),
+                    Text(cert.name,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF92400e))),
+                    Text(cert.isLocked ? cert.date : cert.date,
+                        style: const TextStyle(
+                            fontSize: 8, color: Color(0xFF94a3b8))),
+                    if (cert.isLocked) ...[
+                      const SizedBox(height: 6),
+                      Container(
+                        height: 3,
+                        decoration: BoxDecoration(
+                            color: const Color(0xFFfef3c7),
+                            borderRadius: BorderRadius.circular(3)),
+                        alignment: Alignment.centerRight,
+                        child: FractionallySizedBox(
+                            widthFactor: cert.progress,
+                            child: Container(
+                                decoration: BoxDecoration(
+                                    color: const Color(0xFFd97706),
+                                    borderRadius: BorderRadius.circular(3)))),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           );
@@ -449,17 +568,37 @@ class _VolunteerCertificatesViewState extends ConsumerState<VolunteerCertificate
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
-          SizedBox(width: 30, child: Text('$val س', style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold))),
+          Flexible(
+            child: Text('$val س',
+                style: TextStyle(
+                    color: color, fontSize: 10, fontWeight: FontWeight.bold)),
+          ),
+          const SizedBox(width: 8),
           Expanded(
+            flex: 3,
             child: Container(
               height: 6,
-              decoration: BoxDecoration(color: const Color(0xFFfef3c7), borderRadius: BorderRadius.circular(4)),
+              decoration: BoxDecoration(
+                  color: const Color(0xFFfef3c7),
+                  borderRadius: BorderRadius.circular(4)),
               alignment: Alignment.centerRight,
-              child: FractionallySizedBox(widthFactor: width, child: Container(decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(4)))),
+              child: FractionallySizedBox(
+                  widthFactor: width,
+                  child: Container(
+                      decoration: BoxDecoration(
+                          color: color,
+                          borderRadius: BorderRadius.circular(4)))),
             ),
           ),
           const SizedBox(width: 10),
-          SizedBox(width: 55, child: Text(label, style: const TextStyle(fontSize: 10, color: Color(0xFF64748b)), textAlign: TextAlign.right)),
+          Flexible(
+            flex: 2,
+            child: Text(label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 10, color: Color(0xFF64748b)),
+                textAlign: TextAlign.right),
+          ),
         ],
       ),
     );

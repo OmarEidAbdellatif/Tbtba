@@ -141,13 +141,15 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
             onPressed: onUpload,
             icon: Icon(hasFile ? Icons.refresh_rounded : Icons.upload_file_rounded, color: const Color(0xFF059669)),
           ),
-          const Spacer(),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-              Text(hasFile ? fileName : 'لم يتم الرفع بعد', style: TextStyle(fontSize: 11, color: hasFile ? const Color(0xFF059669) : Colors.grey)),
-            ],
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                Text(hasFile ? fileName : 'لم يتم الرفع بعد', style: TextStyle(fontSize: 11, color: hasFile ? const Color(0xFF059669) : Colors.grey)),
+              ],
+            ),
           ),
           const SizedBox(width: 12),
           Icon(hasFile ? Icons.check_circle_rounded : Icons.description_outlined, color: hasFile ? const Color(0xFF10b981) : Colors.grey[400]),

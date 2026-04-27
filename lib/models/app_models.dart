@@ -13,13 +13,15 @@ class User {
 }
 
 class Medication {
-  String id;
-  String name;
-  String dosage;
-  String timeDescription;
-  String timeOfDay; // 'الصباح', 'الظهر', 'المساء'
+  final String id;
+  final String name;
+  final String dosage;
+  final String timeDescription;
+  final String timeOfDay; // 'الصباح', 'الظهر', 'المساء'
   bool isTaken;
-  String dayTag; // 'أمس', 'اليوم', 'غداً', 'الأسبوع'
+  final String dayTag; // 'أمس', 'اليوم', 'غداً', 'الأسبوع'
+  final String? residentName;
+  final DateTime? scheduledTime;
 
   Medication({
     required this.id,
@@ -29,7 +31,14 @@ class Medication {
     required this.timeOfDay,
     this.isTaken = false,
     this.dayTag = 'اليوم',
+    this.residentName,
+    this.scheduledTime,
   });
+
+  bool get isMissed {
+    if (isTaken || scheduledTime == null) return false;
+    return DateTime.now().isAfter(scheduledTime!);
+  }
 }
 
 class FamilyMember {
@@ -288,6 +297,8 @@ class SocialSpecialistResidentScore {
   final String date;
   final Map<String, double> scores; // { 'نفسي': 0.45, ... }
   final bool isUrgent;
+  final String healthStatus; // 'stable', 'monitoring', 'critical'
+  final DateTime lastAssessment;
 
   SocialSpecialistResidentScore({
     required this.id,
@@ -297,6 +308,8 @@ class SocialSpecialistResidentScore {
     required this.date,
     required this.scores,
     this.isUrgent = false,
+    this.healthStatus = 'stable',
+    required this.lastAssessment,
   });
 }
 
@@ -449,6 +462,24 @@ class ShiftHandoff {
     required this.notes,
     required this.timestamp,
     required this.criticalCases,
+  });
+}
+
+class PendingAssessment {
+  final String residentName;
+  final String toolName;
+  final Map<int, int> selections;
+  final Map<int, int> scales;
+  final String notes;
+  final DateTime timestamp;
+
+  PendingAssessment({
+    required this.residentName,
+    required this.toolName,
+    required this.selections,
+    required this.scales,
+    required this.notes,
+    required this.timestamp,
   });
 }
 

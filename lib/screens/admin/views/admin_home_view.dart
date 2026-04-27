@@ -29,8 +29,13 @@ class AdminHomeView extends StatelessWidget {
               const SizedBox(height: 32),
               FadeTransition(opacity: fadeAnimations[2], child: _buildSectionTitle('تنبيهات المركز العاجلة')),
               const SizedBox(height: 16),
-              _buildAlertCard('نقص في مخزون أدوية الضغط (غرفة ١٠٣)', 'منذ ٤٥ دقيقة', Colors.red),
-              _buildAlertCard('أخصائي اجتماعي متغيب اليوم (أ. سمر)', 'منذ ٢ ساعة', Colors.amber),
+              if (provider.filteredNotifications.where((n) => n.targetRole == 'مدير' || n.targetRole == 'all').isEmpty)
+                _buildAlertCard('لا توجد تنبيهات إدارية عاجلة', 'الآن', Colors.green)
+              else
+                ...provider.filteredNotifications
+                    .where((n) => n.targetRole == 'مدير' || n.targetRole == 'all')
+                    .take(3)
+                    .map((n) => _buildAlertCard(n.title, n.time, n.type == 'complaint' ? Colors.red : Colors.blue)),
             ],
           ),
         );

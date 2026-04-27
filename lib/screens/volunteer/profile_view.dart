@@ -36,15 +36,19 @@ class VolunteerProfileView extends ConsumerWidget {
           const SizedBox(height: 24),
           _buildSectionLabel('فرص تطوعية جديدة', const Color(0xFF059669), 1),
           const SizedBox(height: 12),
-          ...provider.volunteerOpportunities.map((o) => _buildOpportunityCard(o)).toList(),
+          ...provider.volunteerOpportunities
+              .map((o) => _buildOpportunityCard(context, o))
+              .toList(),
           const SizedBox(height: 24),
           _buildSectionLabel('حجوزاتي القادمة', const Color(0xFF059669), 2),
           const SizedBox(height: 12),
-          ...provider.volunteerBookings.map((b) => _buildBookingCard(b)).toList(),
+          ...provider.volunteerBookings
+              .map((b) => _buildBookingCard(context, b))
+              .toList(),
           const SizedBox(height: 24),
           _buildSectionLabel('سجل الساعات', const Color(0xFF059669), 3),
           const SizedBox(height: 12),
-          _buildHoursLog(provider),
+          _buildHoursLog(context, provider),
           const SizedBox(height: 24),
           _buildSectionLabel('شهاداتي ومكافآتي 🏅', const Color(0xFFf59e0b), 4),
           const SizedBox(height: 12),
@@ -71,248 +75,336 @@ class VolunteerProfileView extends ConsumerWidget {
           ),
           const SizedBox(width: 8),
           Text(label,
-              style: TextStyle(color: color, fontSize: 14, fontWeight: FontWeight.bold)),
+              style: TextStyle(
+                  color: color, fontSize: 14, fontWeight: FontWeight.bold)),
         ],
       ),
     );
   }
 
-   Widget _buildProfileCard(BuildContext context, WidgetRef ref) {
-     final profile = ref.watch(appRiverpod).volunteerProfile;
-     return FadeTransition(
-       opacity: fadeAnimations[1],
-       child: Container(
-         padding: const EdgeInsets.all(16),
-         decoration: BoxDecoration(
-           color: Colors.white,
-           borderRadius: BorderRadius.circular(20),
-           border: Border.all(color: const Color(0xFFa7f3d0), width: 1.5),
-         ),
-         child: Column(
-           children: [
-             Row(
-               crossAxisAlignment: CrossAxisAlignment.start,
-               children: [
-                 Column(
-                   children: [
-                     IconButton(
-                       onPressed: () => _showEditProfile(context),
-                       icon: const Icon(Icons.edit_note_rounded, color: Color(0xFF059669)),
-                     ),
-                     IconButton(
-                       onPressed: () => _simulateShare(context, profile),
-                       icon: const Icon(Icons.share_rounded, color: Color(0xFF059669), size: 20),
-                     ),
-                   ],
-                 ),
-                 const Spacer(),
-                 Column(
-                   crossAxisAlignment: CrossAxisAlignment.end,
-                   children: [
-                     Row(
-                       children: [
-                         Container(
-                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                           decoration: BoxDecoration(color: const Color(0xFFd1fae5), borderRadius: BorderRadius.circular(8)),
-                           child: const Text('✓ موثّق', style: TextStyle(color: Color(0xFF065f46), fontSize: 10, fontWeight: FontWeight.bold)),
-                         ),
-                         const SizedBox(width: 8),
-                         Text(profile.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                       ],
-                     ),
-                     Text('${profile.location} · مسجل منذ مارس ٢٠٢٤',
-                         style: TextStyle(fontSize: 10, color: Colors.grey[600])),
-                     const SizedBox(height: 8),
-                     Row(
-                       mainAxisAlignment: MainAxisAlignment.end,
-                       children: [
-                         if (profile.instagramUrl != null && profile.instagramUrl!.isNotEmpty)
-                           _socialIcon('📸'),
-                         if (profile.facebookUrl != null && profile.facebookUrl!.isNotEmpty)
-                           _socialIcon('🔵'),
-                         if (profile.linkedinUrl != null && profile.linkedinUrl!.isNotEmpty)
-                           _socialIcon('💼'),
-                       ],
-                     ),
-                   ],
-                 ),
-                 const SizedBox(width: 12),
-                 Container(
-                   width: 58,
-                   height: 58,
-                   decoration: const BoxDecoration(
-                     gradient: LinearGradient(colors: [Color(0xFF059669), Color(0xFF10b981)]),
-                     shape: BoxShape.circle,
-                   ),
-                   child: Center(child: Text(profile.name.substring(0, 2), style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold))),
-                 ),
-               ],
-             ),
-             const SizedBox(height: 12),
-             Text(profile.bio, 
-                 textAlign: TextAlign.right,
-                 style: TextStyle(fontSize: 11, color: Colors.grey[700], height: 1.4)),
-             const SizedBox(height: 16),
-             Wrap(
-               spacing: 8,
-               runSpacing: 8,
-               alignment: WrapAlignment.end,
-               children: [
-                 ...profile.skills.map((s) => _buildSkillTag(s, ref: ref)),
-                 GestureDetector(
-                   onTap: () => _showAddSkill(context, ref),
-                   child: _buildSkillTag('+ إضافة مهارة', isAction: true),
-                 ),
-               ],
-             ),
-             if (profile.cvFileName != null || profile.recommendationFileName != null) ...[
-               const SizedBox(height: 12),
-               Container(
-                 padding: const EdgeInsets.all(8),
-                 decoration: BoxDecoration(color: const Color(0xFFF0FDF4), borderRadius: BorderRadius.circular(10)),
-                 child: Row(
-                   children: [
-                     const Icon(Icons.check_circle, color: Color(0xFF10b981), size: 14),
-                     const SizedBox(width: 8),
-                     Text('تم إرفاق الملفات المهنية بنجاح', style: const TextStyle(fontSize: 9, color: Color(0xFF065f46))),
-                   ],
-                 ),
-               ),
-             ]
-           ],
-         ),
-       ),
-     );
-   }
- 
-   Widget _socialIcon(String emoji) {
-     return Container(
-       margin: const EdgeInsets.only(left: 8),
-       padding: const EdgeInsets.all(4),
-       decoration: BoxDecoration(color: const Color(0xFFF0FDF4), borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFFd1fae5))),
-       child: Text(emoji, style: const TextStyle(fontSize: 12)),
-     );
-   }
- 
-   void _showEditProfile(BuildContext context) {
-     showModalBottomSheet(
-       context: context,
-       isScrollControlled: true,
-       backgroundColor: Colors.transparent,
-       builder: (context) => const EditProfileSheet(),
-     );
-   }
- 
-   void _showAddSkill(BuildContext context, WidgetRef ref) {
-     showDialog(
-       context: context,
-       builder: (context) => AddSkillDialog(
-         onAdd: (s) => ref.read(appRiverpod).addVolunteerSkill(s),
-       ),
-     );
-   }
- 
-   void _simulateShare(BuildContext context, VolunteerProfile profile) {
-     ScaffoldMessenger.of(context).showSnackBar(
-       SnackBar(
-         content: const Text('تم نسخ رابط ملفك الشخصي للمشاركة! 🔗', style: TextStyle(fontFamily: 'Cairo')),
-         backgroundColor: const Color(0xFF0369A1),
-         action: SnackBarAction(label: 'ممتاز', textColor: Colors.white, onPressed: () {}),
-       ),
-     );
-   }
- 
-   Widget _buildSkillTag(String label, {bool isAction = false, WidgetRef? ref}) {
-     return Container(
-       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-       decoration: BoxDecoration(
-         color: isAction ? Colors.white : const Color(0xFFd1fae5),
-         borderRadius: BorderRadius.circular(12),
-         border: Border.all(color: const Color(0xFFa7f3d0)),
-       ),
-       child: Row(
-         mainAxisSize: MainAxisSize.min,
-         children: [
-           if (!isAction && ref != null)
-             GestureDetector(
-               onTap: () => ref.read(appRiverpod).removeVolunteerSkill(label),
-               child: const Padding(
-                 padding: EdgeInsets.only(right: 6),
-                 child: Icon(Icons.close, size: 12, color: Color(0xFF065f46)),
-               ),
-             ),
-           Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF065f46))),
-         ],
-       ),
-     );
-   }
-
-  Widget _buildOpportunityCard(VolunteerOpportunity opp) {
-    return AnimatedBuilder(
-      animation: floatController,
-      builder: (context, child) {
-        return Transform.translate(
-          offset: opp.isNew ? Offset(0, -4 * floatController.value) : Offset.zero,
-          child: child,
-        );
-      },
+  Widget _buildProfileCard(BuildContext context, WidgetRef ref) {
+    final profile = ref.watch(appRiverpod).volunteerProfile;
+    return FadeTransition(
+      opacity: fadeAnimations[1],
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: opp.isNew ? const Color(0xFF10b981) : const Color(0xFFa7f3d0), width: 1.5),
-          boxShadow: opp.isNew ? [BoxShadow(color: const Color(0xFF10b981).withOpacity(0.1), blurRadius: 10, spreadRadius: 2)] : [],
+          border: Border.all(color: const Color(0xFFa7f3d0), width: 1.5),
         ),
-        child: Stack(
+        child: Column(
           children: [
-            if (opp.isNew)
-              Positioned(
-                left: 0,
-                top: 0,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(color: const Color(0xFF10b981), borderRadius: BorderRadius.circular(8)),
-                  child: const Text('جديدة!', style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold)),
-                ),
-              ),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    _buildGlowButton('احجز الآن'),
-                    const SizedBox(height: 8),
-                    Text('⏱ ${opp.hours} ساعة · يضيف لرصيدك', style: TextStyle(color: Colors.grey[600], fontSize: 10)),
+                    IconButton(
+                      onPressed: () => _showEditProfile(context),
+                      icon: const Icon(Icons.edit_note_rounded,
+                          color: Color(0xFF059669)),
+                    ),
+                    IconButton(
+                      onPressed: () => _simulateShare(context, profile),
+                      icon: const Icon(Icons.share_rounded,
+                          color: Color(0xFF059669), size: 20),
+                    ),
                   ],
                 ),
-                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text(opp.title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                      Text(opp.org, style: TextStyle(color: Colors.grey[600], fontSize: 10)),
-                      const SizedBox(height: 8),
-                      // Wrap is simple here
                       Wrap(
-                        spacing: 4,
-                        children: opp.tags.map((t) => _buildBadge(t)).toList(),
+                        alignment: WrapAlignment.end,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                                color: const Color(0xFFd1fae5),
+                                borderRadius: BorderRadius.circular(8)),
+                            child: const Text('✓ موثّق',
+                                style: TextStyle(
+                                    color: Color(0xFF065f46),
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold)),
+                          ),
+                          Text(profile.name,
+                              textAlign: TextAlign.right,
+                              style: const TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                      Text('${profile.location} · مسجل منذ مارس ٢٠٢٤',
+                          textAlign: TextAlign.right,
+                          style:
+                              TextStyle(fontSize: 10, color: Colors.grey[600])),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        alignment: WrapAlignment.end,
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: [
+                          if (profile.instagramUrl != null &&
+                              profile.instagramUrl!.isNotEmpty)
+                            _socialIcon('📸'),
+                          if (profile.facebookUrl != null &&
+                              profile.facebookUrl!.isNotEmpty)
+                            _socialIcon('🔵'),
+                          if (profile.linkedinUrl != null &&
+                              profile.linkedinUrl!.isNotEmpty)
+                            _socialIcon('💼'),
+                        ],
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(width: 12),
                 Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(color: const Color(0xFFf0fdf4), borderRadius: BorderRadius.circular(12)),
-                  child: Center(child: Text(opp.icon, style: const TextStyle(fontSize: 20))),
+                  width: 58,
+                  height: 58,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                        colors: [Color(0xFF059669), Color(0xFF10b981)]),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                      child: Text(
+                          profile.name
+                              .substring(0, min(2, profile.name.length)),
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold))),
                 ),
               ],
             ),
+            const SizedBox(height: 12),
+            Text(profile.bio,
+                textAlign: TextAlign.right,
+                style: TextStyle(
+                    fontSize: 11, color: Colors.grey[700], height: 1.4)),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              alignment: WrapAlignment.end,
+              children: [
+                ...profile.skills.map((s) => _buildSkillTag(s, ref: ref)),
+                GestureDetector(
+                  onTap: () => _showAddSkill(context, ref),
+                  child: _buildSkillTag('+ إضافة مهارة', isAction: true),
+                ),
+              ],
+            ),
+            if (profile.cvFileName != null ||
+                profile.recommendationFileName != null) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                    color: const Color(0xFFF0FDF4),
+                    borderRadius: BorderRadius.circular(10)),
+                child: Row(
+                  children: [
+                    const Icon(Icons.check_circle,
+                        color: Color(0xFF10b981), size: 14),
+                    const SizedBox(width: 8),
+                    Text('تم إرفاق الملفات المهنية بنجاح',
+                        style: const TextStyle(
+                            fontSize: 9, color: Color(0xFF065f46))),
+                  ],
+                ),
+              ),
+            ]
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _socialIcon(String emoji) {
+    return Container(
+      margin: const EdgeInsets.only(left: 8),
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+          color: const Color(0xFFF0FDF4),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFFd1fae5))),
+      child: Text(emoji, style: const TextStyle(fontSize: 12)),
+    );
+  }
+
+  void _showEditProfile(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const EditProfileSheet(),
+    );
+  }
+
+  void _showAddSkill(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (context) => AddSkillDialog(
+        onAdd: (s) => ref.read(appRiverpod).addVolunteerSkill(s),
+      ),
+    );
+  }
+
+  void _simulateShare(BuildContext context, VolunteerProfile profile) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('تم نسخ رابط ملفك الشخصي للمشاركة! 🔗',
+            style: TextStyle(fontFamily: 'Cairo')),
+        backgroundColor: const Color(0xFF0369A1),
+        action: SnackBarAction(
+            label: 'ممتاز', textColor: Colors.white, onPressed: () {}),
+      ),
+    );
+  }
+
+  Widget _buildSkillTag(String label, {bool isAction = false, WidgetRef? ref}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: isAction ? Colors.white : const Color(0xFFd1fae5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFa7f3d0)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (!isAction && ref != null)
+            GestureDetector(
+              onTap: () => ref.read(appRiverpod).removeVolunteerSkill(label),
+              child: const Padding(
+                padding: EdgeInsets.only(right: 6),
+                child: Icon(Icons.close, size: 12, color: Color(0xFF065f46)),
+              ),
+            ),
+          Text(label,
+              style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF065f46))),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOpportunityCard(BuildContext context, VolunteerOpportunity opp) {
+    return AnimatedBuilder(
+      animation: floatController,
+      builder: (context, child) {
+        return Transform.translate(
+          offset:
+              opp.isNew ? Offset(0, -4 * floatController.value) : Offset.zero,
+          child: child,
+        );
+      },
+      child: GestureDetector(
+        onTap: () => _showOpportunityDetails(context, opp),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+                color: opp.isNew
+                    ? const Color(0xFF10b981)
+                    : const Color(0xFFa7f3d0),
+                width: 1.5),
+            boxShadow: opp.isNew
+                ? [
+                    BoxShadow(
+                        color: const Color(0xFF10b981).withOpacity(0.1),
+                        blurRadius: 10,
+                        spreadRadius: 2)
+                  ]
+                : [],
+          ),
+          child: Stack(
+            children: [
+              if (opp.isNew)
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                        color: const Color(0xFF10b981),
+                        borderRadius: BorderRadius.circular(8)),
+                    child: const Text('جديدة!',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              Row(
+                children: [
+                  Flexible(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        _buildGlowButton('احجز الآن'),
+                        const SizedBox(height: 8),
+                        Text('⏱ ${opp.hours} ساعة · يضيف لرصيدك',
+                            textAlign: TextAlign.right,
+                            style: TextStyle(
+                                color: Colors.grey[600], fontSize: 10)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(opp.title,
+                            textAlign: TextAlign.right,
+                            style: const TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.bold)),
+                        Text(opp.org,
+                            textAlign: TextAlign.right,
+                            style: TextStyle(
+                                color: Colors.grey[600], fontSize: 10)),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          alignment: WrapAlignment.end,
+                          spacing: 4,
+                          runSpacing: 4,
+                          children:
+                              opp.tags.map((t) => _buildBadge(t)).toList(),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                        color: const Color(0xFFf0fdf4),
+                        borderRadius: BorderRadius.circular(12)),
+                    child: Center(
+                        child: Text(opp.icon,
+                            style: const TextStyle(fontSize: 20))),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -338,7 +430,11 @@ class VolunteerProfileView extends ConsumerWidget {
               ),
             ],
           ),
-          child: Text(label, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+          child: Text(label,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold)),
         );
       },
     );
@@ -347,102 +443,161 @@ class VolunteerProfileView extends ConsumerWidget {
   Widget _buildBadge(String label) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(color: const Color(0xFFd1fae5), borderRadius: BorderRadius.circular(8)),
-      child: Text(label, style: const TextStyle(color: Color(0xFF065f46), fontSize: 9, fontWeight: FontWeight.bold)),
+      decoration: BoxDecoration(
+          color: const Color(0xFFd1fae5),
+          borderRadius: BorderRadius.circular(8)),
+      child: Text(label,
+          style: const TextStyle(
+              color: Color(0xFF065f46),
+              fontSize: 9,
+              fontWeight: FontWeight.bold)),
     );
   }
 
-  Widget _buildBookingCard(VolunteerBooking booking) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFa7f3d0), width: 1.5),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(color: const Color(0xFFd1fae5), borderRadius: BorderRadius.circular(8)),
-            child: const Text('✓ مؤكد', style: TextStyle(color: Color(0xFF065f46), fontSize: 10, fontWeight: FontWeight.bold)),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(booking.title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                Text(booking.timeInfo, style: TextStyle(color: Colors.grey[600], fontSize: 10)),
-              ],
+  Widget _buildBookingCard(BuildContext context, VolunteerBooking booking) {
+    return GestureDetector(
+      onTap: () => _showBookingDetails(context, booking),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFa7f3d0), width: 1.5),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                  color: const Color(0xFFd1fae5),
+                  borderRadius: BorderRadius.circular(8)),
+              child: const Text('✓ مؤكد',
+                  style: TextStyle(
+                      color: Color(0xFF065f46),
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold)),
             ),
-          ),
-          const SizedBox(width: 12),
-          Container(
-            width: 44,
-            height: 48,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [Color(0xFF059669), Color(0xFF10b981)]),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('${booking.day}', style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                Text(booking.month, style: const TextStyle(color: Colors.white, fontSize: 8)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHoursLog(AppRiverpod provider) {
-    final progress = provider.volunteerHours / provider.volunteerGoal;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [Color(0xFF065f46), Color(0xFF059669)]),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('${provider.volunteerGoal}', style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                  Text('الهدف', style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 9)),
-                ],
-              ),
-              Column(
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('⏱ ${provider.volunteerHours}', style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
-                  Text('ساعة تطوعية هذا الشهر', style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 11)),
+                  Text(booking.title,
+                      textAlign: TextAlign.right,
+                      style: const TextStyle(
+                          fontSize: 12, fontWeight: FontWeight.bold)),
+                  Text(booking.timeInfo,
+                      textAlign: TextAlign.right,
+                      style: TextStyle(color: Colors.grey[600], fontSize: 10)),
                 ],
               ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          _buildShimmerProgressBar(progress),
-          const SizedBox(height: 8),
-          Text('${(progress * 100).toInt()}% من هدفك — باقي ${provider.volunteerGoal - provider.volunteerHours} ساعة للشهادة الذهبية 🏆',
-              style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 10)),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 6,
-            children: [
-              _buildLogChip('قراءة: ١٥ س'),
-              _buildLogChip('دعم نفسي: ١٢ س'),
-              _buildLogChip('ترفيه: ١١ س'),
-            ],
-          ),
-        ],
+            ),
+            const SizedBox(width: 12),
+            Container(
+              width: 44,
+              height: 48,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                    colors: [Color(0xFF059669), Color(0xFF10b981)]),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('${booking.day}',
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold)),
+                  Text(booking.month,
+                      style: const TextStyle(color: Colors.white, fontSize: 8)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHoursLog(BuildContext context, AppRiverpod provider) {
+    final progress = provider.volunteerHours / provider.volunteerGoal;
+    return GestureDetector(
+      onTap: () => _showHoursLogDetails(context, provider),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+              colors: [Color(0xFF065f46), Color(0xFF059669)]),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+                color: const Color(0xFF065f46).withOpacity(0.2),
+                blurRadius: 12,
+                offset: const Offset(0, 6))
+          ],
+        ),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('${provider.volunteerGoal}',
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold)),
+                      Text('الهدف',
+                          style: TextStyle(
+                              color: Colors.white.withOpacity(0.7),
+                              fontSize: 9)),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text('⏱ ${provider.volunteerHours}',
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold)),
+                      Text('ساعة تطوعية هذا الشهر',
+                          textAlign: TextAlign.right,
+                          style: TextStyle(
+                              color: Colors.white.withOpacity(0.8),
+                              fontSize: 11)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _buildShimmerProgressBar(progress),
+            const SizedBox(height: 8),
+            Text(
+                '${(progress * 100).toInt()}% من هدفك — باقي ${provider.volunteerGoal - provider.volunteerHours} ساعة للشهادة الذهبية 🏆',
+                style: TextStyle(
+                    color: Colors.white.withOpacity(0.9), fontSize: 10)),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                _buildLogChip('قراءة: ١٥ س'),
+                _buildLogChip('دعم نفسي: ١٢ س'),
+                _buildLogChip('ترفيه: ١١ س'),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -454,14 +609,20 @@ class VolunteerProfileView extends ConsumerWidget {
         return Container(
           height: 10,
           width: double.infinity,
-          decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(10)),
+          decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(10)),
           child: LayoutBuilder(builder: (context, constraints) {
             return Container(
               height: 10,
               width: constraints.maxWidth * progress,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: const [Color(0xFF10b981), Color(0xFF6ee7b7), Color(0xFF10b981)],
+                  colors: const [
+                    Color(0xFF10b981),
+                    Color(0xFF6ee7b7),
+                    Color(0xFF10b981)
+                  ],
                   stops: [
                     shimmerController.value - 0.4,
                     shimmerController.value,
@@ -480,8 +641,12 @@ class VolunteerProfileView extends ConsumerWidget {
   Widget _buildLogChip(String label) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(10)),
-      child: Text(label, style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold)),
+      decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(10)),
+      child: Text(label,
+          style: const TextStyle(
+              color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold)),
     );
   }
 
@@ -500,7 +665,9 @@ class VolunteerProfileView extends ConsumerWidget {
               margin: const EdgeInsets.only(right: 10),
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: cert.isLocked ? Colors.transparent : const Color(0xFFf0fdf4),
+                color: cert.isLocked
+                    ? Colors.transparent
+                    : const Color(0xFFf0fdf4),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: const Color(0xFFa7f3d0),
@@ -514,9 +681,15 @@ class VolunteerProfileView extends ConsumerWidget {
                   children: [
                     Text(cert.icon, style: const TextStyle(fontSize: 24)),
                     const SizedBox(height: 4),
-                    Text(cert.name, textAlign: TextAlign.center, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFF065f46))),
+                    Text(cert.name,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF065f46))),
                     Text(cert.isLocked ? cert.progressInfo : cert.date,
-                        style: const TextStyle(fontSize: 8, color: Color(0xFF94a3b8))),
+                        style: const TextStyle(
+                            fontSize: 8, color: Color(0xFF94a3b8))),
                   ],
                 ),
               ),
@@ -539,7 +712,10 @@ class VolunteerProfileView extends ConsumerWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: const Color(0xFFfffbeb), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFfde68a))),
+            decoration: BoxDecoration(
+                color: const Color(0xFFfffbeb),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFfde68a))),
             child: Row(
               children: [
                 const Text('🙏', style: TextStyle(fontSize: 18)),
@@ -548,12 +724,22 @@ class VolunteerProfileView extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      const Text('قيّم جلسة القراءة — الحاج محمود', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                      const Text('جلسة الأحد ٦ أبريل · انتظر تقييمك', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                      const Text('قيّم جلسة القراءة — الحاج محمود',
+                          style: TextStyle(
+                              fontSize: 12, fontWeight: FontWeight.bold)),
+                      const Text('جلسة الأحد ٦ أبريل · انتظر تقييمك',
+                          style: TextStyle(fontSize: 10, color: Colors.grey)),
                       const SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
-                        children: List.generate(5, (index) => Text(index < 4 ? '★' : '☆', style: TextStyle(color: index < 4 ? Colors.amber : Colors.grey[300], fontSize: 16))),
+                        children: List.generate(
+                            5,
+                            (index) => Text(index < 4 ? '★' : '☆',
+                                style: TextStyle(
+                                    color: index < 4
+                                        ? Colors.amber
+                                        : Colors.grey[300],
+                                    fontSize: 16))),
                       ),
                     ],
                   ),
@@ -565,9 +751,17 @@ class VolunteerProfileView extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              const Text('تقييمات المقيمين لي', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFFfbbf24))),
+              const Text('تقييمات المقيمين لي',
+                  style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFFfbbf24))),
               const SizedBox(width: 8),
-              Container(width: 7, height: 7, decoration: const BoxDecoration(color: Color(0xFFfbbf24), shape: BoxShape.circle)),
+              Container(
+                  width: 7,
+                  height: 7,
+                  decoration: const BoxDecoration(
+                      color: Color(0xFFfbbf24), shape: BoxShape.circle)),
             ],
           ),
           const SizedBox(height: 8),
@@ -584,13 +778,605 @@ class VolunteerProfileView extends ConsumerWidget {
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(
         children: [
-          Text('$rating', style: TextStyle(color: rating >= 5 ? const Color(0xFF10b981) : const Color(0xFFf59e0b), fontSize: 10, fontWeight: FontWeight.bold)),
+          Text('$rating',
+              style: TextStyle(
+                  color: rating >= 5
+                      ? const Color(0xFF10b981)
+                      : const Color(0xFFf59e0b),
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold)),
           const Spacer(),
           Row(
-            children: List.generate(5, (i) => Text(i < rating ? '★' : '☆', style: TextStyle(color: i < rating ? Colors.amber : Colors.grey[300], fontSize: 12))),
+            children: List.generate(
+                5,
+                (i) => Text(i < rating ? '★' : '☆',
+                    style: TextStyle(
+                        color: i < rating ? Colors.amber : Colors.grey[300],
+                        fontSize: 12))),
           ),
           const SizedBox(width: 12),
-          SizedBox(width: 60, child: Text(label, textAlign: TextAlign.right, style: const TextStyle(fontSize: 10, color: Colors.grey))),
+          SizedBox(
+              width: 60,
+              child: Text(label,
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(fontSize: 10, color: Colors.grey))),
+        ],
+      ),
+    );
+  }
+
+  void _showOpportunityDetails(BuildContext context, VolunteerOpportunity opp) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.75,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2)),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                              color: const Color(0xFFf0fdf4),
+                              borderRadius: BorderRadius.circular(12)),
+                          child: Text(opp.icon,
+                              style: const TextStyle(fontSize: 24)),
+                        ),
+                        if (opp.isNew)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                                color: const Color(0xFF10b981),
+                                borderRadius: BorderRadius.circular(8)),
+                            child: const Text('فرصة جديدة',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold)),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Text(opp.title,
+                        textAlign: TextAlign.right,
+                        style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF065f46))),
+                    Text(opp.org,
+                        textAlign: TextAlign.right,
+                        style: const TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF059669),
+                            fontWeight: FontWeight.w500)),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        _buildDetailChip(
+                            '${opp.hours} ساعة', Icons.timer_outlined),
+                        const SizedBox(width: 12),
+                        _buildDetailChip(
+                            '${opp.points} نقطة', Icons.stars_rounded),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        _buildDetailChip(opp.dateInfo, Icons.calendar_today),
+                        const SizedBox(width: 12),
+                        _buildDetailChip(
+                            'المقاعد: ${opp.filledSlots}/${opp.totalSlots}',
+                            Icons.people_outline),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+                    const Text('وصف الفرصة التطوعية',
+                        textAlign: TextAlign.right,
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1e293b))),
+                    const SizedBox(height: 12),
+                    Text(
+                        opp.description.isEmpty
+                            ? 'انضم إلينا في هذه الفرصة التطوعية المميزة للمساهمة في دعم ورعاية كبار السن. مهاراتك يمكن أن تصنع فرقاً كبيراً في حياتهم اليومية.'
+                            : opp.description,
+                        textAlign: TextAlign.right,
+                        style: const TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF475569),
+                            height: 1.6)),
+                    const SizedBox(height: 24),
+                    const Text('المهارات المطلوبة',
+                        textAlign: TextAlign.right,
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1e293b))),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      alignment: WrapAlignment.end,
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: opp.tags.map((t) => _buildBadge(t)).toList(),
+                    ),
+                    const SizedBox(height: 40),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                          'تم حجز الفرصة بنجاح! سيتم التواصل معك قريباً 🌿'),
+                      backgroundColor: Color(0xFF059669),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF059669),
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 56),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
+                  elevation: 0,
+                ),
+                child: const Text('تأكيد الحجز الآن',
+                    style:
+                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailChip(String label, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+          color: const Color(0xFFf8fafc),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFe2e8f0))),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label,
+              style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF475569))),
+          const SizedBox(width: 8),
+          Icon(icon, size: 16, color: const Color(0xFF059669)),
+        ],
+      ),
+    );
+  }
+
+  void _showBookingDetails(BuildContext context, VolunteerBooking booking) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2)),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                              color: const Color(0xFFf0fdf4),
+                              borderRadius: BorderRadius.circular(12)),
+                          child:
+                              const Text('📋', style: TextStyle(fontSize: 24)),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                              color: const Color(0xFFd1fae5),
+                              borderRadius: BorderRadius.circular(8)),
+                          child: const Text('حجز مؤكد',
+                              style: TextStyle(
+                                  color: Color(0xFF065f46),
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Text(booking.title,
+                        textAlign: TextAlign.right,
+                        style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF065f46))),
+                    const SizedBox(height: 8),
+                    Text('تم تأكيد موعدك بنجاح. نحن في انتظارك!',
+                        textAlign: TextAlign.right,
+                        style:
+                            TextStyle(fontSize: 14, color: Colors.grey[600])),
+                    const SizedBox(height: 32),
+                    _buildBookingInfoRow(
+                        'الموعد', booking.timeInfo, Icons.access_time_rounded),
+                    _buildBookingInfoRow(
+                        'التاريخ',
+                        '${booking.day} ${booking.month} ٢٠٢٤',
+                        Icons.calendar_today_rounded),
+                    _buildBookingInfoRow(
+                        'المكان',
+                        booking.location.isEmpty
+                            ? 'دار الرعاية الرئيسي'
+                            : booking.location,
+                        Icons.location_on_outlined),
+                    _buildBookingInfoRow('النقاط المتوقعة',
+                        '${booking.points} نقطة', Icons.stars_rounded),
+                    const SizedBox(height: 32),
+                    const Text('تعليمات هامة',
+                        textAlign: TextAlign.right,
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1e293b))),
+                    const SizedBox(height: 12),
+                    const Text(
+                        '• يرجى الحضور قبل الموعد بـ ١٥ دقيقة.\n• تأكد من إبراز الكود الخاص بك عند الوصول.\n• في حال الاعتذار، يرجى التواصل قبل ٢٤ ساعة.',
+                        textAlign: TextAlign.right,
+                        style: TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFF475569),
+                            height: 1.8)),
+                    const SizedBox(height: 40),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
+                        side: const BorderSide(color: Color(0xFFe2e8f0)),
+                      ),
+                      child: const Text('إغلاق',
+                          style: TextStyle(
+                              color: Color(0xFF475569),
+                              fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content:
+                                    Text('تم إضافة الموعد لتقويمك الشخصي 📅')));
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF059669),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
+                        elevation: 0,
+                      ),
+                      child: const Text('إضافة للتقويم',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showHoursLogDetails(BuildContext context, AppRiverpod provider) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.8,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2)),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                              color: const Color(0xFFf0fdf4),
+                              borderRadius: BorderRadius.circular(12)),
+                          child:
+                              const Text('⏱', style: TextStyle(fontSize: 24)),
+                        ),
+                        const Text('تفاصيل سجل الساعات',
+                            style: TextStyle(
+                                color: Color(0xFF065f46),
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    _buildMonthlyGoalCard(provider),
+                    const SizedBox(height: 32),
+                    const Text('توزيع الساعات حسب الفئة',
+                        textAlign: TextAlign.right,
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1e293b))),
+                    const SizedBox(height: 16),
+                    _buildCategoryHourRow(
+                        'قراءة ومرافقة', 15, const Color(0xFF10b981)),
+                    _buildCategoryHourRow(
+                        'دعم نفسي واجتماعي', 12, const Color(0xFF6366f1)),
+                    _buildCategoryHourRow(
+                        'ترفيه وألعاب', 11, const Color(0xFFf59e0b)),
+                    _buildCategoryHourRow(
+                        'مساعدة طبية بسيطة', 8, const Color(0xFFef4444)),
+                    const SizedBox(height: 32),
+                    const Text('سجل النشاطات الأخيرة',
+                        textAlign: TextAlign.right,
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1e293b))),
+                    const SizedBox(height: 12),
+                    _buildHistoryLogItem('جلسة قراءة - الحاج محمود',
+                        'الأحد، ٢٠ أبريل', '٣ ساعات'),
+                    _buildHistoryLogItem('مرافقة في الحديقة - الحاجة زينب',
+                        'الخميس، ١٧ أبريل', '٢ ساعة'),
+                    _buildHistoryLogItem('أمسية ترفيهية - قسم (أ)',
+                        'الثلاثاء، ١٥ أبريل', '٤ ساعات'),
+                    _buildHistoryLogItem(
+                        'دعم نفسي - الحاج عمر', 'السبت، ١٢ أبريل', '١.٥ ساعة'),
+                    const SizedBox(height: 40),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF065f46),
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 56),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
+                  elevation: 0,
+                ),
+                child: const Text('فهمت',
+                    style:
+                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMonthlyGoalCard(AppRiverpod provider) {
+    final progress = provider.volunteerHours / provider.volunteerGoal;
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF065f46),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('${provider.volunteerGoal} س',
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold)),
+                  Text('الهدف الشهري',
+                      style: TextStyle(
+                          color: Colors.white.withOpacity(0.6), fontSize: 10)),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text('${provider.volunteerHours} س',
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold)),
+                  Text('تم إنجازها',
+                      style: TextStyle(
+                          color: Colors.white.withOpacity(0.8), fontSize: 12)),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          _buildShimmerProgressBar(progress),
+          const SizedBox(height: 12),
+          Text(
+              'باقي لك ${provider.volunteerGoal - provider.volunteerHours} ساعة للحصول على شهادة التقدير لهذا الشهر 🌟',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  color: Colors.white.withOpacity(0.9), fontSize: 11)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCategoryHourRow(String label, int hours, Color color) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Text('$hours س',
+                  style: TextStyle(
+                      color: color, fontWeight: FontWeight.bold, fontSize: 13)),
+              const Spacer(),
+              Text(label,
+                  style:
+                      const TextStyle(fontSize: 12, color: Color(0xFF475569))),
+            ],
+          ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: hours / 20,
+              backgroundColor: color.withOpacity(0.1),
+              valueColor: AlwaysStoppedAnimation<Color>(color),
+              minHeight: 6,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHistoryLogItem(String title, String date, String hours) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: Color(0xFFf1f5f9)))),
+      child: Row(
+        children: [
+          Text(hours,
+              style: const TextStyle(
+                  color: Color(0xFF059669),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13)),
+          const Spacer(),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(title,
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1e293b))),
+              Text(date,
+                  textAlign: TextAlign.right,
+                  style:
+                      const TextStyle(fontSize: 10, color: Color(0xFF64748b))),
+            ],
+          ),
+          const SizedBox(width: 12),
+          const Icon(Icons.check_circle_outline,
+              size: 16, color: Color(0xFF10b981)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBookingInfoRow(String title, String val, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        children: [
+          Text(val,
+              style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1e293b))),
+          const Spacer(),
+          Text(title, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+          const SizedBox(width: 12),
+          Icon(icon, size: 20, color: const Color(0xFF059669)),
         ],
       ),
     );

@@ -11,6 +11,9 @@ class TaptabaScaffold extends StatefulWidget {
   final Widget? bottomNavigationBar;
   final Widget? floatingActionButton;
   final String? overrideRole;
+  final bool extendBodyBehindAppBar;
+  final bool transparentAppBar;
+  final bool hideAppBar;
 
   const TaptabaScaffold({
     super.key,
@@ -22,6 +25,9 @@ class TaptabaScaffold extends StatefulWidget {
     this.bottomNavigationBar,
     this.floatingActionButton,
     this.overrideRole,
+    this.extendBodyBehindAppBar = false,
+    this.transparentAppBar = false,
+    this.hideAppBar = false,
   });
 
   @override
@@ -62,11 +68,11 @@ class _TaptabaScaffoldState extends State<TaptabaScaffold>
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
-      extendBodyBehindAppBar: false,
+      extendBodyBehindAppBar: widget.extendBodyBehindAppBar,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       drawer: TaptabaDrawer(overrideRole: widget.overrideRole),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
+      appBar: widget.hideAppBar ? null : AppBar(
+        backgroundColor: widget.transparentAppBar ? Colors.transparent : Colors.white,
         elevation: 0,
         centerTitle: true,
         iconTheme: const IconThemeData(color: Color(0xFF64748b)),
