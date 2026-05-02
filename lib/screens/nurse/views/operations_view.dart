@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../providers/app_riverpod.dart';
 import '../../../models/app_models.dart';
+import '../nurse_medications_screen.dart';
 
 class OperationsView extends ConsumerStatefulWidget {
   const OperationsView({super.key});
@@ -16,7 +17,7 @@ class _OperationsViewState extends ConsumerState<OperationsView> with TickerProv
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: 6, vsync: this);
   }
 
   @override
@@ -37,6 +38,7 @@ class _OperationsViewState extends ConsumerState<OperationsView> with TickerProv
           child: TabBarView(
             controller: _tabController,
             children: [
+              const NurseMedicationsScreen(),
               _buildCareChecklist(provider),
               _buildInventory(provider),
               _buildDoctorLog(provider),
@@ -65,7 +67,7 @@ class _OperationsViewState extends ConsumerState<OperationsView> with TickerProv
         children: [
           const Text('إدارة العمليات والمنشأة 🏢', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
-          Text('تنظيم المهام اليومية، المخزون، والخدمات الفندقية', style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 11)),
+          Text('تنظيم المهام اليومية، الأدوية، والمخزون', style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 11)),
         ],
       ),
     );
@@ -84,6 +86,7 @@ class _OperationsViewState extends ConsumerState<OperationsView> with TickerProv
         indicatorWeight: 3,
         labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, fontFamily: 'Cairo'),
         tabs: const [
+          Tab(text: 'جدول الأدوية'),
           Tab(text: 'قائمة المهام'),
           Tab(text: 'المخزون'),
           Tab(text: 'زيارات الأطباء'),

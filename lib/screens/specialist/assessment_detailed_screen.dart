@@ -5,9 +5,10 @@ import '../../providers/app_riverpod.dart'; // مزود الحالة العام
 import '../../models/app_models.dart'; // نماذج البيانات
 import '../../services/pdf_service.dart'; // خدمة إنشاء ملفات PDF
 
+// شاشة التقييم الاجتماعي التفصيلي للمقيم - تسمح للأخصائي بإجراء التقييمات وحفظ النتائج
 class AssessmentDetailedScreen extends ConsumerStatefulWidget {
-  final SocialSpecialistAssessmentTool? tool; // أداة التقييم المختارة
-  final SocialSpecialistResidentScore resident; // بيانات المقيم المستهدف
+  final SocialSpecialistAssessmentTool? tool; // أداة التقييم المختارة (نفسي، اجتماعي، إلخ)
+  final SocialSpecialistResidentScore resident; // بيانات المقيم المستهدف بالتقييم
   const AssessmentDetailedScreen({super.key, this.tool, required this.resident});
 
   @override
@@ -28,6 +29,7 @@ class _AssessmentDetailedScreenState extends ConsumerState<AssessmentDetailedScr
   late List<AssessmentQuestion> _questions; // قائمة الأسئلة الحالية
   final TextEditingController _notesController = TextEditingController(
       text: 'المقيم يُبدي علامات قلق متزايدة مؤخراً...'); // متحكم نص الملاحظات
+  bool _isInterventionRequired = false; // حالة التدخل الاجتماعي
 
   @override
   void initState() {
@@ -104,7 +106,7 @@ class _AssessmentDetailedScreenState extends ConsumerState<AssessmentDetailedScr
                    const SizedBox(height: 24),
                    _buildSpecialistNotes(), // حقل ملاحظات الأخصائي
                    const SizedBox(height: 24),
-                   _buildAutoRecommendations(), // التوصيات الذكية المقترحة
+                   _buildInterventionToggle(), // تفعيل طلب التدخل
                    const SizedBox(height: 40),
                 ],
               ),
@@ -297,6 +299,7 @@ class _AssessmentDetailedScreenState extends ConsumerState<AssessmentDetailedScr
   }
 
   // بناء الجزء الخاص بالأسئلة وتوليد التقارير
+  // بناء منطقة الأسئلة (تتغير بناءً على التقدم في التقييم)
   Widget _buildQuestionnaire(AppRiverpod provider) {
     final tool = widget.tool ?? provider.socialAssessmentTools[0];
     return FadeTransition(
@@ -514,37 +517,66 @@ class _AssessmentDetailedScreenState extends ConsumerState<AssessmentDetailedScr
     );
   }
 
-  // بناء التوصيات التلقائية المقترحة من النظام
-  Widget _buildAutoRecommendations() {
-    final recs = [
-      {'icon': '✅', 'text': 'جدولة جلسة دعم نفسي هذا الأسبوع', 'bg': const Color(0xFFd1fae5), 'fg': const Color(0xFF065f46)},
-      {'icon': '📞', 'text': 'التواصل مع الأسرة لتشجيع الزيارات', 'bg': const Color(0xFFfef3c7), 'fg': const Color(0xFF92400e)},
-      {'icon': '🎯', 'text': 'تسجيله في برنامج ورشة الرسم الأسبوعية', 'bg': const Color(0xFFede9fe), 'fg': const Color(0xFF4c1d95)},
-    ];
-
-    return FadeTransition(
-      opacity: _fadeAnimations[6],
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: const Color(0xFFfed7aa), width: 1.5)),
-        child: Column(
-          children: [
-            Row(mainAxisAlignment: MainAxisAlignment.end, children: [const Text('التوصيات التلقائية', style: TextStyle(color: Color(0xFF9a3412), fontSize: 11, fontWeight: FontWeight.bold)), const SizedBox(width: 8), Container(width: 7, height: 7, decoration: const BoxDecoration(color: Color(0xFF10b981), shape: BoxShape.circle))]),
-            const SizedBox(height: 8),
-            ...recs.map((r) => Container(margin: const EdgeInsets.only(bottom: 6), padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7), decoration: BoxDecoration(color: r['bg'] as Color, borderRadius: BorderRadius.circular(10)), child: Row(children: [Text(r['icon'] as String, style: const TextStyle(fontSize: 13)), const Spacer(), Text(r['text'] as String, style: TextStyle(color: r['fg'] as Color, fontSize: 10, fontWeight: FontWeight.bold))]))).toList(),
-          ],
-        ),
+  // بناء خيار تفعيل التدخل الاجتماعي العاجل
+  Widget _buildInterventionToggle() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _isInterventionRequired ? const Color(0xFFfee2e2) : Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _isInterventionRequired ? const Color(0xFFef4444) : const Color(0xFFfed7aa), width: 1.5),
+      ),
+      child: Row(
+        children: [
+          Switch(
+            value: _isInterventionRequired,
+            onChanged: (v) => setState(() => _isInterventionRequired = v),
+            activeColor: const Color(0xFFef4444),
+          ),
+          const Spacer(),
+          const Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text('تفعيل طلب تدخل عاجل', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF991b1b))),
+              Text('سيتم إخطار الإدارة والزملاء فوراً', style: TextStyle(fontSize: 10, color: Color(0xFFb91c1c))),
+            ],
+          ),
+          const SizedBox(width: 12),
+          const Icon(Icons.report_problem_rounded, color: Color(0xFFef4444)),
+        ],
       ),
     );
   }
 
-  // بناء شريط الإجراءات السفلي (زر الحفظ النهائي)
+  // بناء شريط الإجراءات السفلي مع منطق الحفظ الفعلي
   Widget _buildActionBar() {
     return Container(
       padding: const EdgeInsets.all(12), decoration: const BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: Color(0xFFfed7aa)))),
       child: Row(
         children: [
-          Expanded(child: ElevatedButton(onPressed: () => Navigator.pop(context), style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFea580c), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 0), child: const Text('حفظ التقييم وإرساله للإدارة ✅', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)))),
+          Expanded(child: ElevatedButton(
+            onPressed: () {
+              // حساب الدرجة التقريبية بناءً على عدد الإجابات المختارة
+              final Map<String, double> newScores = {};
+              if (widget.tool != null) {
+                newScores[widget.tool!.name] = (_selections.length / _questions.length).clamp(0.1, 1.0);
+              }
+              
+              // استدعاء دالة الحفظ في الـ Provider لتحديث بيانات المقيم في النظام
+              ref.read(appRiverpod).saveSocialAssessment(
+                residentId: widget.resident.id,
+                newScores: newScores,
+                needsIntervention: _isInterventionRequired,
+                notes: _notesController.text,
+              );
+              
+              Navigator.pop(context); // إغلاق الصفحة بعد الحفظ
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('تم حفظ التقييم وتحديث حالة المقيم بنجاح ✅'), backgroundColor: Color(0xFF10b981)),
+              );
+            }, 
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFea580c), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 0), 
+            child: const Text('حفظ التقييم وإرساله للإدارة ✅', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)))),
         ],
       ),
     );

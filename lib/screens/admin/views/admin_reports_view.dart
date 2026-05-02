@@ -141,18 +141,18 @@ class AdminReportsView extends ConsumerWidget {
         const SizedBox(height: 12),
         Row(
           children: [
-            Expanded(child: _exportBtn(context, 'Excel', Icons.table_chart_outlined, Colors.green, provider)),
+            Expanded(child: _exportBtn(context, 'Excel', 'Excel', Icons.table_chart_outlined, Colors.green, provider)),
             const SizedBox(width: 12),
-            Expanded(child: _exportBtn(context, 'PDF Report', Icons.picture_as_pdf_outlined, Colors.red, provider)),
+            Expanded(child: _exportBtn(context, 'PDF', 'PDF Report', Icons.picture_as_pdf_outlined, Colors.red, provider)),
           ],
         ),
       ],
     );
   }
 
-  Widget _exportBtn(BuildContext context, String label, IconData icon, Color c, AppRiverpod provider) {
+  Widget _exportBtn(BuildContext context, String format, String label, IconData icon, Color c, AppRiverpod provider) {
     return InkWell(
-      onTap: () => _showExportDialog(context, provider),
+      onTap: () => _showExportDialog(context, provider, format),
       borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -169,23 +169,48 @@ class AdminReportsView extends ConsumerWidget {
     );
   }
 
-  void _showExportDialog(BuildContext context, AppRiverpod provider) {
+  void _showExportDialog(BuildContext context, AppRiverpod provider, String format) {
     final summary = provider.generatePerformanceSummary();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text('تقرير أداء الدار', textAlign: TextAlign.right, style: TextStyle(fontWeight: FontWeight.bold)),
-        content: Text(summary, textAlign: TextAlign.right, style: const TextStyle(fontSize: 14, height: 1.5)),
+        title: Text('تصدير تقرير $format', textAlign: TextAlign.right, style: const TextStyle(fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(summary, textAlign: TextAlign.right, style: const TextStyle(fontSize: 12, height: 1.5, color: Color(0xFF64748b))),
+            const SizedBox(height: 16),
+            const Text('هل تريد تأكيد تصدير هذا التقرير؟', textAlign: TextAlign.right, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('إغلاق', style: TextStyle(color: Color(0xFF64748b))),
+            child: const Text('إلغاء', style: TextStyle(color: Color(0xFF64748b))),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () async {
+              Navigator.pop(context);
+              // Show loading
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('جاري تجهيز تقرير $format...'), backgroundColor: const Color(0xFF0369a1)),
+              );
+              
+              final fileName = await provider.exportReport(format.toLowerCase() == 'excel' ? 'csv' : 'pdf');
+              
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('تم تصدير الملف بنجاح: $fileName'),
+                    backgroundColor: Colors.green,
+                    duration: const Duration(seconds: 4),
+                  ),
+                );
+              }
+            },
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0369a1), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-            child: const Text('مشاركة التقرير', style: TextStyle(color: Colors.white)),
+            child: const Text('تأكيد التصدير', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),

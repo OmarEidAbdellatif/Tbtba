@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/app_riverpod.dart';
 
+// شاشة تسليم الوردية (Shift Handoff) - لضمان انتقال آمن وسلس للمعلومات بين الممرضين
 class ShiftHandoffScreen extends ConsumerStatefulWidget {
   const ShiftHandoffScreen({super.key});
 
@@ -10,8 +11,8 @@ class ShiftHandoffScreen extends ConsumerStatefulWidget {
 }
 
 class _ShiftHandoffScreenState extends ConsumerState<ShiftHandoffScreen> {
-  bool _isConfirmed = false;
-  final TextEditingController _incomingNurseName = TextEditingController();
+  bool _isConfirmed = false; // حالة إقرار الممرض بصحة البيانات المسلمة
+  final TextEditingController _incomingNurseName = TextEditingController(); // متحكم اسم الممرض المستلم
 
   @override
   void dispose() {
@@ -37,13 +38,14 @@ class _ShiftHandoffScreenState extends ConsumerState<ShiftHandoffScreen> {
       ),
       body: Column(
         children: [
-          _buildTopBanner(),
+          _buildTopBanner(), // بنر توضيحي لنوع الوردية (صباحية/مسائية)
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
+                  // قسم ملخص القراءات الحيوية المسجلة خلال الوردية
                   _buildSectionHeader('ملخص القراءات الحيوية', Icons.monitor_heart_rounded),
                   _buildSummaryCard([
                     _summaryRow('قراءات ضغط الدم', '١٨ قراءة تم تسجيلها'),
@@ -52,6 +54,7 @@ class _ShiftHandoffScreenState extends ConsumerState<ShiftHandoffScreen> {
                   ]),
                   const SizedBox(height: 24),
 
+                  // قسم ملخص الأدوية التي تم إعطاؤها أو تأجيلها
                   _buildSectionHeader('سجل الأدوية', Icons.medication_liquid_rounded),
                   _buildSummaryCard([
                     _summaryRow('أدوية تم إعطاؤها', '٦٤ جرعة'),
@@ -60,6 +63,7 @@ class _ShiftHandoffScreenState extends ConsumerState<ShiftHandoffScreen> {
                   ]),
                   const SizedBox(height: 24),
 
+                  // قسم الملاحظات التمريضية الجديدة المضافة للمقيمين
                   _buildSectionHeader('الملاحظات التمريضية', Icons.note_alt_rounded),
                   _buildSummaryCard([
                     _summaryRow('إجمالي الملاحظات', '${provider.nursingNotes.length} ملاحظة جديدة'),
@@ -67,13 +71,13 @@ class _ShiftHandoffScreenState extends ConsumerState<ShiftHandoffScreen> {
                   ]),
                   const SizedBox(height: 32),
 
-                  _buildHandoverSection(),
+                  _buildHandoverSection(), // واجهة إدخال بيانات الممرض المستلم والإقرار
                   const SizedBox(height: 40),
                 ],
               ),
             ),
           ),
-          _buildActionFooter(),
+          _buildActionFooter(), // زر الإنهاء النهائي للوردية
         ],
       ),
     );

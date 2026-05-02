@@ -306,7 +306,7 @@ class _VisitBookingScreenState extends ConsumerState<VisitBookingScreen> {
                   date: '$_selectedDay أبريل',
                   time: _selectedSlot!,
                   type: _selectedType == 0 ? 'physical' : 'video',
-                  status: 'upcoming',
+                  status: 'pending',
                 ));
                 _showSuccessSheet();
               }

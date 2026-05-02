@@ -4,6 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../providers/app_riverpod.dart';
 import '../../../models/app_models.dart';
 
+/* 
+ * واجهة تتبع وإدارة الشكاوى: 
+ * تقوم هذه الشاشة بعرض قائمة الشكاوى الواردة من الأهالي، وتوفر أدوات 
+ * لتصفية الشكاوى حسب حالتها (مفتوحة، قيد المعالجة، مكتملة)، 
+ * بالإضافة إلى عرض الجدول الزمني لكل شكوى للمتابعة اللحظية.
+ */
+
 class SpecialistComplaintsView extends ConsumerWidget {
   final List<Animation<double>> fadeAnimations;
   final AnimationController floatController;
@@ -24,6 +31,12 @@ class SpecialistComplaintsView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final provider = ref.watch(appRiverpod);
 
+    /* 
+     * إدارة حالات الشكاوى:
+     * يتم هنا فصل الشكاوى برمجياً بناءً على الحالة (Status)
+     * لضمان ظهور كل شكوى في القسم المخصص لها في واجهة المستخدم.
+     */
+
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
@@ -42,8 +55,9 @@ class SpecialistComplaintsView extends ConsumerWidget {
           sliver: SliverList(
             delegate: SliverChildListDelegate([
               _buildSectionLabel('تحتاج تدخل فوري', const Color(0xFFef4444), 3,
-                  isBlink: true),
+                  isBlink: true), // قسم الشكاوى عالية الأهمية التي تتطلب تحركاً سريعاً
               const SizedBox(height: 8),
+              // جلب وعرض الشكاوى المفتوحة ذات الأولوية القصوى
               ...provider.filteredSocialComplaints
                   .where((c) => c.status == 'open' && c.priority == 'high')
                   .map((c) => _buildDetailedComplaintCard(context, ref, c))
@@ -469,10 +483,11 @@ class SpecialistComplaintsView extends ConsumerWidget {
     );
   }
 
+  // بناء كارت الشكوى التفصيلي: يعرض كافة المعلومات الأساسية وحالة الأولوية
   Widget _buildDetailedComplaintCard(BuildContext context, WidgetRef ref,
       SocialSpecialistComplaint complaint) {
     return GestureDetector(
-      onTap: () => _showComplaintDetails(context, ref, complaint),
+      onTap: () => _showComplaintDetails(context, ref, complaint), // فتح تفاصيل الشكوى والجدول الزمني عند الضغط
       child: FadeTransition(
         opacity: fadeAnimations[4],
         child: Container(
@@ -482,7 +497,7 @@ class SpecialistComplaintsView extends ConsumerWidget {
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
                 color:
-                    _getStatusBorderColor(complaint.status, complaint.priority),
+                    _getStatusBorderColor(complaint.status, complaint.priority), // لون الإطار يعبر عن الحالة
                 width: 1.5),
           ),
           child: Column(
@@ -856,9 +871,12 @@ class SpecialistComplaintsView extends ConsumerWidget {
                 complaint.status == 'open' ? '✏️ بدء التدخل' : '↑ تصعيد',
                 type: 'primary',
                 onTap: () {
-                  // Standard feedback
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('تم تحديث حالة الشكوى')));
+                  if (complaint.status == 'open') {
+                    ref.read(appRiverpod).startIntervention(complaint.id);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('تم تصعيد الشكوى للإدارة')));
+                  }
                 },
               ),
             ),

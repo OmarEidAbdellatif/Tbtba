@@ -6,10 +6,11 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // مكتب
 
 final appRiverpod = ChangeNotifierProvider((ref) => AppRiverpod());
 
+// مزود الحالة الرئيسي للتطبيق - يدير كافة البيانات والعمليات البرمجية
 class AppRiverpod extends ChangeNotifier {
-  // الحالة العامة للتطبيق
+  // --- الحالة العامة للتطبيق ---
   int selectedIndex = 0; // الفهرس الحالي للتبويب المختار
-  String currentRole = 'مسن'; // الدور الحالي للمستخدم (ممرض، متطوع، إلخ)
+  String currentRole = 'مسن'; // الدور الحالي للمستخدم (ممرض، متطوع، مدير، إلخ)
   bool hasSeenOnboarding = false; // هل شاهد المستخدم شاشات الترحيب؟
   bool isAuthenticated = false; // هل المستخدم مسجل دخوله؟
   double fontScaleFactor = 1.0; // حجم الخط المختار لسهولة القراءة
@@ -20,6 +21,7 @@ class AppRiverpod extends ChangeNotifier {
   String? _sessionToken; // رمز الجلسة الحالي
   DateTime? _sessionExpiry; // موعد انتهاء الجلسة
   bool isRefreshingSession = false; // هل يجري حالياً تجديد الجلسة؟
+  String selectedAdminDateFilter = 'اليوم'; // فلتر التاريخ النشط للوحة تحكم المدير (اليوم، أسبوع، شهر)
 
   final _storage = const FlutterSecureStorage(); // إنشاء كائن التخزين الآمن
 
@@ -33,6 +35,7 @@ class AppRiverpod extends ChangeNotifier {
     final role = await _storage.read(key: 'currentRole');
     final onboarding = await _storage.read(key: 'hasSeenOnboarding');
     final expiryStr = await _storage.read(key: 'sessionExpiry');
+    _sessionToken = await _storage.read(key: 'sessionToken');
     
     if (auth == 'true') {
       isAuthenticated = true;
@@ -88,6 +91,14 @@ class AppRiverpod extends ChangeNotifier {
   void toggleDarkMode() {
     isDarkMode = !isDarkMode;
     notifyListeners();
+  }
+
+  // تحديث فلتر التاريخ للوحة تحكم المدير ومحاكاة جلب البيانات بناءً على الفترة الزمنية
+  void updateAdminDateFilter(String filter) {
+    selectedAdminDateFilter = filter;
+    // ملاحظة: هنا يمكن إضافة استدعاء للـ API لتحديث قائمة الإحصائيات (adminStats) 
+    // بناءً على التاريخ المختار (اليوم مقابل الشهر الماضي مثلاً)
+    notifyListeners(); // إشعار كافة واجهات المدير بضرورة إعادة البناء بالبيانات الجديدة
   }
 
   // Offline Mode State
@@ -509,13 +520,27 @@ class AppRiverpod extends ChangeNotifier {
     VoiceMessage(
         id: 'v1',
         senderId: 'f1',
-        title: 'رسالة من سارة',
-        timeDescription: 'منذ ساعتين'),
+        title: 'رسالة من سارة 💜',
+        timeDescription: 'منذ ساعتين',
+        isUnread: true),
     VoiceMessage(
         id: 'v2',
         senderId: 'f3',
-        title: 'حكاية من ليلى',
-        timeDescription: 'أمس'),
+        title: 'حكاية من ليلى 👧',
+        timeDescription: 'اليوم ١٠:٠٠ ص',
+        isUnread: true),
+    VoiceMessage(
+        id: 'v3',
+        senderId: 'f2',
+        title: 'أخبار من أحمد 🏠',
+        timeDescription: 'أمس ٠٩:٣٠ م',
+        isUnread: false),
+    VoiceMessage(
+        id: 'v4',
+        senderId: 'f1',
+        title: 'تحية صباحية ☕',
+        timeDescription: 'أمس ٠٨:٠٠ ص',
+        isUnread: false),
   ];
 
   // Call State
@@ -1160,7 +1185,18 @@ class AppRiverpod extends ChangeNotifier {
     final idx = medications.indexWhere((m) => m.id == id);
     if (idx != -1 && !medications[idx].isTaken) {
       medications[idx].isTaken = true;
+      medications[idx].isSkipped = false;
       addPoints(10); // Reward points for taking medication
+      notifyListeners();
+    }
+  }
+
+  void skipMedication(String id, String reason) {
+    final idx = medications.indexWhere((m) => m.id == id);
+    if (idx != -1) {
+      medications[idx].isSkipped = true;
+      medications[idx].isTaken = false;
+      medications[idx].skipReason = reason;
       notifyListeners();
     }
   }
@@ -1209,6 +1245,17 @@ class AppRiverpod extends ChangeNotifier {
     final idx = voiceMessagesList.indexWhere((v) => v.id == id);
     if (idx != -1) {
       voiceMessagesList[idx].isPlaying = !voiceMessagesList[idx].isPlaying;
+      if (voiceMessagesList[idx].isUnread) {
+        voiceMessagesList[idx].isUnread = false;
+      }
+      notifyListeners();
+    }
+  }
+
+  void markVoiceMessageRead(String id) {
+    final idx = voiceMessagesList.indexWhere((v) => v.id == id);
+    if (idx != -1) {
+      voiceMessagesList[idx].isUnread = false;
       notifyListeners();
     }
   }
@@ -1242,13 +1289,16 @@ class AppRiverpod extends ChangeNotifier {
         .toList();
   }
 
+  // --- تتبع الشكاوى والمتابعة الاجتماعية (US-07-04) ---
+  
+  // فلترة الشكاوى بناءً على حالتها (جديدة، قيد المعالجة، مكتملة)
   List<SocialSpecialistComplaint> get filteredSocialComplaints {
-    if (selectedComplaintStatus == 'الكل') return socialComplaints;
-    if (selectedComplaintStatus == '🔴 مفتوحة')
+    if (selectedComplaintStatus.contains('الكل')) return socialComplaints;
+    if (selectedComplaintStatus.contains('مفتوحة'))
       return socialComplaints.where((c) => c.status == 'open').toList();
-    if (selectedComplaintStatus == '🟡 جاري')
+    if (selectedComplaintStatus.contains('جاري'))
       return socialComplaints.where((c) => c.status == 'progress').toList();
-    if (selectedComplaintStatus == '✅ مُغلقة')
+    if (selectedComplaintStatus.contains('مُغلقة'))
       return socialComplaints.where((c) => c.status == 'done').toList();
     return socialComplaints;
   }
@@ -1344,22 +1394,36 @@ class AppRiverpod extends ChangeNotifier {
     SpecialistResidentFile(
         id: 'rf1',
         name: 'الحاج محمود الجوهري',
+        nameEn: 'Mahmoud El Gohary',
         room: '١٠١',
         status: 'updated',
         lastUpdate: 'اليوم ١٠:٠٠ ص',
         initials: 'مح',
-        categories: ['social', 'medical']),
+        categories: ['social', 'medical'],
+        age: 72,
+        phone: '01012345678',
+        familyMembers: [
+          FamilyMember(id: 'f1', name: 'أحمد محمود', relation: 'ابن', avatarPath: '', initials: 'أم', isAvailable: true),
+          FamilyMember(id: 'f2', name: 'سارة محمود', relation: 'ابنة', avatarPath: '', initials: 'سم'),
+        ]),
     SpecialistResidentFile(
         id: 'rf2',
         name: 'سعدية علي كامل',
+        nameEn: 'Saadia Ali Kamel',
         room: '١٠٢',
         status: 'pending',
         lastUpdate: 'أمس ٠٩:٣٠ م',
         initials: 'سع',
-        categories: ['social', 'admin']),
+        categories: ['social', 'admin'],
+        age: 68,
+        phone: '01112223334',
+        familyMembers: [
+          FamilyMember(id: 'f3', name: 'منى حسن', relation: 'ابنة', avatarPath: '', initials: 'مح'),
+        ]),
     SpecialistResidentFile(
         id: 'rf3',
         name: 'إبراهيم سليمان',
+        nameEn: 'Ibrahim Soliman',
         room: '١٠٣',
         status: 'updated',
         lastUpdate: '١٨ أبريل',
@@ -1368,6 +1432,7 @@ class AppRiverpod extends ChangeNotifier {
     SpecialistResidentFile(
         id: 'rf4',
         name: 'سامي حسن',
+        nameEn: 'Sami Hassan',
         room: '١٠٤',
         status: 'critical',
         lastUpdate: 'اليوم ٠٨:١٥ ص',
@@ -1376,6 +1441,7 @@ class AppRiverpod extends ChangeNotifier {
     SpecialistResidentFile(
         id: 'rf5',
         name: 'فاطمة الزهراء',
+        nameEn: 'Fatma El Zahraa',
         room: '١٠٥',
         status: 'updated',
         lastUpdate: '١٥ أبريل',
@@ -1384,6 +1450,7 @@ class AppRiverpod extends ChangeNotifier {
     SpecialistResidentFile(
         id: 'rf6',
         name: 'عمر المختار',
+        nameEn: 'Omar El Mokhtar',
         room: '٢٠١',
         status: 'pending',
         lastUpdate: '١٤ أبريل',
@@ -1721,15 +1788,23 @@ class AppRiverpod extends ChangeNotifier {
 
   void addFamilyVisit(FamilyVisit visit) {
     familyVisits.insert(0, visit);
-
-    triggerNotification(
-      title: 'تم حجز زيارة جديدة 🗓️',
-      body: 'موعدنا يوم ${visit.date} في تمام الساعة ${visit.time}.',
-      type: 'family',
-      targetRole: 'أهل',
-    );
-
     notifyListeners();
+  }
+
+  void approveVisit(String id) {
+    final idx = familyVisits.indexWhere((v) => v.id == id);
+    if (idx != -1) {
+      familyVisits[idx] = familyVisits[idx].copyWith(status: 'upcoming');
+      notifyListeners();
+    }
+  }
+
+  void rejectVisit(String id) {
+    final idx = familyVisits.indexWhere((v) => v.id == id);
+    if (idx != -1) {
+      familyVisits[idx] = familyVisits[idx].copyWith(status: 'cancelled');
+      notifyListeners();
+    }
   }
 
   void sendFamilyMessage(String message, String residentName) {
@@ -1761,6 +1836,14 @@ class AppRiverpod extends ChangeNotifier {
     );
 
     notifyListeners();
+  }
+
+  void updateResident(SpecialistResidentFile resident) {
+    final index = residentFiles.indexWhere((r) => r.id == resident.id);
+    if (index != -1) {
+      residentFiles[index] = resident;
+      notifyListeners();
+    }
   }
 
   void addResident(SpecialistResidentFile resident) {
@@ -1850,6 +1933,14 @@ class AppRiverpod extends ChangeNotifier {
 - الحفاظ على مستوى الاستجابة السريع للشكاوى.
 - تعزيز فترات الراحة للطاقم الطبي لضمان استمرارية الجودة.
 ''';
+  }
+
+  Future<String> exportReport(String format) async {
+    // Simulate processing time
+    await Future.delayed(const Duration(seconds: 2));
+    final dateStr = "${DateTime.now().year}-${DateTime.now().month}-${DateTime.now().day}";
+    final fileName = "Taptaba_Report_$dateStr.$format";
+    return fileName;
   }
 
   // --- MEMORY WALL ---
@@ -2180,6 +2271,119 @@ class AppRiverpod extends ChangeNotifier {
       notifyListeners();
     } else {
       mealPlans.add(plan);
+    }
+  }
+
+  // بدء عملية التدخل الاجتماعي وتغيير حالة الشكوى
+  void startIntervention(String id) {
+    final idx = socialComplaints.indexWhere((c) => c.id == id);
+    if (idx != -1) {
+      final updatedTimeline = List<ComplaintStep>.from(socialComplaints[idx].timeline);
+      updatedTimeline.add(ComplaintStep(
+        text: 'بدء التدخل والمتابعة',
+        time: 'الآن',
+        status: 'progress',
+      ));
+
+      socialComplaints[idx] = SocialSpecialistComplaint(
+        id: socialComplaints[idx].id,
+        title: socialComplaints[idx].title,
+        residentName: socialComplaints[idx].residentName,
+        room: socialComplaints[idx].room,
+        date: socialComplaints[idx].date,
+        priority: socialComplaints[idx].priority,
+        status: 'progress',
+        category: socialComplaints[idx].category,
+        icon: socialComplaints[idx].icon,
+        timeline: updatedTimeline,
+      );
+      
+      notifyListeners();
+    }
+  }
+
+  // حفظ تقييم اجتماعي جديد وتحديث درجات المقيم
+  void saveSocialAssessment({
+    required String residentId,
+    required Map<String, double> newScores,
+    required bool needsIntervention,
+    required String notes,
+  }) {
+    final idx = filteredResidentScores.indexWhere((r) => r.id == residentId);
+    if (idx != -1) {
+      final r = filteredResidentScores[idx];
+      
+      // Update scores
+      final updatedScores = Map<String, double>.from(r.scores);
+      newScores.forEach((key, value) {
+        updatedScores[key] = value;
+      });
+
+      filteredResidentScores[idx] = SocialSpecialistResidentScore(
+        id: r.id,
+        name: r.name,
+        room: r.room,
+        date: 'الآن',
+        isUrgent: needsIntervention,
+        scores: updatedScores,
+        initials: r.initials,
+        healthStatus: r.healthStatus,
+        lastAssessment: DateTime.now(),
+      );
+      
+      // Add a social notification if urgent
+      if (needsIntervention) {
+        notifications.insert(0, TaptabaNotification(
+          id: 'soc_${DateTime.now().millisecondsSinceEpoch}',
+          title: 'تنبيه تدخل اجتماعي: ${r.name}',
+          body: 'المقيم بحاجة لمتابعة عاجلة بناءً على التقييم الأخير.',
+          time: 'الآن',
+          type: 'social',
+          targetRole: 'specialist',
+          residentId: residentId,
+          isRead: false,
+        ));
+      }
+
+      notifyListeners();
+    }
+  }
+
+  // خريطة الاحتياجات: تجميع بيانات المقيمين مع حساب لون الحالة بصرياً
+  List<Map<String, dynamic>> get needMapData {
+    return filteredResidentScores.map((r) {
+      // Calculate overall social health
+      double avgScore = 0;
+      if (r.scores.isNotEmpty) {
+        avgScore = r.scores.values.reduce((a, b) => a + b) / r.scores.length;
+      }
+      
+      Color statusColor;
+      if (r.isUrgent || avgScore < 0.4) {
+        statusColor = const Color(0xFFef4444); // High Need
+      } else if (avgScore < 0.7) {
+        statusColor = const Color(0xFFf59e0b); // Medium Need
+      } else {
+        statusColor = const Color(0xFF10b981); // Stable
+      }
+
+      return {
+        'id': r.id,
+        'name': r.name,
+        'room': r.room,
+        'color': statusColor,
+        'score': avgScore,
+        'initials': r.initials,
+      };
+    }).toList();
+  }
+
+  // وضع علامة "تم الحل" على التنبيهات الإدارية
+  void resolveNotification(String id) {
+    final idx = notifications.indexWhere((n) => n.id == id);
+    if (idx != -1) {
+      notifications[idx].isRead = true;
+      notifyListeners();
     }
   }
 }

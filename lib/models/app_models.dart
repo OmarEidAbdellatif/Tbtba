@@ -1,8 +1,9 @@
+// نموذج يمثل بيانات المستخدم (المسن) ونظام النقاط التحفيزي
 class User {
-  String name;
-  int points;
-  int streakDays;
-  int completedActivities;
+  String name; // اسم المستخدم
+  int points; // إجمالي النقاط المكتسبة من الأنشطة
+  int streakDays; // عدد الأيام المتتالية للنشاط (التحدي اليومي)
+  int completedActivities; // إجمالي الأنشطة التي أتمها المستخدم
 
   User({
     required this.name,
@@ -12,16 +13,19 @@ class User {
   });
 }
 
+// نموذج يمثل الدواء والجرعة وحالة التناول والمتابعة
 class Medication {
-  final String id;
-  final String name;
-  final String dosage;
-  final String timeDescription;
-  final String timeOfDay; // 'الصباح', 'الظهر', 'المساء'
-  bool isTaken;
-  final String dayTag; // 'أمس', 'اليوم', 'غداً', 'الأسبوع'
-  final String? residentName;
-  final DateTime? scheduledTime;
+  final String id; // معرف فريد للدواء
+  final String name; // اسم الدواء
+  final String dosage; // الجرعة (مثلاً: قرص واحد)
+  final String timeDescription; // وصف الوقت (مثلاً: ٨ صباحاً)
+  final String timeOfDay; // الفترة الزمنية: 'الصباح', 'الظهر', 'المساء'
+  bool isTaken; // هل تم تناول الجرعة؟
+  bool isSkipped; // هل تم تجاوز الجرعة عمداً؟
+  String? skipReason; // سبب تجاوز الجرعة (مثلاً: عدم الرغبة)
+  final String dayTag; // تصنيف اليوم: 'أمس', 'اليوم', 'غداً'
+  final String? residentName; // اسم المقيم (يستخدم في واجهة الممرض)
+  final DateTime? scheduledTime; // الوقت المحدد للجرعة بدقة
 
   Medication({
     required this.id,
@@ -30,24 +34,28 @@ class Medication {
     required this.timeDescription,
     required this.timeOfDay,
     this.isTaken = false,
+    this.isSkipped = false,
+    this.skipReason,
     this.dayTag = 'اليوم',
     this.residentName,
     this.scheduledTime,
   });
 
+  // التحقق مما إذا كانت الجرعة قد فاتت موعدها ولم تؤخذ
   bool get isMissed {
-    if (isTaken || scheduledTime == null) return false;
+    if (isTaken || isSkipped || scheduledTime == null) return false;
     return DateTime.now().isAfter(scheduledTime!);
   }
 }
 
+// نموذج يمثل فرد من أفراد العائلة وسهولة الوصول إليه
 class FamilyMember {
   String id;
-  String name;
-  String relation;
-  String avatarPath;
-  String initials;
-  bool isAvailable;
+  String name; // اسم قريب المسن
+  String relation; // صلة القرابة (ابن، حفيدة، إلخ)
+  String avatarPath; // مسار الصورة الشخصية
+  String initials; // الحروف الأولى من الاسم (للعرض البديل)
+  bool isAvailable; // هل القريب متاح حالياً للمكالمة؟
 
   FamilyMember({
     required this.id,
@@ -59,12 +67,14 @@ class FamilyMember {
   });
 }
 
+// نموذج يمثل رسالة صوتية مرسلة من العائلة للمسن
 class VoiceMessage {
   String id;
-  String senderId;
-  String title;
-  String timeDescription;
-  bool isPlaying;
+  String senderId; // معرف مرسل الرسالة
+  String title; // عنوان الرسالة أو موضوعها
+  String timeDescription; // وقت الإرسال (مثلاً: منذ ساعتين)
+  bool isPlaying; // هل الرسالة قيد التشغيل حالياً؟
+  bool isUnread; // هل الرسالة جديدة ولم تسمع بعد؟
 
   VoiceMessage({
     required this.id,
@@ -72,6 +82,7 @@ class VoiceMessage {
     required this.title,
     required this.timeDescription,
     this.isPlaying = false,
+    this.isUnread = true,
   });
 }
 
@@ -411,6 +422,24 @@ class FamilyVisit {
     required this.status,
     required this.type,
   });
+
+  FamilyVisit copyWith({
+    String? id,
+    String? date,
+    String? time,
+    String? visitorName,
+    String? status,
+    String? type,
+  }) {
+    return FamilyVisit(
+      id: id ?? this.id,
+      date: date ?? this.date,
+      time: time ?? this.time,
+      visitorName: visitorName ?? this.visitorName,
+      status: status ?? this.status,
+      type: type ?? this.type,
+    );
+  }
 }
 
 class FamilyBill {
@@ -499,21 +528,29 @@ class FamilyHealthMetric {
 
 class SpecialistResidentFile {
   final String id;
-  final String name;
+  final String name; // الاسم بالعربية
+  final String nameEn; // الاسم بالإنجليزية
   final String room;
   final String status; // 'updated', 'pending', 'critical'
   final String lastUpdate;
   final List<String> categories; // 'social', 'medical', 'psychological', 'admin'
   final String initials;
+  final String? phone; // رقم التواصل
+  final int? age; // العمر
+  final List<FamilyMember> familyMembers; // الربط العائلي
 
   SpecialistResidentFile({
     required this.id,
     required this.name,
+    required this.nameEn,
     required this.room,
     required this.status,
     required this.lastUpdate,
     required this.categories,
     required this.initials,
+    this.phone,
+    this.age,
+    this.familyMembers = const [],
   });
 }
 
@@ -587,22 +624,25 @@ class CenterOperationalStat {
   });
 }
 
+// نموذج التنبيهات الموحد في التطبيق (الإشعارات الداخلية)
 class TaptabaNotification {
-  final String id;
-  final String title;
-  final String body;
-  final String time;
-  final String type; // 'medical', 'activity', 'social', 'admin', 'visit'
-  final String targetRole; // 'مسن', 'أهل', 'ممرض', 'أخصائي', 'مدير', 'متطوع', 'all'
-  bool isRead;
+  final String id; // المعرف الفريد للتنبيه
+  final String title; // عنوان التنبيه (مثال: حالة طبية حرجة)
+  final String body; // نص التنبيه التفصيلي
+  final String time; // وقت وصول التنبيه (مثال: منذ ٥ دقائق)
+  final String type; // نوع التنبيه (medical, complaint, social, stable)
+  final String targetRole; // الدور المستهدف بالتنبيه (مدير، أخصائي، إلخ)
+  final String? residentId; // معرف المقيم المرتبط بالتنبيه (للتنقل السريع لملفه)
+  bool isRead; // حالة القراءة (هل تمت معالجة التنبيه؟)
 
   TaptabaNotification({
     required this.id,
     required this.title,
     required this.body,
     required this.time,
-    this.type = 'admin',
+    required this.type,
     this.targetRole = 'all',
+    this.residentId,
     this.isRead = false,
   });
 }

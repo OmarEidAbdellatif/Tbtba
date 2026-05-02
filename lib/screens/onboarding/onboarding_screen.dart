@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/app_riverpod.dart';
 
+// شاشة الترحيب (Onboarding) - واجهة العرض الأولى للمستخدمين الجدد للتعريف بمميزات التطبيق
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -11,12 +12,13 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 }
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> with TickerProviderStateMixin {
-  final PageController _pageController = PageController();
-  int _currentPage = 0;
+  final PageController _pageController = PageController(); // متحكم في صفحات الترحيب
+  int _currentPage = 0; // مؤشر الصفحة الحالية
 
-  late AnimationController _floatController;
-  late AnimationController _fadeController;
+  late AnimationController _floatController; // متحكم حركات الطفو للعناصر الرسومية
+  late AnimationController _fadeController; // متحكم حركة الظهور التدريجي
 
+  // بيانات صفحات الترحيب (العنوان، الوصف، اللون، والأيقونة)
   final List<OnboardingData> _pages = [
     OnboardingData(
       title: 'أهلاً بك في طبطبة',
@@ -47,22 +49,26 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> with Ticker
   @override
   void initState() {
     super.initState();
+    // تهيئة المؤثرات الحركية لضمان تجربة مستخدم ممتعة عند الدخول لأول مرة
     _floatController = AnimationController(vsync: this, duration: const Duration(seconds: 3))..repeat(reverse: true);
     _fadeController = AnimationController(vsync: this, duration: const Duration(milliseconds: 800))..forward();
   }
 
   @override
   void dispose() {
+    // تنظيف الموارد عند الانتهاء من عرض شاشات الترحيب
     _pageController.dispose();
     _floatController.dispose();
     _fadeController.dispose();
     super.dispose();
   }
 
+  // دالة الانتقال للصفحة التالية أو إنهاء الترحيب والذهاب لشاشة الدخول
   void _nextPage() {
     if (_currentPage < _pages.length - 1) {
       _pageController.nextPage(duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
     } else {
+      // إبلاغ النظام بأن المستخدم أتم مشاهدة شاشات الترحيب
       ref.read(appRiverpod).completeOnboarding();
     }
   }
@@ -73,7 +79,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> with Ticker
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          _buildAnimatedBackground(),
+          _buildAnimatedBackground(), // خلفية متحركة بفقاعات لونية
           Column(
             children: [
               Expanded(
@@ -82,11 +88,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> with Ticker
                   itemCount: _pages.length,
                   onPageChanged: (idx) => setState(() => _currentPage = idx),
                   itemBuilder: (context, index) {
-                    return _buildPage(_pages[index]);
+                    return _buildPage(_pages[index]); // بناء محتوى كل صفحة
                   },
                 ),
               ),
-              _buildFooter(),
+              _buildFooter(), // شريط التنقل السفلي (المؤشرات وزر التالي)
             ],
           ),
         ],

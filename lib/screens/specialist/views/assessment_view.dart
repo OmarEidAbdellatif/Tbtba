@@ -5,12 +5,14 @@ import '../../../providers/app_riverpod.dart'; // مزود الحالة العا
 import '../../../models/app_models.dart'; // نماذج البيانات
 import '../assessment_detailed_screen.dart'; // شاشة التقييم التفصيلية
 
+// شاشة التقييم الرئيسية للأخصائي الاجتماعي - تعرض خريطة الاحتياجات وقائمة المقيمين
 class SpecialistAssessmentView extends ConsumerWidget {
-  final List<Animation<double>> fadeAnimations; // حركات الظهور المتسلسلة
-  final AnimationController floatController; // متحكم الحركة العائمة
-  final AnimationController shimmerController; // متحكم حركة اللمعان
-  final AnimationController popController; // متحكم حركة القفز
-  final void Function(int) onNavigate; // دالة للتنقل بين التبويبات
+  final List<Animation<double>> fadeAnimations; // حركات الظهور المتسلسلة للعناصر
+  final AnimationController floatController; // متحكم حركات الطفو الرسومية
+  final AnimationController shimmerController; // متحكم حركة اللمعان للعناصر قيد التحميل
+  final AnimationController popController; // متحكم حركة القفز للأيقونات التفاعلية
+  final void Function(int) onNavigate; // دالة للتنقل بين التبويبات الرئيسية
+  static bool _showNeedMap = false; // متغير ثابت للتبديل بين وضع القائمة ووضع الخريطة
 
   const SpecialistAssessmentView({
     super.key,
@@ -38,17 +40,25 @@ class SpecialistAssessmentView extends ConsumerWidget {
                   'أدوات التقييم المتاحة', const Color(0xFF6366f1), 0),
               const SizedBox(height: 12),
               _buildToolsCard(
-                  context, provider), // كارت يحتوي على أدوات التقييم
+                  context, provider), // كارت يحتوي على روابط سريعة لأدوات التقييم المختلفة
               const SizedBox(height: 24),
               _buildSectionLabel(
-                  'مقيمون بحاجة لتقييم', const Color(0xFFef4444), 1),
+                  'خريطة توزيع الاحتياجات', const Color(0xFFef4444), 1),
               const SizedBox(height: 12),
-              _buildAdvancedSearch(provider), // شريط البحث المتقدم والفلترة
+              _buildViewToggle(provider), // أزرار التبديل بين عرض (قائمة) أو (خريطة ملونة)
               const SizedBox(height: 12),
-              // عرض قائمة المقيمين الذين يحتاجون لتقييم
-              ...provider.filteredResidentScores
-                  .map((score) => _buildResidentAssessmentCard(context, score))
-                  .toList(),
+              
+              // التبديل البرمجي بين واجهة الخريطة التفاعلية وواجهة القائمة التقليدية
+              if (SpecialistAssessmentView._showNeedMap)
+                _buildNeedMap(context, provider) // عرض خريطة المقيمين الملونة بناءً على حالتهم
+              else ...[
+                _buildAdvancedSearch(provider), // شريط البحث والفلترة حسب الغرف أو الحالات
+                const SizedBox(height: 12),
+                // عرض قائمة المقيمين الذين يحتاجون لتقييم دوري
+                ...provider.filteredResidentScores
+                    .map((score) => _buildResidentAssessmentCard(context, score))
+                    .toList(),
+              ],
               const SizedBox(height: 40),
             ]),
           ),
@@ -630,4 +640,83 @@ class SpecialistAssessmentView extends ConsumerWidget {
       : (icon == '🤝'
           ? const Color(0xFFede9fe)
           : (icon == '🏃' ? const Color(0xFFdbeafe) : const Color(0xFFd1fae5)));
+
+  Widget _buildViewToggle(AppRiverpod provider) {
+    return StatefulBuilder(
+      builder: (context, setState) => Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          _toggleBtn('قائمة', !SpecialistAssessmentView._showNeedMap, Icons.list_alt_rounded, () {
+            setState(() => SpecialistAssessmentView._showNeedMap = false);
+            provider.notifyListeners();
+          }),
+          const SizedBox(width: 8),
+          _toggleBtn('خريطة', SpecialistAssessmentView._showNeedMap, Icons.grid_view_rounded, () {
+            setState(() => SpecialistAssessmentView._showNeedMap = true);
+            provider.notifyListeners();
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _toggleBtn(String label, bool isSel, IconData icon, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSel ? const Color(0xFFea580c) : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: isSel ? Colors.transparent : const Color(0xFFfed7aa)),
+        ),
+        child: Row(
+          children: [
+            Text(label, style: TextStyle(color: isSel ? Colors.white : const Color(0xFF9a3412), fontSize: 11, fontWeight: FontWeight.bold)),
+            const SizedBox(width: 6),
+            Icon(icon, color: isSel ? Colors.white : const Color(0xFF9a3412), size: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // بناء خريطة الاحتياجات: عرض المقيمين كشبكة من الدوائر الملونة لسهولة المتابعة
+  Widget _buildNeedMap(BuildContext context, AppRiverpod provider) {
+    final mapData = provider.needMapData; // استلام بيانات الحالة والألوان من الـ Provider
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 4, // عرض 4 مقيمين في كل صف
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+      ),
+      itemCount: mapData.length,
+      itemBuilder: (context, index) {
+        final r = mapData[index];
+        return GestureDetector(
+          onTap: () {
+            // عند الضغط على مقيم في الخريطة، تظهر خيارات التقييم المباشرة
+            final score = provider.filteredResidentScores.firstWhere((s) => s.id == r['id']);
+            _showResidentAssessmentOptions(context, score);
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              color: (r['color'] as Color).withOpacity(0.1), // لون الخلفية شفاف قليلاً
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: r['color'] as Color, width: 2), // إطار ملون يعكس الحالة
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(r['initials'], style: TextStyle(color: r['color'] as Color, fontWeight: FontWeight.bold, fontSize: 12)),
+                Text('غ ${r['room']}', style: TextStyle(color: (r['color'] as Color).withOpacity(0.8), fontSize: 9)),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 }

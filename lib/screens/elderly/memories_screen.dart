@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/app_riverpod.dart';
 import '../../models/app_models.dart';
+import 'voice_messages_playback_screen.dart';
 
 class MemoriesScreen extends ConsumerStatefulWidget {
   const MemoriesScreen({super.key});
@@ -91,7 +92,7 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
                 const SizedBox(height: 12),
                 _buildFeaturedCard(),
                 const SizedBox(height: 12),
-                _buildVoiceMessage(),
+                _buildVoiceMessage(provider),
                 const SizedBox(height: 12),
                 _buildPhotoGrid(provider),
                 const SizedBox(height: 12),
@@ -516,110 +517,109 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
     );
   }
 
-  Widget _buildVoiceMessage() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-            colors: [Color(0xFF6C63FF), Color(0xFFA78BFA), Color(0xFFc084fc)]),
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-              color: const Color(0xFF6C63FF).withOpacity(0.3),
-              blurRadius: 24,
-              offset: const Offset(0, 6))
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(22),
-        child: Stack(
-          children: [
-            Positioned(
-                right: -15,
-                top: -15,
-                child: Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.1)))),
-            Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            shape: BoxShape.circle),
-                        child: const Icon(Icons.play_arrow,
-                            color: Colors.white, size: 16),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            const Text('🎙️ رسالة من سارة',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold)),
-                            const SizedBox(height: 4),
-                            Text('تشتغل تلقائياً عند الفتح · ٠:٤٥ دقيقة',
-                                style: TextStyle(
-                                    color: Colors.white.withOpacity(0.85),
-                                    fontSize: 14)),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.25),
-                            shape: BoxShape.circle),
-                        child: const Center(
-                            child: Text('سا',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold))),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _buildWaveBar(4, 0),
-                      const SizedBox(width: 3),
-                      _buildWaveBar(9, 1),
-                      const SizedBox(width: 3),
-                      _buildWaveBar(15, 2),
-                      const SizedBox(width: 3),
-                      _buildWaveBar(10, 3),
-                      const SizedBox(width: 3),
-                      _buildWaveBar(6, 4),
-                      const SizedBox(width: 3),
-                      _buildWaveBar(12, 0),
-                      const SizedBox(width: 3),
-                      _buildWaveBar(7, 1),
-                      const SizedBox(width: 3),
-                      _buildWaveBar(14, 2),
-                      const SizedBox(width: 3),
-                      _buildWaveBar(5, 3),
-                      const SizedBox(width: 3),
-                      _buildWaveBar(10, 4),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+  Widget _buildVoiceMessage(AppRiverpod provider) {
+    final unreadCount = provider.voiceMessages.where((v) => v.isUnread).length;
+    final latestMsg = provider.voiceMessages.isNotEmpty ? provider.voiceMessages.first : null;
+
+    return GestureDetector(
+      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const VoiceMessagesPlaybackScreen())),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+              colors: [Color(0xFF6C63FF), Color(0xFFA78BFA), Color(0xFFc084fc)]),
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: [
+            BoxShadow(
+                color: const Color(0xFF6C63FF).withOpacity(0.3),
+                blurRadius: 24,
+                offset: const Offset(0, 6))
           ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(22),
+          child: Stack(
+            children: [
+              Positioned(
+                  right: -15,
+                  top: -15,
+                  child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withOpacity(0.1)))),
+              Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              shape: BoxShape.circle),
+                          child: const Icon(Icons.play_arrow,
+                              color: Colors.white, size: 16),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(latestMsg != null ? latestMsg.title : '🎙️ رسائل الأسرة',
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 4),
+                              Text(unreadCount > 0 ? 'لديك $unreadCount رسائل جديدة ✨' : 'استمع لرسائل أحبائك',
+                                  style: TextStyle(
+                                      color: Colors.white.withOpacity(0.85),
+                                      fontSize: 14)),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        if (unreadCount > 0)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(color: const Color(0xFFf43f5e), borderRadius: BorderRadius.circular(10)),
+                            child: Text('$unreadCount', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _buildWaveBar(4, 0),
+                        const SizedBox(width: 3),
+                        _buildWaveBar(9, 1),
+                        const SizedBox(width: 3),
+                        _buildWaveBar(15, 2),
+                        const SizedBox(width: 3),
+                        _buildWaveBar(10, 3),
+                        const SizedBox(width: 3),
+                        _buildWaveBar(6, 4),
+                        const SizedBox(width: 3),
+                        _buildWaveBar(12, 0),
+                        const SizedBox(width: 3),
+                        _buildWaveBar(7, 1),
+                        const SizedBox(width: 3),
+                        _buildWaveBar(14, 2),
+                        const SizedBox(width: 3),
+                        _buildWaveBar(5, 3),
+                        const SizedBox(width: 3),
+                        _buildWaveBar(10, 4),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

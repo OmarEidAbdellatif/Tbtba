@@ -5,6 +5,7 @@ import '../../models/app_models.dart';
 import 'visit_booking_screen.dart';
 import 'care_report_detail_screen.dart';
 import 'resident_id_screen.dart';
+import 'family_bridge_screen.dart';
 import '../../widgets/taptaba_drawer.dart';
 import '../../widgets/taptaba_scaffold.dart';
 
@@ -267,6 +268,11 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
+            GestureDetector(
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FamilyBridgeScreen())),
+              child: const Text('عرض الكل / إضافة', style: TextStyle(color: Color(0xFF0ea5e9), fontSize: 10, fontWeight: FontWeight.bold)),
+            ),
+            const Spacer(),
             const Text('حائط الذكريات ✨', style: TextStyle(color: Color(0xFF1f2937), fontSize: 14, fontWeight: FontWeight.bold)),
             const SizedBox(width: 8),
             Container(width: 4, height: 16, decoration: BoxDecoration(color: const Color(0xFF0ea5e9), borderRadius: BorderRadius.circular(2))),

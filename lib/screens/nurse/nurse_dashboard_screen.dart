@@ -801,10 +801,10 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
   }
 
   Widget _inputRow(String emoji, String lbl, TextEditingController controller,
-      String unit, Color bg, bool hasBtn) {
+      String unit, Color bg, bool hasBtn) { // بناء صف إدخال بيانات (مثل الضغط أو السكر)
     return Row(
       children: [
-        Container(
+        Container( // أيقونة تعبيرية للبيان
           width: 36,
           height: 36,
           decoration:
@@ -812,11 +812,11 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
           child: Center(child: Text(emoji, style: const TextStyle(fontSize: 16))),
         ),
         const SizedBox(width: 10),
-        Expanded(
+        Expanded( // تسمية البيان (Label)
             child: Text(lbl,
                 style:
                     const TextStyle(color: Color(0xFF64748B), fontSize: 13))),
-        Container(
+        Container( // حقل الإدخال الرقمي
           width: 80,
           decoration: BoxDecoration(
               color: const Color(0xFFF8FAFC),
@@ -837,13 +837,13 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
           ),
         ),
         const SizedBox(width: 8),
-        SizedBox(
+        SizedBox( // وحدة القياس (مثل مجم/ديسيلتر)
           width: 40,
           child: Text(unit,
               style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
         ),
         const SizedBox(width: 8),
-        if (hasBtn)
+        if (hasBtn) // زر الربط مع أجهزة القياس الخارجية (بلوتوث)
           ElevatedButton(
             onPressed: () {},
             style: ElevatedButton.styleFrom(
@@ -862,7 +862,7 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
     );
   }
 
-  Widget _bar(double h, Color c) {
+  Widget _bar(double h, Color c) { // بناء أعمدة الرسم البياني للإحصائيات
     return Expanded(
       child: TweenAnimationBuilder(
         duration: const Duration(milliseconds: 1000),
@@ -884,11 +884,11 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
     );
   }
 
-  Widget _buildMedScheduleSection() {
+  Widget _buildMedScheduleSection() { // بناء قسم جدول مواعيد الأدوية لليوم
     final provider = ref.watch(appRiverpod);
     final allMeds = provider.medications;
     
-    // Group meds by resident
+    // تجميع الأدوية حسب المقيم لعرضها في صفوف منظمة
     final Map<String, List<Medication>> groupedMeds = {};
     for (var med in allMeds) {
       final name = med.residentName ?? 'غير محدد';
@@ -901,8 +901,17 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSectionHeader('جدول الأدوية — اليوم', const Color(0xFF6366F1)),
-          Container(
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              TextButton( // زر للانتقال لتبويب العمليات لمشاهدة تفاصيل أكثر
+                onPressed: () => setState(() => _currentTabIndex = 2),
+                child: const Text('عرض الكل 📊', style: TextStyle(color: Color(0xFF0EA5E9), fontWeight: FontWeight.bold, fontSize: 12)),
+              ),
+              _buildSectionHeader('جدول الأدوية — اليوم', const Color(0xFF6366F1)),
+            ],
+          ),
+          Container( // حاوية الجدول الرئيسي
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(18),
@@ -910,7 +919,7 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
             ),
             child: Column(
               children: [
-                Container(
+                Container( // ترويسة الجدول (الفترات الزمنية)
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: const BoxDecoration(
@@ -926,22 +935,22 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
                                   color: Color(0xFF64748B)))),
-                      _medH('ص'),
-                      _medH('ظ'),
-                      _medH('م'),
-                      _medH('ل'),
+                      _medH('ص'), // صباحاً
+                      _medH('ظ'), // ظهراً
+                      _medH('م'), // مساءً
+                      _medH('ل'), // ليلاً
                     ],
                   ),
                 ),
-                ...groupedMeds.entries.map((entry) {
+                ...groupedMeds.entries.map((entry) { // إنشاء صف لكل مقيم وأدويته
                   final name = entry.key;
                   final meds = entry.value;
                   final medNames = meds.map((m) => m.name).join(' + ');
                   
-                  // Simple logic to map timeOfDay to cells
+                  // منطق تحديد حالة الدواء لكل فترة زمنية في الجدول
                   String d1 = '-', d2 = '-', d3 = '-', d4 = '-';
                   for (var m in meds) {
-                    final status = m.isTaken ? '✓' : (m.isMissed ? '!' : '⏰');
+                    final status = m.isTaken ? '✓' : ((m.isMissed || m.isSkipped) ? '!' : '⏰');
                     if (m.timeOfDay == 'الصباح') d1 = status;
                     if (m.timeOfDay == 'الظهر') d2 = status;
                     if (m.timeOfDay == 'المساء') d3 = status;
@@ -962,7 +971,7 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
     );
   }
 
-  Widget _medH(String txt) {
+  Widget _medH(String txt) { // خلية ترويسة الجدول
     return SizedBox(
         width: 40,
         child: Text(txt,
@@ -973,58 +982,70 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
                 color: Color(0xFF64748B))));
   }
 
-  Widget _medRow(String n, String s, String d1, String d2, String d3, String d4) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(n,
-                    style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF0F172A))),
-                Text(s,
-                    style: const TextStyle(
-                        fontSize: 11, color: Color(0xFF64748B))),
-              ],
+  Widget _medRow(String n, String s, String d1, String d2, String d3, String d4) { // صف بيانات المقيم في جدول الأدوية
+    return GestureDetector(
+      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => NurseResidentDetailScreen(residentName: n, roomNumber: n.contains('محمود') ? '١٠٣' : '١١٢'))),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.arrow_back_ios_new_rounded, size: 10, color: Color(0xFF94A3B8)),
+                      const SizedBox(width: 4),
+                      Text(n, // اسم المقيم
+                          style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF0F172A))),
+                    ],
+                  ),
+                  Text(s, // أسماء الأدوية
+                      style: const TextStyle(
+                          fontSize: 11, color: Color(0xFF64748B))),
+                ],
+              ),
             ),
-          ),
-          _doseCell(d1, n),
-          _doseCell(d2, n),
-          _doseCell(d3, n),
-          _doseCell(d4, n),
-        ],
+            _doseCell(d1, n), // خلية الجرعة الصباحية
+            _doseCell(d2, n), // خلية الجرعة الظهرية
+            _doseCell(d3, n), // خلية الجرعة المسائية
+            _doseCell(d4, n), // خلية الجرعة الليلية
+          ],
+        ),
       ),
     );
   }
 
-  Widget _doseCell(String st, String resident) {
-    Color bg = const Color(0xFFF3F4F6);
+  Widget _doseCell(String st, String resident) { // خلية حالة الجرعة (ملونة حسب الحالة)
+    Color bg = const Color(0xFFF3F4F6); // لون افتراضي (لا يوجد دواء)
     Color fg = const Color(0xFF9CA3AF);
-    if (st == '✓') {
+    if (st == '✓') { // تم الإعطاء (أخضر)
       bg = const Color(0xFFD1FAE5);
       fg = const Color(0xFF065F46);
-    } else if (st == '!') {
+    } else if (st == '!') { // فاشلة/تجاوزت (أحمر)
       bg = const Color(0xFFFEE2E2);
       fg = const Color(0xFF7F1D1D);
-    } else if (st == '⏰') {
+    } else if (st == '⏰') { // بانتظار الموعد (أصفر)
       bg = const Color(0xFFFEF3C7);
       fg = const Color(0xFF92400E);
     }
 
     return GestureDetector(
-      onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('تحديث حالة الدواء لـ $resident'),
-            backgroundColor: const Color(0xFF0369A1),
-            behavior: SnackBarBehavior.floating,
-          ),
+      onTap: () { // فتح نافذة التأكيد عند الضغط على الخلية
+        final provider = ref.read(appRiverpod);
+        final med = provider.medications.firstWhere(
+          (m) => m.residentName == resident && 
+                ((st == '⏰' && !m.isTaken && !m.isSkipped) || 
+                 (st == '✓' && m.isTaken) || 
+                 (st == '!' && m.isMissed)),
+          orElse: () => provider.medications.firstWhere((m) => m.residentName == resident),
         );
+
+        _showDoseConfirmation(med);
       },
       child: SizedBox(
         width: 40,
@@ -1044,7 +1065,90 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
     );
   }
 
-  void _showNoteDialog(String residentName) {
+  void _showDoseConfirmation(Medication med) { // نافذة تأكيد إعطاء الجرعة الدوائية
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: const Color(0xFFE2E8F0), borderRadius: BorderRadius.circular(2))),
+            const SizedBox(height: 24),
+            Text('تأكيد جرعة الدواء 💊', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF0369A1))),
+            const SizedBox(height: 8),
+            Text('المقيم: ${med.residentName}', style: const TextStyle(fontSize: 14, color: Color(0xFF64748B))),
+            Text('${med.name} — ${med.dosage}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded( // زر التأكيد النهائي
+                  child: ElevatedButton(
+                    onPressed: () {
+                      ref.read(appRiverpod).takeMedication(med.id);
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم تسجيل إعطاء الدواء بنجاح ✅')));
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF10B981),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: const Text('تم الإعطاء ✅', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded( // زر لتسجيل سبب عدم الإعطاء
+                  child: OutlinedButton(
+                    onPressed: () => _showSkipReasonDialog(med),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: const BorderSide(color: Color(0xFFEF4444)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: const Text('تجاوز الجرعة ❌', style: TextStyle(color: Color(0xFFEF4444), fontWeight: FontWeight.bold, fontSize: 16)),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 32),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showSkipReasonDialog(Medication med) { // نافذة اختيار سبب تجاوز الجرعة
+    final reasons = ['رفض المريض', 'غير متاح', 'نائم', 'حالة صحية لا تسمح', 'صائم'];
+    Navigator.pop(context); // إغلاق النافذة السابقة
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('سبب تجاوز الجرعة', textAlign: TextAlign.right, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: reasons.map((r) => ListTile(
+            title: Text(r, textAlign: TextAlign.right),
+            onTap: () {
+              ref.read(appRiverpod).skipMedication(med.id, r);
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('تم تسجيل تجاوز الجرعة: $r ⚠️')));
+            },
+          )).toList(),
+        ),
+      ),
+    );
+  }
+
+  void _showNoteDialog(String residentName) { // نافذة إضافة ملاحظة تمريضية جديدة
     final titleController = TextEditingController();
     final contentController = TextEditingController();
     
@@ -1061,7 +1165,7 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
+            TextField( // حقل العنوان
               controller: titleController,
               textAlign: TextAlign.right,
               decoration: InputDecoration(
@@ -1073,7 +1177,7 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
               ),
             ),
             const SizedBox(height: 12),
-            TextField(
+            TextField( // حقل التفاصيل (متعدد الأسطر)
               controller: contentController,
               maxLines: 4,
               textAlign: TextAlign.right,
@@ -1098,7 +1202,7 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('إلغاء')),
-          ElevatedButton(
+          ElevatedButton( // زر الحفظ النهائي للملاحظة
             onPressed: () {
               if (titleController.text.isNotEmpty && contentController.text.isNotEmpty) {
                 final newNote = NursingNote(
@@ -1122,7 +1226,7 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
     );
   }
 
-  void _showEmergencyAlert(String residentName) {
+  void _showEmergencyAlert(String residentName) { // نافذة تأكيد إرسال استغاثة طارئة لمقيم محدد
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1133,7 +1237,7 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
           textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 14)),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('إلغاء', style: TextStyle(color: Colors.white70))),
-          ElevatedButton(
+          ElevatedButton( // زر التأكيد (يؤدي لإرسال إشارات التنبيه)
             onPressed: () {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.red, content: Text('تم إرسال إشارة الطوارئ! 🚑')));
@@ -1146,7 +1250,7 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
     );
   }
 
-  Widget _buildBottomNav() {
+  Widget _buildBottomNav() { // بناء شريط التنقل السفلي المخصص للممرض
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
@@ -1167,7 +1271,7 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
     );
   }
 
-  Widget _navItem(IconData icon, String label, bool active, {VoidCallback? onTap}) {
+  Widget _navItem(IconData icon, String label, bool active, {VoidCallback? onTap}) { // بناء عنصر واحد في شريط التنقل
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: onTap,
@@ -1183,7 +1287,7 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
                 fontWeight: active ? FontWeight.bold : FontWeight.normal,
                 color: active ? const Color(0xFF0EA5E9) : (isDark ? Colors.white38 : const Color(0xFF9CA3AF))),
           ),
-          if (active) ...[
+          if (active) ...[ // إظهار نقطة تحت العنصر النشط
             const SizedBox(height: 2),
             Container(
                 width: 5,
@@ -1195,7 +1299,8 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
       ),
     );
   }
-  Widget _buildEmergencyFAB() {
+
+  Widget _buildEmergencyFAB() { // بناء زر الطوارئ العام (SOS) العائم
     return FloatingActionButton.extended(
       onPressed: _showEmergencyDialog,
       backgroundColor: const Color(0xFFEF4444),
@@ -1205,7 +1310,7 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
     );
   }
 
-  void _showEmergencyDialog() {
+  void _showEmergencyDialog() { // نافذة اختيار نوع حالة الطوارئ العامة
     final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet(
       context: context,
@@ -1225,7 +1330,7 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
             const SizedBox(height: 8),
             Text('برجاء اختيار نوع الطوارئ لتنبيه الطاقم المعني', style: TextStyle(fontSize: 12, color: isDark ? Colors.white60 : const Color(0xFF64748B))),
             const SizedBox(height: 24),
-            Row(
+            Row( // شبكة خيارات الطوارئ (إسعاف، طبيب، كود بلو، إدارة)
               children: [
                 Expanded(child: _emergencyAction('طلب إسعاف', Icons.airport_shuttle_rounded, const Color(0xFFEF4444), () => _triggerEmergency('سيارة إسعاف'))),
                 const SizedBox(width: 12),
@@ -1247,7 +1352,7 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
     );
   }
 
-  Widget _emergencyAction(String label, IconData icon, Color color, VoidCallback onTap) {
+  Widget _emergencyAction(String label, IconData icon, Color color, VoidCallback onTap) { // بناء زر واحد لنوع الطوارئ
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -1269,10 +1374,10 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
     );
   }
 
-  Future<void> _triggerEmergency(String type) async {
-    Navigator.pop(context);
+  Future<void> _triggerEmergency(String type) async { // معالجة تفعيل حالة الطوارئ (الاتصال بالإسعاف أو تنبيه الطاقم)
+    Navigator.pop(context); // إغلاق النافذة
     
-    if (type == 'سيارة إسعاف') {
+    if (type == 'سيارة إسعاف') { // محاولة الاتصال برقم الإسعاف (128)
       final status = await Permission.phone.request();
       if (!mounted) return;
 
@@ -1290,7 +1395,7 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
     }
 
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar( // إشعار نجاح إرسال التنبيه
       content: Text('تم إرسال تنبيه $type لجميع الطاقم المعني 🚨'),
       backgroundColor: const Color(0xFFEF4444),
       behavior: SnackBarBehavior.floating,
