@@ -83,6 +83,7 @@ class _TaptabaBellState extends ConsumerState<TaptabaBell>
               ),
               onPressed: () {
                 // Show Notifications bottom sheet or screen
+                provider.markAllFilteredNotificationsAsRead();
                 _showNotifications(context, provider);
               },
             ),

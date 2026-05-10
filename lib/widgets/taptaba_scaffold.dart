@@ -54,15 +54,7 @@ class _TaptabaScaffoldState extends State<TaptabaScaffold>
     super.dispose();
   }
 
-  void _toggleDrawer() { // دالة لفتح وإغلاق القائمة الجانبية
-    if (_drawerController.isCompleted) {
-      _drawerController.reverse(); // إغلاق
-      _scaffoldKey.currentState?.closeDrawer();
-    } else {
-      _drawerController.forward(); // فتح
-      _scaffoldKey.currentState?.openDrawer();
-    }
-  }
+
 
   @override
   Widget build(BuildContext context) { // دالة بناء الواجهة
@@ -71,31 +63,42 @@ class _TaptabaScaffoldState extends State<TaptabaScaffold>
       extendBodyBehindAppBar: widget.extendBodyBehindAppBar, // ضبط تمديد المحتوى
       backgroundColor: Theme.of(context).scaffoldBackgroundColor, // لون خلفية التطبيق
       drawer: TaptabaDrawer(overrideRole: widget.overrideRole), // القائمة الجانبية الموحدة
-      appBar: widget.hideAppBar ? null : AppBar( // شريط العنوان (إذا لم يتم إخفاؤه)
-        backgroundColor: widget.transparentAppBar ? Colors.transparent : Colors.white, // شفافية الشريط
-        elevation: 0, // إخفاء الظل الافتراضي لجمالية Glassmorphism
-        centerTitle: true, // توسيط العنوان
-        iconTheme: const IconThemeData(color: Color(0xFF64748b)), // لون الأيقونات
-        leading: IconButton( // زر فتح القائمة الجانبية (الهامبرغر)
-          icon: const Icon(Icons.menu_rounded, color: Color(0xFF64748b)),
-          onPressed: () => _scaffoldKey.currentState?.openDrawer(), // فتح القائمة عند الضغط
-        ),
-        title: Text( // نص العنوان (طبطبـة)
-          'طبطبـة',
-          style: TextStyle(
-            color: widget.titleColor ?? const Color(0xFF6C63FF), // اللون الموف المميز لطبطبة
-            fontWeight: FontWeight.w900, // خط عريض جداً
-            fontSize: 24, // حجم كبير للعنوان
-            letterSpacing: 1.2, // تباعد خفيف بين الحروف
+      body: widget.hideAppBar 
+        ? widget.body 
+        : NestedScrollView(
+            headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+              return <Widget>[
+                SliverAppBar(
+                  floating: true, // يظهر بمجرد السحب لأسفل
+                  snap: true, // يظهر بالكامل عند سحب بسيط
+                  pinned: false, // لا يظل ثابتاً في الأعلى
+                  backgroundColor: widget.transparentAppBar ? Colors.transparent : Colors.white,
+                  elevation: 0,
+                  centerTitle: true,
+                  forceElevated: innerBoxIsScrolled,
+                  iconTheme: const IconThemeData(color: Color(0xFF64748b)),
+                  leading: IconButton(
+                    icon: const Icon(Icons.menu_rounded, color: Color(0xFF64748b)),
+                    onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                  ),
+                  title: Text(
+                    'طبطبـة',
+                    style: TextStyle(
+                      color: widget.titleColor ?? const Color(0xFF6C63FF),
+                      fontWeight: FontWeight.w900,
+                      fontSize: 24,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  actions: widget.actions ?? [
+                    const TaptabaBell(),
+                    const SizedBox(width: 8),
+                  ],
+                ),
+              ];
+            },
+            body: widget.body,
           ),
-        ),
-        actions: widget.actions ?? // أيقونات الأكشن (أو الجرس الافتراضي)
-            [
-              const TaptabaBell(), // جرس التنبيهات
-              const SizedBox(width: 8), // مسافة جانبية
-            ],
-      ),
-      body: widget.body, // المحتوى الرئيسي للشاشة
       bottomNavigationBar: widget.bottomNavigationBar, // شريط التنقل السفلي إن وجد
       floatingActionButton: widget.floatingActionButton, // الزر العائم إن وجد
     );

@@ -39,7 +39,8 @@ class _AdminHomeViewState extends ConsumerState<AdminHomeView> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildDateFilter(provider), // فلتر التاريخ للتقارير
+                Flexible(child: _buildDateFilter(provider)), // جعل فلتر التاريخ مرناً
+                const SizedBox(width: 8),
                 _buildSectionTitle('الأداء التشغيلي'),
               ],
             ),
@@ -59,8 +60,9 @@ class _AdminHomeViewState extends ConsumerState<AdminHomeView> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildAlertFilter(), // أزرار التبديل بين التنبيهات النشطة والمعالجة
-              FadeTransition(opacity: widget.fadeAnimations[2], child: _buildSectionTitle('تنبيهات المركز العاجلة')),
+              Flexible(child: _buildAlertFilter()), // جعل فلتر التنبيهات مرناً
+              const SizedBox(width: 8),
+              Flexible(child: FadeTransition(opacity: widget.fadeAnimations[2], child: _buildSectionTitle('تنبيهات المركز العاجلة'))),
             ],
           ),
           const SizedBox(height: 16),
@@ -184,9 +186,20 @@ class _AdminHomeViewState extends ConsumerState<AdminHomeView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(s.label, style: const TextStyle(color: Color(0xFF94a3b8), fontSize: 11, fontWeight: FontWeight.bold)),
+                  Text(
+                    s.label, 
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: Color(0xFF94a3b8), fontSize: 11, fontWeight: FontWeight.bold)
+                  ),
                   const SizedBox(height: 8),
-                  Text(s.value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF0f172a))),
+                  FittedBox( // يضمن أن القيم الكبيرة (مثل المبالغ المالية) لن تسبب Overflow
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      s.value, 
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF0f172a))
+                    ),
+                  ),
                   const Spacer(),
                   Row(
                     children: [

@@ -70,28 +70,22 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
   @override
   Widget build(BuildContext context) {
     final provider = ref.watch(appRiverpod);
-    return SafeArea(
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
       child: Column(
         children: [
           _buildHero(provider),
-          SizedBox(
-            height: 48,
-            child: _buildDayTabs(),
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(14, 14, 14, 34),
-              child: Column(
-                children: [
-                  _buildMissBanner(),
-                  const SizedBox(height: 12),
-                  ..._buildDynamicSections(provider, selectedDay),
-                  // _buildAppointmentsSection(), // Wait, keep this static for now, uncomment below if wanted
-                  const SizedBox(height: 12),
-                  _buildAppointmentsSection(provider),
-                ],
-              ),
+          _buildDayTabs(),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 34),
+            child: Column(
+              children: [
+                _buildMissBanner(),
+                const SizedBox(height: 12),
+                ..._buildDynamicSections(provider, selectedDay),
+                const SizedBox(height: 12),
+                _buildAppointmentsSection(provider),
+              ],
             ),
           ),
         ],
@@ -578,10 +572,14 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
                               fontWeight: FontWeight.bold,
                               color: Colors.white)),
                       const SizedBox(height: 4),
-                      Text(med.dosage,
-                          style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.white.withOpacity(0.85))),
+                      Text(
+                        med.dosage,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white.withOpacity(0.85))
+                      ),
                       const SizedBox(height: 6),
                       Row(
                         mainAxisSize: MainAxisSize.min,

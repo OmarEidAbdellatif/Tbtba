@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/app_models.dart'; // نماذج البيانات المستخدمة في التطبيق
 import 'package:permission_handler/permission_handler.dart'; // مكتبة إدارة التصاريح
 import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // مكتبة التخزين الآمن
+import 'package:flutter_contacts/flutter_contacts.dart'; // مكتبة جهات الاتصال
+import 'package:url_launcher/url_launcher.dart'; // مكتبة تشغيل الروابط والمكالمات
+import 'package:photo_manager/photo_manager.dart'; // مكتبة إدارة الصور
 
 final appRiverpod = ChangeNotifierProvider((ref) => AppRiverpod());
 
@@ -18,10 +21,10 @@ class AppRiverpod extends ChangeNotifier {
   bool isDarkMode = false; // تفعيل الوضع الليلي
 
   // إدارة الجلسة (Session Management) - US-02-04
-  String? _sessionToken; // رمز الجلسة الحالي
   DateTime? _sessionExpiry; // موعد انتهاء الجلسة
   bool isRefreshingSession = false; // هل يجري حالياً تجديد الجلسة؟
-  String selectedAdminDateFilter = 'اليوم'; // فلتر التاريخ النشط للوحة تحكم المدير (اليوم، أسبوع، شهر)
+  String selectedAdminDateFilter =
+      'اليوم'; // فلتر التاريخ النشط للوحة تحكم المدير (اليوم، أسبوع، شهر)
 
   final _storage = const FlutterSecureStorage(); // إنشاء كائن التخزين الآمن
 
@@ -35,8 +38,7 @@ class AppRiverpod extends ChangeNotifier {
     final role = await _storage.read(key: 'currentRole');
     final onboarding = await _storage.read(key: 'hasSeenOnboarding');
     final expiryStr = await _storage.read(key: 'sessionExpiry');
-    _sessionToken = await _storage.read(key: 'sessionToken');
-    
+
     if (auth == 'true') {
       isAuthenticated = true;
       if (expiryStr != null) {
@@ -45,7 +47,7 @@ class AppRiverpod extends ChangeNotifier {
     }
     if (role != null) currentRole = role;
     if (onboarding == 'true') hasSeenOnboarding = true;
-    
+
     notifyListeners();
   }
 
@@ -62,19 +64,20 @@ class AppRiverpod extends ChangeNotifier {
     // إذا كانت الجلسة منتهية أو ستنتهي خلال دقيقة
     if (_sessionExpiry!.isBefore(DateTime.now())) {
       if (isRefreshingSession) return false;
-      
+
       isRefreshingSession = true;
       notifyListeners();
 
       // محاكاة طلب تجديد الجلسة من السيرفر
       await Future.delayed(const Duration(seconds: 2));
-      
+
       // نجاح التجديد (في ٩٠٪ من الحالات للمحاكاة)
-      bool refreshSuccess = DateTime.now().second % 10 != 0; 
-      
+      bool refreshSuccess = DateTime.now().second % 10 != 0;
+
       if (refreshSuccess) {
         _sessionExpiry = DateTime.now().add(const Duration(hours: 2));
-        await _storage.write(key: 'sessionExpiry', value: _sessionExpiry!.toIso8601String());
+        await _storage.write(
+            key: 'sessionExpiry', value: _sessionExpiry!.toIso8601String());
         isRefreshingSession = false;
         notifyListeners();
         return true;
@@ -96,7 +99,7 @@ class AppRiverpod extends ChangeNotifier {
   // تحديث فلتر التاريخ للوحة تحكم المدير ومحاكاة جلب البيانات بناءً على الفترة الزمنية
   void updateAdminDateFilter(String filter) {
     selectedAdminDateFilter = filter;
-    // ملاحظة: هنا يمكن إضافة استدعاء للـ API لتحديث قائمة الإحصائيات (adminStats) 
+    // ملاحظة: هنا يمكن إضافة استدعاء للـ API لتحديث قائمة الإحصائيات (adminStats)
     // بناءً على التاريخ المختار (اليوم مقابل الشهر الماضي مثلاً)
     notifyListeners(); // إشعار كافة واجهات المدير بضرورة إعادة البناء بالبيانات الجديدة
   }
@@ -190,6 +193,142 @@ class AppRiverpod extends ChangeNotifier {
       type: 'admin',
       targetRole: 'أهل',
     ),
+    TaptabaNotification(
+      id: '4',
+      title: 'تذكير بالماء 💧',
+      body: 'حان وقت شرب كوب من الماء.',
+      time: 'منذ ٣ ساعات',
+      type: 'medical',
+      targetRole: 'مسن',
+    ),
+    TaptabaNotification(
+      id: '5',
+      title: 'رسالة من المتطوع',
+      body: 'أحمد يريد زيارتك غداً صباحاً.',
+      time: 'منذ ٤ ساعات',
+      type: 'social',
+      targetRole: 'مسن',
+    ),
+    TaptabaNotification(
+      id: '6',
+      title: 'تحديث الطبيب',
+      body: 'تم تحديث سجل الأدوية الخاص بك.',
+      time: 'منذ ٥ ساعات',
+      type: 'medical',
+      targetRole: 'nurse',
+    ),
+    TaptabaNotification(
+      id: '7',
+      title: 'فعالية جديدة',
+      body: 'غداً رحلة إلى حديقة الأزهر.',
+      time: 'منذ ٦ ساعات',
+      type: 'social',
+      targetRole: 'all',
+    ),
+    TaptabaNotification(
+      id: '8',
+      title: 'تقييم مكتمل',
+      body: 'تم الانتهاء من التقييم الاجتماعي الدوري.',
+      time: 'منذ ٧ ساعات',
+      type: 'assessment',
+      targetRole: 'specialist',
+    ),
+    TaptabaNotification(
+      id: '9',
+      title: 'تنبيه أمان',
+      body: 'تم تفعيل نظام الطوارئ في الغرفة ١٠١.',
+      time: 'منذ ٨ ساعات',
+      type: 'medical',
+      targetRole: 'nurse',
+    ),
+    TaptabaNotification(
+      id: '10',
+      title: 'رسالة شكر',
+      body: 'عائلة المقيم محمود تشكرك على مجهودك.',
+      time: 'منذ ٩ ساعات',
+      type: 'social',
+      targetRole: 'volunteer',
+    ),
+    TaptabaNotification(
+      id: '11',
+      title: 'تحديث إداري',
+      body: 'سيتم إجراء صيانة دورية للمصاعد غداً.',
+      time: 'منذ ١٠ ساعات',
+      type: 'admin',
+      targetRole: 'all',
+    ),
+    TaptabaNotification(
+      id: '12',
+      title: 'صورة جديدة',
+      body: 'تمت إضافة صورة جديدة لرحلة الإسكندرية.',
+      time: 'أمس',
+      type: 'social',
+      targetRole: 'مسن',
+    ),
+    TaptabaNotification(
+      id: '13',
+      title: 'فحص دوري',
+      body: 'موعد فحص السكر بعد ١٠ دقائق.',
+      time: 'أمس',
+      type: 'medical',
+      targetRole: 'nurse',
+    ),
+    TaptabaNotification(
+      id: '14',
+      title: 'اجتماع الأخصائيين',
+      body: 'اجتماع تنسيقي لمناقشة حالات الطابق الثالث.',
+      time: 'أمس',
+      type: 'assessment',
+      targetRole: 'specialist',
+    ),
+    TaptabaNotification(
+      id: '15',
+      title: 'زيارة عائلية',
+      body: 'عائلة الحاجة فاطمة في صالة الاستقبال.',
+      time: 'أمس',
+      type: 'visit',
+      targetRole: 'all',
+    ),
+    TaptabaNotification(
+      id: '16',
+      title: 'تذكير بالرياضة',
+      body: 'حان موعد تمارين الصباح الخفيفة.',
+      time: 'أمس',
+      type: 'social',
+      targetRole: 'مسن',
+    ),
+    TaptabaNotification(
+      id: '17',
+      title: 'تسليم وردية',
+      body: 'تم الانتهاء من تسليم الوردية الليلية.',
+      time: 'أمس',
+      type: 'admin',
+      targetRole: 'nurse',
+    ),
+    TaptabaNotification(
+      id: '18',
+      title: 'شكوى مغلقة',
+      body: 'تم حل شكوى الغرفة ٢٠٤ بنجاح.',
+      time: 'أمس',
+      type: 'complaint',
+      targetRole: 'specialist',
+    ),
+    TaptabaNotification(
+      id: '19',
+      title: 'مكالمة فائتة',
+      body: 'حاول ابنك الاتصال بك منذ قليل.',
+      time: 'أمس',
+      type: 'family',
+      targetRole: 'مسن',
+    ),
+    TaptabaNotification(
+      id: '20',
+      title: 'هدية من المتطوع',
+      body: 'وصلت هدية صغيرة من فريق المتطوعين.',
+      time: 'أمس',
+      type: 'social',
+      targetRole: 'all',
+    ),
   ];
 
   List<TaptabaNotification> get filteredNotifications {
@@ -223,6 +362,15 @@ class AppRiverpod extends ChangeNotifier {
       notifications[idx].isRead = true;
       notifyListeners();
     }
+  }
+
+  void markAllFilteredNotificationsAsRead() {
+    for (var n in notifications) {
+      if (n.targetRole == currentRole || n.targetRole == 'all') {
+        n.isRead = true;
+      }
+    }
+    notifyListeners();
   }
 
   void clearNotifications() {
@@ -295,17 +443,34 @@ class AppRiverpod extends ChangeNotifier {
     notifyListeners();
   }
 
-  // عملية تسجيل الدخول وحفظ البيانات آمنياً مع ضبط موعد انتهاء الجلسة
-  Future<void> login(String role) async {
+  // عملية تسجيل الدخول وحفظ البيانات آمنياً مع ضبط موعد انتهاء الجلسة (US-SmartLogin)
+  Future<void> login(String identifier, String password) async {
+    // منطق ذكي لتحديد الدور بناءً على المعرف (رقم الهاتف أو البريد الإلكتروني)
+    String role = 'أسرة'; // الدور الافتراضي
+
+    if (identifier.contains('@admin.com')) {
+      role = 'إدارة';
+    } else if (identifier.contains('@nurse.com')) {
+      role = 'ممرض';
+    } else if (identifier.contains('@specialist.com')) {
+      role = 'أخصائي اجتماعي';
+    } else if (identifier.startsWith('01')) {
+      role = 'مسن';
+    } else if (identifier.contains('@volunteer.com')) {
+      role = 'متطوع';
+    }
+
     currentRole = role;
     isAuthenticated = true;
-    _sessionExpiry = DateTime.now().add(const Duration(hours: 2)); // الجلسة صالحة لساعتين
-    
+    _sessionExpiry =
+        DateTime.now().add(const Duration(hours: 2)); // الجلسة صالحة لساعتين
+
     // حفظ البيانات في التخزين الآمن (Secure Storage)
     await _storage.write(key: 'isAuthenticated', value: 'true');
     await _storage.write(key: 'currentRole', value: role);
-    await _storage.write(key: 'sessionExpiry', value: _sessionExpiry!.toIso8601String());
-    
+    await _storage.write(
+        key: 'sessionExpiry', value: _sessionExpiry!.toIso8601String());
+
     notifyListeners(); // إعلام الواجهات بالتغيير
   }
 
@@ -313,12 +478,12 @@ class AppRiverpod extends ChangeNotifier {
   Future<void> logout() async {
     isAuthenticated = false;
     _sessionExpiry = null;
-    
+
     // مسح التخزين الآمن تماماً
     await _storage.delete(key: 'isAuthenticated');
     await _storage.delete(key: 'currentRole');
     await _storage.delete(key: 'sessionExpiry');
-    
+
     notifyListeners(); // العودة لشاشة تسجيل الدخول تلقائياً
   }
 
@@ -406,7 +571,7 @@ class AppRiverpod extends ChangeNotifier {
     if (index != -1) {
       final med = medications[index];
       medications[index].isTaken = true;
-      
+
       // LINK: Notify Family when medication is taken
       triggerNotification(
         title: 'تم إعطاء الدواء 💊',
@@ -417,7 +582,7 @@ class AppRiverpod extends ChangeNotifier {
 
       // LINK: Notify Admin if a dose is marked after being missed
       if (med.isMissed) {
-         triggerNotification(
+        triggerNotification(
           title: 'معالجة تأخير دواء ⚠️',
           body: 'تم إعطاء الجرعة المتأخرة لـ ${med.residentName}.',
           type: 'admin',
@@ -494,26 +659,35 @@ class AppRiverpod extends ChangeNotifier {
 
   List<FamilyMember> familyMembersList = [
     FamilyMember(
-        id: 'f1',
-        name: 'سارة',
-        relation: 'ابنة',
-        avatarPath: '',
-        initials: 'س',
-        isAvailable: true),
+      id: 'f1',
+      name: 'سارة',
+      relation: 'ابنة',
+      avatarPath: '',
+      initials: 'س',
+      phoneNumber: '01012345678',
+      zoomLink: 'https://zoom.us/j/1234567890',
+      isAvailable: true,
+    ),
     FamilyMember(
-        id: 'f2',
-        name: 'محمد',
-        relation: 'ابن',
-        avatarPath: '',
-        initials: 'م',
-        isAvailable: false),
+      id: 'f2',
+      name: 'محمد',
+      relation: 'ابن',
+      avatarPath: '',
+      initials: 'م',
+      phoneNumber: '01122334455',
+      zoomLink: 'https://zoom.us/j/0987654321',
+      isAvailable: false,
+    ),
     FamilyMember(
-        id: 'f3',
-        name: 'ليلى',
-        relation: 'حفيدة',
-        avatarPath: '',
-        initials: 'ل',
-        isAvailable: true),
+      id: 'f3',
+      name: 'ليلى',
+      relation: 'حفيدة',
+      avatarPath: '',
+      initials: 'ل',
+      phoneNumber: '01233445566',
+      zoomLink: 'https://zoom.us/j/1122334455',
+      isAvailable: true,
+    ),
   ];
 
   List<VoiceMessage> voiceMessagesList = [
@@ -550,12 +724,46 @@ class AppRiverpod extends ChangeNotifier {
   String activeCallerInitials = 'سا';
 
   // New Features State
+  bool isAIInsightsEnabled = true;
+  List<AIInsight> aiInsights = [
+    AIInsight(
+      id: 'ai1',
+      residentName: 'الحاج محمود سالم',
+      summary:
+          'تحسن ملحوظ في التفاعل الاجتماعي خلال الأسبوع الماضي، مع زيادة في المشاركة في الأنشطة الجماعية بنسبة ٤٠٪.',
+      rationale:
+          'تم تحليل سجلات الحضور والمشاركة في الأنشطة اليومية، بالإضافة إلى ملاحظات الأخصائيين حول حالته المزاجية الإيجابية في الجلسات الجماعية.',
+      generationDate: DateTime.now().subtract(const Duration(hours: 2)),
+      confidenceScore: 0.92,
+    ),
+    AIInsight(
+      id: 'ai2',
+      residentName: 'الحاجة فاطمة علي',
+      summary:
+          'انخفاض طفيف في مستوى النشاط البدني الصباحي. قد يكون بسبب تغيير في نمط النوم.',
+      rationale:
+          'مقارنة قراءات الحركة الصباحية لآخر ٣ أيام مع المتوسط الشهري أظهرت تراجعاً ملحوظاً في الساعات الأولى من اليوم.',
+      generationDate: DateTime.now().subtract(const Duration(days: 1)),
+      confidenceScore: 0.78,
+    ),
+  ];
+
+  bool isAICompanionEnabled = false;
+  List<CompanionMessage> companionChatHistory = [
+    CompanionMessage(
+      id: 'c1',
+      text: 'مرحباً بك يا حاج محمود! أنا رفيقك الذكي، كيف تشعر اليوم؟ ✨',
+      isFromAI: true,
+      timestamp: DateTime.now().subtract(const Duration(minutes: 5)),
+    ),
+  ];
+
   bool isEmergencyActive = false;
   String currentMood = ''; // 'happy', 'calm', 'tired', 'active'
   bool isReadingAudio = false;
   String readingText = '';
 
-  List<String> deviceGalleryImages = []; // Simulated fetched device images
+  List<AssetEntity> deviceGalleryImages = []; // Real fetched device assets
 
   List<MemoryItem> memoriesList = [
     MemoryItem(
@@ -810,30 +1018,83 @@ class AppRiverpod extends ChangeNotifier {
 
   // --- DYNAMIC QUESTION BANK ---
   Map<String, List<Map<String, dynamic>>> questionBank = {
-    't1': [ // Psychological (GDS-15)
-      {'text': 'هل تشعر بالرضا عن حياتك بشكل عام؟', 'type': 'choice', 'options': ['نعم', 'لا']},
-      {'text': 'هل تخلت عن الكثير من اهتماماتك؟', 'type': 'choice', 'options': ['نعم', 'لا']},
-      {'text': 'هل تشعر بفرط الملل؟', 'type': 'choice', 'options': ['نعم', 'لا']},
-      {'text': 'هل تشعر بالقلق من حدوث شيء سيء؟', 'type': 'choice', 'options': ['نعم', 'لا']},
-      {'text': 'هل تشعر بالسعادة معظم الوقت؟', 'type': 'choice', 'options': ['نعم', 'لا']},
+    't1': [
+      // Psychological (GDS-15)
+      {
+        'text': 'هل تشعر بالرضا عن حياتك بشكل عام؟',
+        'type': 'choice',
+        'options': ['نعم', 'لا']
+      },
+      {
+        'text': 'هل تخلت عن الكثير من اهتماماتك؟',
+        'type': 'choice',
+        'options': ['نعم', 'لا']
+      },
+      {
+        'text': 'هل تشعر بفرط الملل؟',
+        'type': 'choice',
+        'options': ['نعم', 'لا']
+      },
+      {
+        'text': 'هل تشعر بالقلق من حدوث شيء سيء؟',
+        'type': 'choice',
+        'options': ['نعم', 'لا']
+      },
+      {
+        'text': 'هل تشعر بالسعادة معظم الوقت؟',
+        'type': 'choice',
+        'options': ['نعم', 'لا']
+      },
     ],
-    't2': [ // Social (LSNS-6)
-      {'text': 'كم عدد الأصدقاء الذين تراهم أو تسمع منهم شهرياً؟', 'type': 'choice', 'options': ['٠', '١', '٢', '٣-٤', '٥-٨', '٩+']},
-      {'text': 'مع كم من أصدقائك تشعر بالراحة للحديث عن أمورك الخاصة؟', 'type': 'choice', 'options': ['٠', '١', '٢', '٣-٤', '٥-٨', '٩+']},
-      {'text': 'كم عدد الأصدقاء الذين تشعر بقربهم بحيث يمكنك طلب المساعدة منهم؟', 'type': 'choice', 'options': ['٠', '١', '٢', '٣-٤', '٥-٨', '٩+']},
+    't2': [
+      // Social (LSNS-6)
+      {
+        'text': 'كم عدد الأصدقاء الذين تراهم أو تسمع منهم شهرياً؟',
+        'type': 'choice',
+        'options': ['٠', '١', '٢', '٣-٤', '٥-٨', '٩+']
+      },
+      {
+        'text': 'مع كم من أصدقائك تشعر بالراحة للحديث عن أمورك الخاصة؟',
+        'type': 'choice',
+        'options': ['٠', '١', '٢', '٣-٤', '٥-٨', '٩+']
+      },
+      {
+        'text':
+            'كم عدد الأصدقاء الذين تشعر بقربهم بحيث يمكنك طلب المساعدة منهم؟',
+        'type': 'choice',
+        'options': ['٠', '١', '٢', '٣-٤', '٥-٨', '٩+']
+      },
     ],
-    't3': [ // Physical (ADL)
-      {'text': 'هل يمكنك الاستحمام بمفردك؟', 'type': 'choice', 'options': ['بشكل مستقل', 'بمساعدة جزئية', 'بمساعدة كاملة']},
-      {'text': 'هل يمكنك ارتداء ملابسك بمفردك؟', 'type': 'choice', 'options': ['بشكل مستقل', 'بمساعدة جزئية', 'بمساعدة كاملة']},
-      {'text': 'القدرة على الحركة والانتقال؟', 'type': 'choice', 'options': ['بشكل مستقل', 'بمساعدة جزئية', 'بمساعدة كاملة']},
+    't3': [
+      // Physical (ADL)
+      {
+        'text': 'هل يمكنك الاستحمام بمفردك؟',
+        'type': 'choice',
+        'options': ['بشكل مستقل', 'بمساعدة جزئية', 'بمساعدة كاملة']
+      },
+      {
+        'text': 'هل يمكنك ارتداء ملابسك بمفردك؟',
+        'type': 'choice',
+        'options': ['بشكل مستقل', 'بمساعدة جزئية', 'بمساعدة كاملة']
+      },
+      {
+        'text': 'القدرة على الحركة والانتقال؟',
+        'type': 'choice',
+        'options': ['بشكل مستقل', 'بمساعدة جزئية', 'بمساعدة كاملة']
+      },
     ],
   };
 
   List<Map<String, dynamic>> getQuestionsForTool(String toolId) {
-    return questionBank[toolId] ?? [
-      {'text': 'سؤال عام ١', 'type': 'choice', 'options': ['نعم', 'لا']},
-      {'text': 'سؤال عام ٢', 'type': 'scale'},
-    ];
+    return questionBank[toolId] ??
+        [
+          {
+            'text': 'سؤال عام ١',
+            'type': 'choice',
+            'options': ['نعم', 'لا']
+          },
+          {'text': 'سؤال عام ٢', 'type': 'scale'},
+        ];
   }
 
   // --- SOCIAL SPECIALIST STATE ---
@@ -899,7 +1160,6 @@ class AppRiverpod extends ChangeNotifier {
         id: 'n13', type: 'مالي', roomNumber: '١٠٨', label: 'م'),
   ];
 
-
   List<SocialSpecialistResidentScore> socialResidentScores = [
     SocialSpecialistResidentScore(
       id: 'rs1',
@@ -938,10 +1198,10 @@ class AppRiverpod extends ChangeNotifier {
 
   List<SocialSpecialistResidentScore> get filteredResidentScores {
     return socialResidentScores.where((r) {
-      final matchQuery =
-          r.name.contains(residentSearchQuery) || r.room.contains(residentSearchQuery);
-      final matchStatus =
-          selectedHealthStatus == null || r.healthStatus == selectedHealthStatus;
+      final matchQuery = r.name.contains(residentSearchQuery) ||
+          r.room.contains(residentSearchQuery);
+      final matchStatus = selectedHealthStatus == null ||
+          r.healthStatus == selectedHealthStatus;
       final matchRoom =
           selectedRoomFilter == null || r.room == selectedRoomFilter;
       return matchQuery && matchStatus && matchRoom;
@@ -1093,6 +1353,70 @@ class AppRiverpod extends ChangeNotifier {
   }
 
   List<FamilyMember> get familyMembers => familyMembersList;
+
+  // --- CONTACTS & COMMUNICATION LOGIC ---
+
+  // طلب إذن الوصول لجهات الاتصال وجلب المفضلين
+  Future<void> fetchFavoriteContacts() async {
+    if (await FlutterContacts.requestPermission()) {
+      // جلب جهات الاتصال مع الصور وأرقام الهواتف
+      final contacts =
+          await FlutterContacts.getContacts(withProperties: true);
+
+      // جلب جهات الاتصال المفضلة (Starred) فقط
+      final favorites = contacts.where((c) => c.isStarred).toList();
+
+      // إذا لم يكن هناك مفضلين، نأخذ أول ٣ جهات اتصال كأمثلة
+      final toShow =
+          favorites.isNotEmpty ? favorites : contacts.take(3).toList();
+
+      for (var contact in toShow) {
+        if (contact.phones.isNotEmpty) {
+          final phone = contact.phones.first.number;
+          if (!familyMembersList.any((m) => m.phoneNumber == phone)) {
+            familyMembersList.add(FamilyMember(
+              id: contact.id,
+              name: contact.displayName,
+              relation: 'قريب', // صلة افتراضية
+              avatarPath: '',
+              initials: contact.displayName.isNotEmpty
+                  ? contact.displayName.substring(0, 1)
+                  : '؟',
+              phoneNumber: phone,
+              isAvailable: true,
+            ));
+          }
+        }
+      }
+      notifyListeners();
+    }
+  }
+
+  // إجراء مكالمة هاتفية حقيقية عبر تطبيق الهاتف
+  Future<void> callPhoneNumber(String phone) async {
+    final Uri launchUri = Uri(
+      scheme: 'tel',
+      path: phone,
+    );
+    if (await canLaunchUrl(launchUri)) {
+      await launchUrl(launchUri);
+    } else {
+      debugPrint('Could not launch dialer for $phone');
+    }
+  }
+
+  // تشغيل اجتماعات زووم
+  Future<void> launchZoom(String? link) async {
+    if (link == null || link.isEmpty) return;
+
+    final Uri url = Uri.parse(link);
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } else {
+      debugPrint('Could not launch Zoom link: $link');
+    }
+  }
+
   List<VoiceMessage> get voiceMessages => voiceMessagesList;
   List<MemoryItem> get memories => memoriesList;
 
@@ -1214,6 +1538,55 @@ class AppRiverpod extends ChangeNotifier {
   }
 
   // --- NEW FEATURES METHODS ---
+  void toggleAIInsights(bool value) {
+    isAIInsightsEnabled = value;
+    notifyListeners();
+  }
+
+  void toggleAICompanion(bool value) {
+    isAICompanionEnabled = value;
+    notifyListeners();
+  }
+
+  void sendCompanionMessage(String text) {
+    if (text.isEmpty) return;
+
+    // Add user message
+    companionChatHistory.add(CompanionMessage(
+      id: DateTime.now().toString(),
+      text: text,
+      isFromAI: false,
+      timestamp: DateTime.now(),
+    ));
+    notifyListeners();
+
+    // Simulate supportive AI reply
+    Future.delayed(const Duration(seconds: 1), () {
+      String reply =
+          'أنا هنا لأسمعك دائماً. يسعدني جداً تواصلك معي! هل هناك شيء آخر تود الحديث عنه؟';
+
+      // Basic supportive logic based on keywords
+      if (text.contains('وحيد') || text.contains('وحدة')) {
+        reply =
+            'لست وحدك أبداً، أنا معك وعائلتك تحبك كثيراً. ما رأيك أن نشاهد بعض الصور من صندوق الذكريات لاحقاً؟';
+      } else if (text.contains('تعبان') || text.contains('مرض')) {
+        reply =
+            'سلامتك ألف سلامة. لا تنسَ تناول دوائك في موعده، وسأكون هنا لأطمئن عليك باستمرار.';
+      } else if (text.contains('سعيد') || text.contains('جميل')) {
+        reply =
+            'يا له من خبر رائع! طاقتك الإيجابية تسعدني جداً. أتمنى أن يدوم هذا الشعور الجميل.';
+      }
+
+      companionChatHistory.add(CompanionMessage(
+        id: DateTime.now().toString(),
+        text: reply,
+        isFromAI: true,
+        timestamp: DateTime.now(),
+      ));
+      notifyListeners();
+    });
+  }
+
   void triggerSOS() {
     isEmergencyActive = true;
     notifyListeners();
@@ -1222,6 +1595,37 @@ class AppRiverpod extends ChangeNotifier {
   void cancelSOS() {
     isEmergencyActive = false;
     notifyListeners();
+  }
+
+  // --- DEEP LINKING & NOTIFICATIONS (US-09-03) ---
+  void handleDeepLink(String route) {
+    // Logic for Elderly (مسن) role
+    if (currentRole == 'مسن') {
+      switch (route) {
+        case 'medication':
+          setElderlyTabIndex(1); // Medication screen
+          break;
+        case 'family_update':
+          setElderlyTabIndex(3); // Memories screen
+          break;
+        case 'calls':
+          setElderlyTabIndex(2); // Calls screen
+          break;
+        case 'activities':
+          setElderlyTabIndex(4); // Activities screen
+          break;
+        default:
+          setElderlyTabIndex(0); // Home
+      }
+    }
+    // Logic for other roles could be added here
+
+    notifyListeners();
+  }
+
+  void simulateNotification(String type) {
+    // Simulate a push notification being clicked
+    handleDeepLink(type);
   }
 
   void setMood(String mood) {
@@ -1290,16 +1694,19 @@ class AppRiverpod extends ChangeNotifier {
   }
 
   // --- تتبع الشكاوى والمتابعة الاجتماعية (US-07-04) ---
-  
+
   // فلترة الشكاوى بناءً على حالتها (جديدة، قيد المعالجة، مكتملة)
   List<SocialSpecialistComplaint> get filteredSocialComplaints {
     if (selectedComplaintStatus.contains('الكل')) return socialComplaints;
-    if (selectedComplaintStatus.contains('مفتوحة'))
+    if (selectedComplaintStatus.contains('مفتوحة')) {
       return socialComplaints.where((c) => c.status == 'open').toList();
-    if (selectedComplaintStatus.contains('جاري'))
+    }
+    if (selectedComplaintStatus.contains('جاري')) {
       return socialComplaints.where((c) => c.status == 'progress').toList();
-    if (selectedComplaintStatus.contains('مُغلقة'))
+    }
+    if (selectedComplaintStatus.contains('مُغلقة')) {
       return socialComplaints.where((c) => c.status == 'done').toList();
+    }
     return socialComplaints;
   }
 
@@ -1403,8 +1810,21 @@ class AppRiverpod extends ChangeNotifier {
         age: 72,
         phone: '01012345678',
         familyMembers: [
-          FamilyMember(id: 'f1', name: 'أحمد محمود', relation: 'ابن', avatarPath: '', initials: 'أم', isAvailable: true),
-          FamilyMember(id: 'f2', name: 'سارة محمود', relation: 'ابنة', avatarPath: '', initials: 'سم'),
+          FamilyMember(
+              id: 'f1',
+              name: 'أحمد محمود',
+              relation: 'ابن',
+              avatarPath: '',
+              initials: 'أم',
+              phoneNumber: '01011112222',
+              isAvailable: true),
+          FamilyMember(
+              id: 'f2',
+              name: 'سارة محمود',
+              relation: 'ابنة',
+              avatarPath: '',
+              initials: 'سم',
+              phoneNumber: '01033334444'),
         ]),
     SpecialistResidentFile(
         id: 'rf2',
@@ -1418,7 +1838,13 @@ class AppRiverpod extends ChangeNotifier {
         age: 68,
         phone: '01112223334',
         familyMembers: [
-          FamilyMember(id: 'f3', name: 'منى حسن', relation: 'ابنة', avatarPath: '', initials: 'مح'),
+          FamilyMember(
+              id: 'f3',
+              name: 'منى حسن',
+              relation: 'ابنة',
+              avatarPath: '',
+              initials: 'مح',
+              phoneNumber: '01155556666'),
         ]),
     SpecialistResidentFile(
         id: 'rf3',
@@ -1758,18 +2184,23 @@ class AppRiverpod extends ChangeNotifier {
     }
   }
 
-  void saveMedicalVitals(String residentName, Map<String, String> readings) {
+  void saveMedicalVitals({
+    required String residentName,
+    required String bp,
+    required String sugar,
+    required String temp,
+  }) {
     // In a real app, this would save to a database.
     // For this prototype, we'll create a new MedicalSession entry and trigger a notification.
 
     final newSession = MedicalSession(
       id: 's${DateTime.now().millisecondsSinceEpoch}',
-      type:
-          'doctor', // Using 'doctor' as it matches existing model types better, or we can add 'vitals' if needed
+      type: 'vitals', // Change type to 'vitals'
       specialistName: 'الممرضة منى',
       time: 'الآن',
       date: 'اليوم',
-      notes: 'تم فحص المؤشرات الحيوية: الأكسجين (${readings['oxygen']})',
+      notes:
+          'تم فحص المؤشرات الحيوية: الضغط ($bp)، السكر ($sugar مجم/دل)، الحرارة ($temp°)',
       residentName: residentName,
     );
 
@@ -1778,12 +2209,11 @@ class AppRiverpod extends ChangeNotifier {
     // Trigger a real notification
     triggerNotification(
       title: 'تم حفظ القراءات 🏥',
-      body: 'تم تسجيل المؤشرات الحيوية لـ $residentName بنجاح.',
+      body: 'تم تسجيل العلامات الحيوية لـ $residentName بنجاح.',
       type: 'medical',
-      targetRole: 'ممرض',
     );
 
-    notifyListeners();
+    notifyListeners(); // Ensure UI updates
   }
 
   void addFamilyVisit(FamilyVisit visit) {
@@ -1817,7 +2247,6 @@ class AppRiverpod extends ChangeNotifier {
     );
     notifyListeners();
   }
-
 
   void clearUnpaidBills() {
     // Mark all bills as paid for simulation
@@ -1919,7 +2348,7 @@ class AppRiverpod extends ChangeNotifier {
 
   String generatePerformanceSummary() {
     final compliance = (medicationComplianceRate * 100).toInt();
-    final occupancy = 94; // Mocked for now
+    const occupancy = 94; // Mocked for now
     return '''
 ملخص أداء دار طبطبة للرعاية
 التاريخ: ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}
@@ -1938,7 +2367,8 @@ class AppRiverpod extends ChangeNotifier {
   Future<String> exportReport(String format) async {
     // Simulate processing time
     await Future.delayed(const Duration(seconds: 2));
-    final dateStr = "${DateTime.now().year}-${DateTime.now().month}-${DateTime.now().day}";
+    final dateStr =
+        "${DateTime.now().year}-${DateTime.now().month}-${DateTime.now().day}";
     final fileName = "Taptaba_Report_$dateStr.$format";
     return fileName;
   }
@@ -2024,15 +2454,17 @@ class AppRiverpod extends ChangeNotifier {
   bool hasGalleryPermission = false;
 
   Future<void> requestGalleryPermission() async {
-    final status = await Permission.photos.request();
-    hasGalleryPermission = status.isGranted;
+    final PermissionState ps = await PhotoManager.requestPermissionExtend();
+    hasGalleryPermission = ps.isAuth;
     if (hasGalleryPermission) {
-      // Simulate fetching images from gallery
-      deviceGalleryImages = [
-        'https://images.unsplash.com/photo-1511895426328-dc8714191300?q=80&w=1000',
-        'https://images.unsplash.com/photo-1516733725897-1aa73b87c8e8?q=80&w=1000',
-        'https://images.unsplash.com/photo-1472289065668-ce650ac443d2?q=80&w=1000',
-      ];
+      // Fetch real images from gallery
+      List<AssetPathEntity> albums =
+          await PhotoManager.getAssetPathList(type: RequestType.image);
+      if (albums.isNotEmpty) {
+        List<AssetEntity> photos =
+            await albums[0].getAssetListPaged(page: 0, size: 50);
+        deviceGalleryImages = photos;
+      }
     }
     notifyListeners();
   }
@@ -2278,7 +2710,8 @@ class AppRiverpod extends ChangeNotifier {
   void startIntervention(String id) {
     final idx = socialComplaints.indexWhere((c) => c.id == id);
     if (idx != -1) {
-      final updatedTimeline = List<ComplaintStep>.from(socialComplaints[idx].timeline);
+      final updatedTimeline =
+          List<ComplaintStep>.from(socialComplaints[idx].timeline);
       updatedTimeline.add(ComplaintStep(
         text: 'بدء التدخل والمتابعة',
         time: 'الآن',
@@ -2297,7 +2730,7 @@ class AppRiverpod extends ChangeNotifier {
         icon: socialComplaints[idx].icon,
         timeline: updatedTimeline,
       );
-      
+
       notifyListeners();
     }
   }
@@ -2312,7 +2745,7 @@ class AppRiverpod extends ChangeNotifier {
     final idx = filteredResidentScores.indexWhere((r) => r.id == residentId);
     if (idx != -1) {
       final r = filteredResidentScores[idx];
-      
+
       // Update scores
       final updatedScores = Map<String, double>.from(r.scores);
       newScores.forEach((key, value) {
@@ -2330,19 +2763,21 @@ class AppRiverpod extends ChangeNotifier {
         healthStatus: r.healthStatus,
         lastAssessment: DateTime.now(),
       );
-      
+
       // Add a social notification if urgent
       if (needsIntervention) {
-        notifications.insert(0, TaptabaNotification(
-          id: 'soc_${DateTime.now().millisecondsSinceEpoch}',
-          title: 'تنبيه تدخل اجتماعي: ${r.name}',
-          body: 'المقيم بحاجة لمتابعة عاجلة بناءً على التقييم الأخير.',
-          time: 'الآن',
-          type: 'social',
-          targetRole: 'specialist',
-          residentId: residentId,
-          isRead: false,
-        ));
+        notifications.insert(
+            0,
+            TaptabaNotification(
+              id: 'soc_${DateTime.now().millisecondsSinceEpoch}',
+              title: 'تنبيه تدخل اجتماعي: ${r.name}',
+              body: 'المقيم بحاجة لمتابعة عاجلة بناءً على التقييم الأخير.',
+              time: 'الآن',
+              type: 'social',
+              targetRole: 'specialist',
+              residentId: residentId,
+              isRead: false,
+            ));
       }
 
       notifyListeners();
@@ -2357,7 +2792,7 @@ class AppRiverpod extends ChangeNotifier {
       if (r.scores.isNotEmpty) {
         avgScore = r.scores.values.reduce((a, b) => a + b) / r.scores.length;
       }
-      
+
       Color statusColor;
       if (r.isUrgent || avgScore < 0.4) {
         statusColor = const Color(0xFFef4444); // High Need

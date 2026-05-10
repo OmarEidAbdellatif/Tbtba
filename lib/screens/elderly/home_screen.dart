@@ -3,6 +3,7 @@ import 'dart:math'; // مكتبة العمليات الرياضية
 import 'package:flutter/material.dart'; // مكتبة فلاتر الأساسية للواجهات
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // مكتبة إدارة الحالة
 import '../../providers/app_riverpod.dart'; // مزود الحالة الرئيسي للتطبيق
+import '../../widgets/ai_companion_chat.dart'; // ويدجت رفيق الذكاء الاصطناعي
 import 'widgets/permission_dialog.dart'; // حوار طلب الصلاحيات المخصص
 
 class HomeScreen extends ConsumerStatefulWidget { // شاشة المسن الرئيسية
@@ -85,29 +86,64 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   @override
   Widget build(BuildContext context) { // دالة بناء واجهة الشاشة الرئيسية
     final provider = ref.watch(appRiverpod); // مراقبة حالة التطبيق
-    return Column(
+    return Stack(
       children: [
-        // قسم الترحيب العلوي (Hero)
-        _buildHero(provider),
-        if (provider.currentMood.isEmpty) _buildMoodTracker(provider), // إظهار متعقب المزاج إذا لم يحدد بعد
+        SingleChildScrollView(
+          padding: const EdgeInsets.only(bottom: 100), // مساحة إضافية في الأسفل
+          child: Column(
+            children: [
+              // قسم الترحيب العلوي (Hero)
+              _buildHero(provider),
+              if (provider.currentMood.isEmpty) _buildMoodTracker(provider), // إظهار متعقب المزاج إذا لم يحدد بعد
 
-        // قسم البطاقات الرئيسية القابلة للتمرير
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(10),
-            child: Column(
-              children: [
-                _buildMedicineCard(provider), // بطاقة الدواء
-                const SizedBox(height: 12),
-                _buildMemoryBoxCard(provider), // بطاقة صندوق الذكريات (جديد)
-                const SizedBox(height: 12),
-                _buildFamilyCard(provider, context), // بطاقة التواصل مع العائلة
-                const SizedBox(height: 12),
-                _buildPointsCard(provider), // بطاقة إجمالي النقاط
-              ],
-            ),
+              // قسم البطاقات الرئيسية
+              Padding(
+                padding: const EdgeInsets.all(10),
+                child: Column(
+                  children: [
+                    _buildMedicineCard(provider), // بطاقة الدواء
+                    const SizedBox(height: 12),
+                    _buildMemoryBoxCard(provider), // بطاقة صندوق الذكريات (جديد)
+                    const SizedBox(height: 12),
+                    _buildFamilyCard(provider, context), // بطاقة التواصل مع العائلة
+                    const SizedBox(height: 12),
+                    _buildPointsCard(provider), // بطاقة إجمالي النقاط
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
+        
+        // ويدجت رفيق الذكاء الاصطناعي (US-08-05) - يظهر فقط عند التفعيل
+        if (provider.isAICompanionEnabled)
+          Positioned(
+            bottom: 20,
+            left: 20,
+            child: GestureDetector(
+              onTap: () => showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (context) => const AICompanionChat(),
+              ),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: [Color(0xFF6366F1), Color(0xFF818CF8)]),
+                  borderRadius: BorderRadius.circular(30),
+                  boxShadow: [BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.4), blurRadius: 12, offset: const Offset(0, 6))],
+                ),
+                child: const Row(
+                  children: [
+                    Text('رفيقي الذكي ✨', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14, fontFamily: 'Cairo')),
+                    SizedBox(width: 8),
+                    Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 20),
+                  ],
+                ),
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -980,21 +1016,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   },
                 ),
                 const Spacer(),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text('⭐ $points',
-                        style: const TextStyle(
-                            fontSize: 36,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF6C63FF))),
-                    const SizedBox(height: 4),
-                    Text('من ٦٠٠ نقطة هذا الشهر',
-                        style: TextStyle(
-                            fontSize: 16,
-                            color: hc ? Colors.white70 : Colors.grey[600],
-                            fontWeight: FontWeight.w500)),
-                  ],
+                Expanded( // جعل قسم النصوص مرناً بالكامل
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      FittedBox( // يضمن أن رقم النقاط الكبير لن يسبب Overflow
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          '⭐ $points',
+                          style: const TextStyle(
+                              fontSize: 36,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF6C63FF)),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      FittedBox( // يضمن أن الجملة التوضيحية لن تخرج عن حدود الكارت
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          'من ٦٠٠ نقطة هذا الشهر',
+                          style: TextStyle(
+                              fontSize: 16,
+                              color: hc ? Colors.white70 : Colors.grey[600],
+                              fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),

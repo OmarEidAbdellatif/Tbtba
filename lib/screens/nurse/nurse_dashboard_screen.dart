@@ -30,9 +30,6 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
   late AnimationController _pulseController; // متحكم أنيميشن النبض للتنبيهات
   late AnimationController _spinController; // متحكم أنيميشن الدوران
 
-  final TextEditingController _bpController = TextEditingController(text: '١٢٠/٨٠'); // متحكم ضغط الدم
-  final TextEditingController _sugarController = TextEditingController(text: '٩٥'); // متحكم مستوى السكر
-
   String _selectedFilter = 'الكل'; // الفلتر المختار لعرض المقيمين
 
   void _startShiftTimer() { // دالة لبدء مؤقت تنازلي لنهاية الوردية
@@ -92,8 +89,6 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
     _timer?.cancel(); // إيقاف المؤقت
     _pulseController.dispose(); // إغلاق متحكم النبض
     _spinController.dispose(); // إغلاق متحكم الدوران
-    _bpController.dispose(); // إغلاق متحكم ضغط الدم
-    _sugarController.dispose(); // إغلاق متحكم السكر
     super.dispose(); // استدعاء التنظيف الأصلي
   }
 
@@ -426,37 +421,45 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
   }
 
   Widget _buildKPICard(String val, String lbl, String sub, Color valColor,
-      Color subColor) { // قالب بطاقة مؤشر الأداء
+      Color subColor) { // قالب بطاقة مؤشر الأداء - تم تعديله ليكون مرناً بالكامل
     return Expanded( // توزيع البطاقات بالتساوي
       child: Container( // تصميم البطاقة
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFE0F2FE)), // إطار أزرق فاتح جداً
+          border: Border.all(color: const Color(0xFFE0F2FE)), 
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text( // القيمة الرقمية للمؤشر
-              val,
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: valColor,
+            FittedBox( // يضمن أن القيمة الرقمية لن تخرج عن حدود الكارت مهما كان حجم الخط
+              fit: BoxFit.scaleDown,
+              child: Text( 
+                val,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: valColor,
+                ),
               ),
             ),
             const SizedBox(height: 4),
-            Text( // مسمى المؤشر
+            Text( // مسمى المؤشر - تم تفعيل الاختصار لمنع الأسطر المتعددة
               lbl,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 10, color: Color(0xFF64748B)),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 9, color: Color(0xFF64748B)),
             ),
             const SizedBox(height: 4),
             Text( // نص توضيحي إضافي
               sub,
               textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 10,
+                fontSize: 9,
                 color: subColor,
                 fontWeight: FontWeight.bold,
               ),
@@ -639,22 +642,24 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
     bool isStable = false,
     String? note,
   }) {
-    return Container( // وعاء البطاقة الأساسي
-      margin: const EdgeInsets.only(bottom: 16),
+    return Container( // وعاء البطاقة الأساسي - تم تعديله لمنع الـ Overflow
+      margin: const EdgeInsets.only(bottom: 16, left: 12, right: 12),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: borderColor, width: 1.5),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
             padding: const EdgeInsets.all(12),
             child: Column(
               children: [
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Stack( // عرض الأفاتار مع نقطة الحالة (أونلاين/طوارئ)
+                    Stack( // عرض الأفاتار مع نقطة الحالة
                       children: [
                         CircleAvatar(
                           radius: 22,
@@ -683,22 +688,32 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
                       ],
                     ),
                     const SizedBox(width: 12),
-                    Expanded(
+                    Expanded( // جعل قسم النصوص مرناً بالكامل لمنع الـ Overflow الأفقي
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(name, // اسم المقيم والغرفة
-                              style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF0F172A))),
+                          Text(
+                            name, // اسم المقيم والغرفة
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF0F172A)),
+                          ),
                           const SizedBox(height: 2),
-                          Text(room, // العمر والحالة العامة
-                              style: const TextStyle(
-                                  fontSize: 11, color: Color(0xFF64748B))),
+                          Text(
+                            room, // العمر والحالة العامة
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontSize: 11, color: Color(0xFF64748B)),
+                          ),
                           const SizedBox(height: 6),
-                          Text( // نص التنبيه الزمني
+                          Text(
                             warnText,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                                 fontSize: 11,
                                 color: isStable
@@ -710,7 +725,7 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
                     ),
                   ],
                 ),
-                if (note != null && note.isNotEmpty) ...[ // عرض الملاحظة الأخيرة إن وجدت
+                if (note != null && note.isNotEmpty) ...[ // عرض الملاحظة الأخيرة
                   const SizedBox(height: 12),
                   Container(
                     padding: const EdgeInsets.all(10),
@@ -722,7 +737,7 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
+                        Expanded( // جعل نص الملاحظة يلتف للسطر التالي بدلاً من الـ Overflow
                           child: Text(
                             note,
                             textAlign: TextAlign.right,
@@ -737,33 +752,37 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
                   ),
                 ],
                 const SizedBox(height: 12),
-                Row( // أزرار الإجراءات السريعة (طوارئ، ملف، ملاحظة)
-                  children: [
-                    Expanded( // زر الطوارئ العاجل للمقيم
-                      child: _actionBtn('🚑 طوارئ',
-                          color: const Color(0xFF7F1D1D),
-                          bg: const Color(0xFFFEE2E2),
-                          onTap: () => _showEmergencyAlert(name)),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded( // زر فتح ملف المقيم الكامل
-                      child: _actionBtn('📋 الملف',
-                          color: Colors.white,
-                          isPrimary: true,
-                          bg: const Color(0xFF0369A1),
-                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => NurseResidentDetailScreen(
-                            residentName: name.split(' — ')[0],
-                            roomNumber: room.replaceAll('غرفة ', '').split(' · ')[0],
-                          )))),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded( // زر إضافة ملاحظة تمريضية سريعة
-                      child: _actionBtn('💬 ملاحظة',
-                          color: const Color(0xFF0369A1),
-                          bg: const Color(0xFFF0F9FF),
-                          onTap: () => _showNoteDialog(name)),
-                    ),
-                  ],
+                LayoutBuilder( // يضمن توزيع الأزرار بشكل صحيح حسب عرض الشاشة
+                  builder: (context, constraints) {
+                    return Row(
+                      children: [
+                        Expanded(
+                          child: _actionBtn('🚑 طوارئ',
+                              color: const Color(0xFF7F1D1D),
+                              bg: const Color(0xFFFEE2E2),
+                              onTap: () => _showEmergencyAlert(name)),
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: _actionBtn('📋 الملف',
+                              color: Colors.white,
+                              isPrimary: true,
+                              bg: const Color(0xFF0369A1),
+                              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => NurseResidentDetailScreen(
+                                residentName: name.split(' — ')[0],
+                                roomNumber: room.replaceAll('غرفة ', '').split(' · ')[0],
+                              )))),
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: _actionBtn('💬 ملاحظة',
+                              color: const Color(0xFF0369A1),
+                              bg: const Color(0xFFF0F9FF),
+                              onTap: () => _showNoteDialog(name)),
+                        ),
+                      ],
+                    );
+                  }
                 ),
               ],
             ),

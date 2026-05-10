@@ -107,21 +107,36 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
         ),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.end, // محاذاة لليمين بدلاً من Spacer لمنع الـ Overflow
         children: [
-          const Spacer(), // دفع المحتوى لليمين (محاذاة عربية)
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              const Text('لوحة تحكم المدير المسئول', style: TextStyle(color: Color(0xFF94a3b8), fontSize: 12, fontWeight: FontWeight.bold)), // مسمى الوظيفة
-              Row(
-                children: [
-                  const Text('م. إبراهيم الجوهري', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)), // اسم المدير
-                  const SizedBox(width: 12),
-                  _buildAnimatedBadge(), // عرض شارة الحماية المتحركة
-                ],
-              ),
-            ],
+          Flexible( // يضمن أن المحتوى النصي سيتصغر ولن يسبب Overflow
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'لوحة تحكم المدير المسئول', 
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: Color(0xFF94a3b8), fontSize: 12, fontWeight: FontWeight.bold)
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Flexible( // يضمن أن اسم المدير لن يكسر السطر أو يسبب Overflow
+                      child: Text(
+                        'م. إبراهيم الجوهري', 
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    _buildAnimatedBadge(),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),

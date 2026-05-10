@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/app_riverpod.dart';
 import '../../models/app_models.dart';
+import 'package:photo_manager/photo_manager.dart';
+import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
 import 'voice_messages_playback_screen.dart';
 
 class MemoriesScreen extends ConsumerStatefulWidget {
@@ -15,7 +17,6 @@ class MemoriesScreen extends ConsumerStatefulWidget {
 class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
     with TickerProviderStateMixin {
   late AnimationController _bgController;
-  late AnimationController _stripController;
   late AnimationController _floatController;
   late AnimationController _heartController;
   late AnimationController _glowController;
@@ -40,9 +41,6 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
     _bgController =
         AnimationController(vsync: this, duration: const Duration(seconds: 10))
           ..repeat();
-    _stripController =
-        AnimationController(vsync: this, duration: const Duration(seconds: 18))
-          ..repeat();
     _floatController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 3500))
       ..repeat(reverse: true);
@@ -66,7 +64,6 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
   @override
   void dispose() {
     _bgController.dispose();
-    _stripController.dispose();
     _floatController.dispose();
     _heartController.dispose();
     _glowController.dispose();
@@ -79,12 +76,12 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
   @override
   Widget build(BuildContext context) {
     final provider = ref.watch(appRiverpod);
-    return Column(
-      children: [
-        _buildHero(provider),
-        _buildPhotoStrip(),
-        Expanded(
-          child: SingleChildScrollView(
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      child: Column(
+        children: [
+          _buildHero(provider),
+          Padding(
             padding: const EdgeInsets.fromLTRB(14, 14, 14, 120),
             child: Column(
               children: [
@@ -101,8 +98,8 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
               ],
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -241,119 +238,7 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
     );
   }
 
-  Widget _buildPhotoStrip() {
-    return Container(
-      height: 80,
-      color: const Color(0xFF1e1b4b),
-      child: Stack(
-        children: [
-          AnimatedBuilder(
-            animation: _stripController,
-            builder: (context, child) {
-              final offset = -_stripController.value * 0.5;
-              return Transform.translate(
-                offset: Offset(offset * MediaQuery.of(context).size.width, 0),
-                child: OverflowBox(
-                  maxWidth: double.infinity,
-                  alignment: Alignment.centerLeft,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ..._buildStripItems(),
-                      ..._buildStripItems(),
-                      ..._buildStripItems(),
-                      ..._buildStripItems(),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-          Positioned(
-              left: 0,
-              top: 0,
-              bottom: 0,
-              child: Container(
-                  width: 32,
-                  decoration: BoxDecoration(
-                      gradient: LinearGradient(colors: [
-                    const Color(0xFF1e1b4b),
-                    const Color(0xFF1e1b4b).withOpacity(0)
-                  ])))),
-          Positioned(
-              right: 0,
-              top: 0,
-              bottom: 0,
-              child: Container(
-                  width: 32,
-                  decoration: BoxDecoration(
-                      gradient: LinearGradient(colors: [
-                    const Color(0xFF1e1b4b).withOpacity(0),
-                    const Color(0xFF1e1b4b)
-                  ])))),
-        ],
-      ),
-    );
-  }
 
-  List<Widget> _buildStripItems() {
-    final items = [
-      {'bg': const [Color(0xFFddd6fe), Color(0xFFc4b5fd)], 'icon': 'image', 'label': 'أسرة'},
-      {'bg': const [Color(0xFFfce7f3), Color(0xFFf9a8d4)], 'icon': 'video', 'label': 'فيديو'},
-      {'bg': const [Color(0xFFdbeafe), Color(0xFF93c5fd)], 'icon': 'image', 'label': 'رحلة'},
-      {'bg': const [Color(0xFFd1fae5), Color(0xFF6ee7b7)], 'icon': 'image', 'label': 'عيد'},
-      {'bg': const [Color(0xFFfef3c7), Color(0xFFfcd34d)], 'icon': 'video', 'label': 'فيديو'},
-      {'bg': const [Color(0xFFffe4e6), Color(0xFFfda4af)], 'icon': 'image', 'label': 'خالد'},
-    ];
-
-    return items.map((item) {
-      return Container(
-        width: 76,
-        height: 76,
-        margin: const EdgeInsets.all(6),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(colors: item['bg'] as List<Color>),
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Stack(
-          children: [
-            Container(
-                decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(14))),
-            if (item['icon'] == 'video')
-              Center(
-                child: Container(
-                  width: 26,
-                  height: 26,
-                  decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
-                      shape: BoxShape.circle),
-                  child: const Icon(Icons.play_arrow,
-                      color: Color(0xFFec4899), size: 14),
-                ),
-              ),
-            if (item['icon'] == 'image')
-              Center(
-                child: Icon(Icons.image,
-                    color: Colors.white.withOpacity(0.5), size: 26),
-              ),
-            Positioned(
-              bottom: 5,
-              left: 0,
-              right: 0,
-              child: Text(item['label'] as String,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500)),
-            ),
-          ],
-        ),
-      );
-    }).toList();
-  }
 
   Widget _buildCategoryTabs() {
     bool hc = ref.watch(appRiverpod).isHighContrast;
@@ -661,10 +546,11 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
         ...items.asMap().entries.map((entry) {
           final index = entry.key;
           final mem = entry.value;
-          
+
           String type = 'image';
           String? url;
           String? label;
+          AssetEntity? asset;
 
           if (mem is MemoryItem) {
             type = mem.type;
@@ -676,12 +562,15 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
           } else if (mem is String) {
             type = 'image';
             url = mem;
+          } else if (mem is AssetEntity) {
+            type = 'image';
+            asset = mem;
           }
 
           return SizedBox(
             width: (MediaQuery.of(context).size.width - 44) / 3,
             height: (MediaQuery.of(context).size.width - 44) / 3,
-            child: _buildGridCell(provider, index, type, url, label),
+            child: _buildGridCell(provider, index, type, url, label, asset),
           );
         }).toList(),
         if (items.isNotEmpty) 
@@ -694,7 +583,8 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
     );
   }
 
-  Widget _buildGridCell(AppRiverpod provider, int index, String type, String? url, String? label) {
+  Widget _buildGridCell(AppRiverpod provider, int index, String type,
+      String? url, String? label, AssetEntity? asset) {
     bool hc = provider.isHighContrast;
     final gradients = [
       const [Color(0xFFddd6fe), Color(0xFFc4b5fd)],
@@ -707,37 +597,67 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
 
     return Container(
       decoration: BoxDecoration(
-        gradient: url == null ? LinearGradient(colors: gradient) : null,
-        image: url != null ? DecorationImage(image: NetworkImage(url), fit: BoxFit.cover) : null,
+        gradient: (url == null && asset == null)
+            ? LinearGradient(colors: gradient)
+            : null,
+        image: url != null
+            ? DecorationImage(image: NetworkImage(url), fit: BoxFit.cover)
+            : null,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: hc ? const Color(0xFF333333) : const Color(0xFFede9fe), width: 1.5),
+        border: Border.all(
+            color: hc ? const Color(0xFF333333) : const Color(0xFFede9fe),
+            width: 1.5),
       ),
-      child: Stack(
-        children: [
-          Container(
-              decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(url != null ? 0.2 : 0.08),
-                  borderRadius: BorderRadius.circular(14))),
-          Center(
-            child: type == 'video'
-                ? Container(
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.9),
-                        shape: BoxShape.circle),
-                    child: const Icon(Icons.play_arrow,
-                        color: Color(0xFFec4899), size: 14),
-                  )
-                : (url == null ? Icon(Icons.image, color: Colors.white.withOpacity(0.6), size: 20) : const SizedBox.shrink()),
-          ),
-          if (label != null && url != null)
-            Positioned(
-              bottom: 4, right: 4, left: 4,
-              child: Text(label, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold)),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: Stack(
+          children: [
+            if (asset != null)
+              Positioned.fill(
+                child: AssetEntityImage(
+                  asset,
+                  isOriginal: false,
+                  thumbnailSize: const ThumbnailSize.square(200),
+                  fit: BoxFit.cover,
+                ),
+              ),
+            Container(
+                decoration: BoxDecoration(
+                    color: Colors.black
+                        .withOpacity(url != null || asset != null ? 0.2 : 0.08),
+                    borderRadius: BorderRadius.circular(14))),
+            Center(
+              child: type == 'video'
+                  ? Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.9),
+                          shape: BoxShape.circle),
+                      child: const Icon(Icons.play_arrow,
+                          color: Color(0xFFec4899), size: 14),
+                    )
+                  : (url == null && asset == null
+                      ? Icon(Icons.image,
+                          color: Colors.white.withOpacity(0.6), size: 20)
+                      : const SizedBox.shrink()),
             ),
-        ],
+            if (label != null && (url != null || asset != null))
+              Positioned(
+                bottom: 4,
+                right: 4,
+                left: 4,
+                child: Text(label,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold)),
+              ),
+          ],
+        ),
       ),
     );
   }

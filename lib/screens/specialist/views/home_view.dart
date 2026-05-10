@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart'; // مكتبة التقاط الصور
 import '../../../providers/app_riverpod.dart'; // مزود الحالة العام
 import '../../../models/app_models.dart'; // نماذج البيانات
+import '../../../widgets/ai_insights_panel.dart'; // لوحة رؤى الذكاء الاصطناعي
 
 class SpecialistHomeView extends ConsumerWidget {
   final List<Animation<double>> fadeAnimations; // قائمة حركات الظهور
@@ -29,6 +30,14 @@ class SpecialistHomeView extends ConsumerWidget {
       children: [
         _buildFilterStrip(provider), // شريط فلاتر أنواع الاحتياجات (نفسي، أسري...)
         _buildFloorTabs(provider), // تبويبات الطوابق (الأول، الثاني...)
+        
+        // لوحة رؤى الذكاء الاصطناعي (US-08-04)
+        AIInsightsPanel(
+          isEnabled: provider.isAIInsightsEnabled,
+          insight: provider.aiInsights.isNotEmpty ? provider.aiInsights[0] : null,
+          onToggle: () => provider.toggleAIInsights(true),
+        ),
+
         Expanded(
           child: Column(
             children: [

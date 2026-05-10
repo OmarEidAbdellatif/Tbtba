@@ -77,12 +77,13 @@ class _ActivitiesScreenState extends ConsumerState<ActivitiesScreen>
   @override
   Widget build(BuildContext context) {
     final provider = ref.watch(appRiverpod);
-    return Column(
-      children: [
-        _buildHero(provider),
-        _buildDayTabs(provider),
-        Expanded(
-          child: SingleChildScrollView(
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      child: Column(
+        children: [
+          _buildHero(provider),
+          _buildDayTabs(provider),
+          Padding(
             padding: const EdgeInsets.all(14),
             child: Column(
               children: [
@@ -96,8 +97,8 @@ class _ActivitiesScreenState extends ConsumerState<ActivitiesScreen>
               ],
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

@@ -10,6 +10,7 @@ import 'screens/specialist/specialist_dashboard_screen.dart'; // لوحة تحك
 import 'screens/admin/admin_dashboard_screen.dart'; // لوحة تحكم الإدارة
 import 'screens/onboarding/onboarding_screen.dart'; // شاشة البداية
 import 'providers/app_riverpod.dart'; // مزود الحالة
+import 'services/notification_service.dart'; // خدمة التنبيهات
 
 /* 
  * الدالة الرئيسية لتشغيل التطبيق:
@@ -37,6 +38,9 @@ class MyApp extends ConsumerWidget { // المكون الرئيسي
   Widget build(BuildContext context, WidgetRef ref) { // بناء واجهة المستخدم
     final provider = ref.watch(appRiverpod); // مراقبة الحالة
     
+    // تهيئة خدمة التنبيهات (US-09-03)
+    ref.read(notificationServiceProvider).initialize(ref);
+
     Widget getHomeWidget() { // تحديد الشاشة الحالية بناءً على حالة المستخدم
       if (!provider.hasSeenOnboarding) return const OnboardingScreen(); // فحص شاشة البداية
       if (!provider.isAuthenticated) return const LoginScreen(); // فحص تسجيل الدخول

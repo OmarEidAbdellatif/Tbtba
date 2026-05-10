@@ -55,6 +55,8 @@ class FamilyMember {
   String relation; // صلة القرابة (ابن، حفيدة، إلخ)
   String avatarPath; // مسار الصورة الشخصية
   String initials; // الحروف الأولى من الاسم (للعرض البديل)
+  String phoneNumber; // رقم الهاتف لإجراء مكالمات حقيقية
+  String? zoomLink; // رابط زووم للمكالمات المرئية
   bool isAvailable; // هل القريب متاح حالياً للمكالمة؟
 
   FamilyMember({
@@ -63,6 +65,8 @@ class FamilyMember {
     required this.relation,
     required this.avatarPath,
     required this.initials,
+    required this.phoneNumber,
+    this.zoomLink,
     this.isAvailable = false,
   });
 }
@@ -841,5 +845,37 @@ class ActivitySession {
     required this.startTime,
     required this.location,
     required this.participants,
+  });
+}
+
+class AIInsight {
+  final String id;
+  final String residentName;
+  final String summary;
+  final String rationale;
+  final DateTime generationDate;
+  final double confidenceScore;
+
+  AIInsight({
+    required this.id,
+    required this.residentName,
+    required this.summary,
+    required this.rationale,
+    required this.generationDate,
+    this.confidenceScore = 0.85,
+  });
+}
+
+class CompanionMessage {
+  final String id;
+  final String text;
+  final bool isFromAI;
+  final DateTime timestamp;
+
+  CompanionMessage({
+    required this.id,
+    required this.text,
+    required this.isFromAI,
+    required this.timestamp,
   });
 }

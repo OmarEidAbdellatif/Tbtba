@@ -16,6 +16,17 @@ class _MedicalAdminViewState extends ConsumerState<MedicalAdminView> {
   final TextEditingController _specialistName = TextEditingController();
   final TextEditingController _sessionNotes = TextEditingController();
   final TextEditingController _prescTitle = TextEditingController();
+  final TextEditingController _bpSys = TextEditingController();
+  final TextEditingController _bpDia = TextEditingController();
+  final TextEditingController _glucose = TextEditingController();
+  final TextEditingController _temp = TextEditingController();
+
+  String _bpStatus = '';
+  String _sugarStatus = '';
+  String _tempStatus = '';
+  Color _bpStatusColor = Colors.grey;
+  Color _sugarStatusColor = Colors.grey;
+  Color _tempStatusColor = Colors.grey;
 
   String _selectedResident = 'الحاج محمود سالم';
   String _selectedTime = 'الصباح';
@@ -35,6 +46,10 @@ class _MedicalAdminViewState extends ConsumerState<MedicalAdminView> {
     _specialistName.dispose();
     _sessionNotes.dispose();
     _prescTitle.dispose();
+    _bpSys.dispose();
+    _bpDia.dispose();
+    _glucose.dispose();
+    _temp.dispose();
     super.dispose();
   }
 
@@ -98,6 +113,9 @@ class _MedicalAdminViewState extends ConsumerState<MedicalAdminView> {
               ],
             ),
           ),
+
+          const SizedBox(height: 24),
+          _buildVitalsCard(provider),
 
           const SizedBox(height: 24),
           _buildEntryCard(
@@ -272,7 +290,7 @@ class _MedicalAdminViewState extends ConsumerState<MedicalAdminView> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String hint, IconData icon, {int maxLines = 1}) {
+  Widget _buildTextField(TextEditingController controller, String hint, IconData icon, {int maxLines = 1, Function(String)? onChanged}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
@@ -284,6 +302,8 @@ class _MedicalAdminViewState extends ConsumerState<MedicalAdminView> {
         controller: controller,
         textAlign: TextAlign.right,
         maxLines: maxLines,
+        onChanged: onChanged,
+        keyboardType: TextInputType.number,
         style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 13),
         decoration: InputDecoration(
           hintText: hint,
@@ -431,6 +451,166 @@ class _MedicalAdminViewState extends ConsumerState<MedicalAdminView> {
         ],
       ),
     );
+  }
+
+  Widget _buildVitalsCard(AppRiverpod provider) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return _buildEntryCard(
+      title: 'تسجيل العلامات الحيوية',
+      subtitle: 'متابعة الضغط، السكر، ودرجة الحرارة',
+      icon: Icons.monitor_heart_rounded,
+      color: const Color(0xFFF43F5E),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    _buildTextField(_bpDia, 'الانبساطي', Icons.bloodtype_outlined, 
+                      onChanged: (v) => _validateVitals()),
+                    if (_bpStatus.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4, right: 4),
+                        child: Text(_bpStatus, style: TextStyle(fontSize: 10, color: _bpStatusColor, fontWeight: FontWeight.bold)),
+                      ),
+                  ],
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                child: Text('/', style: TextStyle(fontSize: 20, color: Colors.grey)),
+              ),
+              Expanded(
+                child: _buildTextField(_bpSys, 'الانقباضي', Icons.speed_rounded, 
+                  onChanged: (v) => _validateVitals()),
+              ),
+              const SizedBox(width: 12),
+              const Text('ضغط الدم:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    _buildTextField(_glucose, 'مستوى السكر (مجم/دل)', Icons.water_drop_outlined,
+                      onChanged: (v) => _validateVitals()),
+                    if (_sugarStatus.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4, right: 4),
+                        child: Text(_sugarStatus, style: TextStyle(fontSize: 10, color: _sugarStatusColor, fontWeight: FontWeight.bold)),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    _buildTextField(_temp, 'درجة الحرارة (°م)', Icons.thermostat_rounded,
+                      onChanged: (v) => _validateVitals()),
+                    if (_tempStatus.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4, right: 4),
+                        child: Text(_tempStatus, style: TextStyle(fontSize: 10, color: _tempStatusColor, fontWeight: FontWeight.bold)),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          _buildActionBtn('حفظ العلامات الحيوية', const Color(0xFFF43F5E), () {
+            if (_bpSys.text.isNotEmpty && _glucose.text.isNotEmpty && _temp.text.isNotEmpty) {
+              provider.saveMedicalVitals(
+                residentName: _selectedResident,
+                bp: '${_bpSys.text}/${_bpDia.text}',
+                sugar: _glucose.text,
+                temp: _temp.text,
+              );
+              
+              _bpSys.clear();
+              _bpDia.clear();
+              _glucose.clear();
+              _temp.clear();
+              setState(() {
+                _bpStatus = '';
+                _sugarStatus = '';
+                _tempStatus = '';
+              });
+              
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                content: Text('تم حفظ العلامات الحيوية وتحديث السجل الطبي ✅'),
+                backgroundColor: Color(0xFF0F172A),
+              ));
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                content: Text('يرجى إكمال جميع القراءات أولاً ⚠️'),
+              ));
+            }
+          }),
+        ],
+      ),
+    );
+  }
+
+  void _validateVitals() {
+    setState(() {
+      // Validate BP
+      if (_bpSys.text.isNotEmpty && _bpDia.text.isNotEmpty) {
+        int sys = int.tryParse(_bpSys.text) ?? 0;
+        int dia = int.tryParse(_bpDia.text) ?? 0;
+        if (sys > 140 || dia > 90) {
+          _bpStatus = 'تحذير: ضغط مرتفع ⚠️';
+          _bpStatusColor = Colors.red;
+        } else if (sys < 90 || dia < 60) {
+          _bpStatus = 'تحذير: ضغط منخفض ⚠️';
+          _bpStatusColor = Colors.orange;
+        } else {
+          _bpStatus = 'مستوى طبيعي ✓';
+          _bpStatusColor = Colors.green;
+        }
+      }
+
+      // Validate Sugar
+      if (_glucose.text.isNotEmpty) {
+        int glu = int.tryParse(_glucose.text) ?? 0;
+        if (glu > 180) {
+          _sugarStatus = 'تحذير: سكر مرتفع ⚠️';
+          _sugarStatusColor = Colors.red;
+        } else if (glu < 70) {
+          _sugarStatus = 'تحذير: سكر منخفض ⚠️';
+          _sugarStatusColor = Colors.orange;
+        } else {
+          _sugarStatus = 'مستوى طبيعي ✓';
+          _sugarStatusColor = Colors.green;
+        }
+      }
+
+      // Validate Temp
+      if (_temp.text.isNotEmpty) {
+        double t = double.tryParse(_temp.text) ?? 0;
+        if (t > 38.0) {
+          _tempStatus = 'تحذير: حمى / حرارة مرتفعة ⚠️';
+          _tempStatusColor = Colors.red;
+        } else if (t < 36.0) {
+          _tempStatus = 'تحذير: حرارة منخفضة ⚠️';
+          _tempStatusColor = Colors.orange;
+        } else {
+          _tempStatus = 'مستقرة ✓';
+          _tempStatusColor = Colors.green;
+        }
+      }
+    });
   }
 
   void _showUploadSimulation(VoidCallback onComplete) {
