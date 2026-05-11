@@ -284,22 +284,10 @@ class TaptabaDrawer extends ConsumerWidget { // فئة القائمة الجان
 
   Widget _buildPremiumLogoutBtn(BuildContext context, WidgetRef ref, bool hc) { // بناء زر خروج
     return ListTile(
-      onTap: () => _showLogoutDialog(context, ref, hc),
+      onTap: () => ref.read(appRiverpod).logout(),
       leading: const Icon(Icons.logout, color: Colors.red),
       title: const Text('تسجيل الخروج', style: TextStyle(color: Colors.red)),
     );
   }
 
-  void _showLogoutDialog(BuildContext context, WidgetRef ref, bool hc) { // حوار تأكيد الخروج
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('تأكيد الخروج'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إلغاء')),
-          TextButton(onPressed: () { Navigator.pop(ctx); ref.read(appRiverpod).logout(); }, child: const Text('خروج')),
-        ],
-      ),
-    );
-  }
 }

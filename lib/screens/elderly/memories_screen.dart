@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:io'; // للتعامل مع ملفات الصور المختارة من الاستوديو
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/app_riverpod.dart';
@@ -76,36 +77,42 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
   @override
   Widget build(BuildContext context) {
     final provider = ref.watch(appRiverpod);
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      child: Column(
-        children: [
-          _buildHero(provider),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 14, 14, 120),
-            child: Column(
-              children: [
-                _buildCategoryTabs(),
-                const SizedBox(height: 12),
-                _buildFeaturedCard(),
-                const SizedBox(height: 12),
-                _buildVoiceMessage(provider),
-                const SizedBox(height: 12),
-                _buildPhotoGrid(provider),
-                const SizedBox(height: 12),
-                _buildFamilyNote(),
-                const SizedBox(height: 20),
-              ],
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        child: Column(
+          children: [
+            _buildHero(provider),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 14, 14, 120),
+              child: Column(
+                children: [
+                  _buildCategoryTabs(),
+                  const SizedBox(height: 12),
+                  _buildFeaturedCard(),
+                  const SizedBox(height: 12),
+                  _buildVoiceMessage(provider),
+                  const SizedBox(height: 12),
+                  _buildPhotoGrid(provider),
+                  const SizedBox(height: 12),
+                  _buildFamilyNote(),
+                  const SizedBox(height: 20),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildHero(AppRiverpod provider) {
-    int photoCount = provider.memoriesList.where((m) => m.type == 'image').length + provider.memoryMoments.length;
-    int videoCount = provider.memoriesList.where((m) => m.type == 'video').length;
+    int photoCount =
+        provider.memoriesList.where((m) => m.type == 'image').length +
+            provider.memoryMoments.length;
+    int videoCount =
+        provider.memoriesList.where((m) => m.type == 'video').length;
     int voiceCount = provider.voiceMessages.length;
     return AnimatedBuilder(
       animation: _bgController,
@@ -131,19 +138,21 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
               SafeArea(
                 bottom: false,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     ),
                     Padding(
-                      padding: const EdgeInsets.only(right: 18, top: 4, bottom: 6),
+                      padding:
+                          const EdgeInsets.only(right: 28, top: 4, bottom: 6),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const FittedBox(
                             fit: BoxFit.scaleDown,
-                            child: Text('📸 ذكرياتي الحلوة',
+                            child: Text('ذكرياتي الحلوة',
                                 style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 28,
@@ -157,7 +166,7 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
                         ],
                       ),
                     ),
-                      Padding(
+                    Padding(
                       padding: const EdgeInsets.only(
                           left: 16, right: 16, top: 12, bottom: 24),
                       child: Row(
@@ -190,7 +199,7 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
         final x = sin(t * (duration / 7)) * 10;
         final y = cos(t * (duration / 7)) * 12;
         return Positioned(
-          right: right + x,
+          left: right + x,
           top: top + y,
           child: Container(
               width: size,
@@ -238,8 +247,6 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
     );
   }
 
-
-
   Widget _buildCategoryTabs() {
     bool hc = ref.watch(appRiverpod).isHighContrast;
     return SizedBox(
@@ -252,16 +259,21 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
           return GestureDetector(
             onTap: () => setState(() => selectedCategory = index),
             child: Container(
-              margin: const EdgeInsets.only(right: 7),
+              margin: const EdgeInsets.only(left: 10),
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
               decoration: BoxDecoration(
                 gradient: isActive
                     ? const LinearGradient(
                         colors: [Color(0xFF6C63FF), Color(0xFFA78BFA)])
                     : null,
-                color: isActive ? null : (hc ? const Color(0xFF1E1E1E) : Colors.white),
+                color: isActive
+                    ? null
+                    : (hc ? const Color(0xFF1E1E1E) : Colors.white),
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: hc ? const Color(0xFF333333) : const Color(0xFFede9fe), width: 1.5),
+                border: Border.all(
+                    color:
+                        hc ? const Color(0xFF333333) : const Color(0xFFede9fe),
+                    width: 1.5),
               ),
               child: Center(
                 child: Text(
@@ -269,7 +281,11 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: isActive ? Colors.white : (hc ? const Color(0xFF9FA8DA) : const Color(0xFF7c3aed)),
+                    color: isActive
+                        ? Colors.white
+                        : (hc
+                            ? const Color(0xFF9FA8DA)
+                            : const Color(0xFF7c3aed)),
                   ),
                 ),
               ),
@@ -291,15 +307,18 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
             decoration: BoxDecoration(
               color: hc ? const Color(0xFF1E1E1E) : Colors.white,
               borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: hc ? const Color(0xFF333333) : const Color(0xFFddd6fe), width: 2),
+              border: Border.all(
+                  color: hc ? const Color(0xFF333333) : const Color(0xFFddd6fe),
+                  width: 2),
               boxShadow: [
                 BoxShadow(
-                    color: const Color(0xFF6C63FF).withOpacity(hc ? 0.25 : 0.15),
+                    color:
+                        const Color(0xFF6C63FF).withOpacity(hc ? 0.25 : 0.15),
                     blurRadius: 24,
                     offset: const Offset(0, 6)),
                 BoxShadow(
-                    color: const Color(0xFFa78bfa)
-                        .withOpacity(hc ? 0.2 : (0.35 + (_glowController.value * 0.45))),
+                    color: const Color(0xFFa78bfa).withOpacity(
+                        hc ? 0.2 : (0.35 + (_glowController.value * 0.45))),
                     blurRadius: 12 + (_glowController.value * 12),
                     spreadRadius: _glowController.value * 6),
               ],
@@ -360,6 +379,35 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
                     padding: const EdgeInsets.all(11),
                     child: Row(
                       children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('عيد ميلاد خالد ٢٠٢٤',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.right,
+                                  style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: hc
+                                          ? Colors.white
+                                          : const Color(0xFF0f172a))),
+                              const SizedBox(height: 6),
+                              Text('أرسلته سارة · ٥ مارس ٢٠٢٤',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.right,
+                                  style: TextStyle(
+                                      fontSize: 14,
+                                      color: hc
+                                          ? Colors.white70
+                                          : Colors.grey[500],
+                                      fontWeight: FontWeight.w500)),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
                         AnimatedBuilder(
                           animation: _heartController,
                           builder: (context, child) {
@@ -369,26 +417,7 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
                             return Transform.scale(scale: scale, child: child);
                           },
                           child:
-                              const Text('❤️', style: TextStyle(fontSize: 22)),
-                        ),
-                        const Spacer(),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text('عيد ميلاد خالد ٢٠٢٤',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: hc ? Colors.white : const Color(0xFF0f172a))),
-                            const SizedBox(height: 6),
-                            Text('أرسلته سارة · ٥ مارس ٢٠٢٤',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                    fontSize: 14, color: hc ? Colors.white70 : Colors.grey[500], fontWeight: FontWeight.w500)),
-                          ],
+                              const Text('💜', style: TextStyle(fontSize: 22)),
                         ),
                       ],
                     ),
@@ -404,14 +433,21 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
 
   Widget _buildVoiceMessage(AppRiverpod provider) {
     final unreadCount = provider.voiceMessages.where((v) => v.isUnread).length;
-    final latestMsg = provider.voiceMessages.isNotEmpty ? provider.voiceMessages.first : null;
+    final latestMsg =
+        provider.voiceMessages.isNotEmpty ? provider.voiceMessages.first : null;
 
     return GestureDetector(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const VoiceMessagesPlaybackScreen())),
+      onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => const VoiceMessagesPlaybackScreen())),
       child: Container(
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-              colors: [Color(0xFF6C63FF), Color(0xFFA78BFA), Color(0xFFc084fc)]),
+          gradient: const LinearGradient(colors: [
+            Color(0xFF6C63FF),
+            Color(0xFFA78BFA),
+            Color(0xFFc084fc)
+          ]),
           borderRadius: BorderRadius.circular(22),
           boxShadow: [
             BoxShadow(
@@ -439,65 +475,55 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
                   children: [
                     Row(
                       children: [
-                        Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              shape: BoxShape.circle),
-                          child: const Icon(Icons.play_arrow,
-                              color: Colors.white, size: 16),
-                        ),
-                        const SizedBox(width: 10),
                         Expanded(
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(latestMsg != null ? latestMsg.title : '🎙️ رسائل الأسرة',
+                              Text(
+                                  latestMsg != null
+                                      ? latestMsg.title
+                                      : 'رسائل الأسرة',
+                                  textAlign: TextAlign.right,
                                   style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold)),
                               const SizedBox(height: 4),
-                              Text(unreadCount > 0 ? 'لديك $unreadCount رسائل جديدة ✨' : 'استمع لرسائل أحبائك',
+                              Text(
+                                  unreadCount > 0
+                                      ? 'لديك $unreadCount رسائل جديدة ✨'
+                                      : 'استمع لرسائل أحبائك',
+                                  textAlign: TextAlign.right,
                                   style: TextStyle(
                                       color: Colors.white.withOpacity(0.85),
                                       fontSize: 14)),
                             ],
                           ),
                         ),
+                        const SizedBox(width: 12),
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              shape: BoxShape.circle),
+                          child: const Icon(Icons.play_arrow_rounded,
+                              color: Colors.white, size: 28),
+                        ),
                         const SizedBox(width: 10),
                         if (unreadCount > 0)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(color: const Color(0xFFf43f5e), borderRadius: BorderRadius.circular(10)),
-                            child: Text('$unreadCount', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                                color: const Color(0xFFf43f5e),
+                                borderRadius: BorderRadius.circular(10)),
+                            child: Text('$unreadCount',
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12)),
                           ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _buildWaveBar(4, 0),
-                        const SizedBox(width: 3),
-                        _buildWaveBar(9, 1),
-                        const SizedBox(width: 3),
-                        _buildWaveBar(15, 2),
-                        const SizedBox(width: 3),
-                        _buildWaveBar(10, 3),
-                        const SizedBox(width: 3),
-                        _buildWaveBar(6, 4),
-                        const SizedBox(width: 3),
-                        _buildWaveBar(12, 0),
-                        const SizedBox(width: 3),
-                        _buildWaveBar(7, 1),
-                        const SizedBox(width: 3),
-                        _buildWaveBar(14, 2),
-                        const SizedBox(width: 3),
-                        _buildWaveBar(5, 3),
-                        const SizedBox(width: 3),
-                        _buildWaveBar(10, 4),
                       ],
                     ),
                   ],
@@ -533,58 +559,96 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
   Widget _buildPhotoGrid(AppRiverpod provider) {
     final activeCategory = categories[selectedCategory];
     List<dynamic> items = provider.getMemoriesByCategory(activeCategory);
-    
+
     if (activeCategory == '🖼️ الاستوديو') {
       items = provider.deviceGalleryImages;
     }
 
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      alignment: WrapAlignment.end,
+    return Column(
       children: [
-        ...items.asMap().entries.map((entry) {
-          final index = entry.key;
-          final mem = entry.value;
+        Row(
+          children: [
+            const Expanded(
+              child: Text('صندوق الذكريات',
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF0f172a))),
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: TextButton.icon(
+                onPressed: () => provider.pickMemoryImage(),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                ),
+                icon: const Icon(Icons.add_photo_alternate_outlined,
+                    color: Color(0xFF6C63FF), size: 20),
+                label: const Text('إضافة صور',
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        color: Color(0xFF6C63FF),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14)),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          alignment: WrapAlignment.start,
+          children: [
+            ...items.asMap().entries.map((entry) {
+              final index = entry.key;
+              final mem = entry.value;
 
-          String type = 'image';
-          String? url;
-          String? label;
-          AssetEntity? asset;
+              String type = 'image';
+              String? url;
+              String? label;
+              String? assetPath;
+              AssetEntity? asset;
 
-          if (mem is MemoryItem) {
-            type = mem.type;
-            label = mem.title;
-          } else if (mem is MemoryMoment) {
-            type = 'image';
-            url = mem.imageUrl;
-            label = mem.activityTitle;
-          } else if (mem is String) {
-            type = 'image';
-            url = mem;
-          } else if (mem is AssetEntity) {
-            type = 'image';
-            asset = mem;
-          }
+              if (mem is MemoryItem) {
+                type = mem.type;
+                label = mem.title;
+                assetPath = mem.assetPath;
+              } else if (mem is MemoryMoment) {
+                type = 'image';
+                url = mem.imageUrl;
+                label = mem.activityTitle;
+              } else if (mem is String) {
+                type = 'image';
+                url = mem;
+              } else if (mem is AssetEntity) {
+                type = 'image';
+                asset = mem;
+              }
 
-          return SizedBox(
-            width: (MediaQuery.of(context).size.width - 44) / 3,
-            height: (MediaQuery.of(context).size.width - 44) / 3,
-            child: _buildGridCell(provider, index, type, url, label, asset),
-          );
-        }).toList(),
-        if (items.isNotEmpty) 
-          SizedBox(
-            width: (MediaQuery.of(context).size.width - 44) / 3,
-            height: (MediaQuery.of(context).size.width - 44) / 3,
-            child: _buildMoreCell(provider),
-          ),
+              return SizedBox(
+                width: (MediaQuery.of(context).size.width - 44) / 3,
+                height: (MediaQuery.of(context).size.width - 44) / 3,
+                child: _buildGridCell(provider, index, type, url, label, asset,
+                    assetPath: assetPath),
+              );
+            }).toList(),
+            if (items.isNotEmpty)
+              SizedBox(
+                width: (MediaQuery.of(context).size.width - 44) / 3,
+                height: (MediaQuery.of(context).size.width - 44) / 3,
+                child: _buildMoreCell(provider),
+              ),
+          ],
+        ),
       ],
     );
   }
 
   Widget _buildGridCell(AppRiverpod provider, int index, String type,
-      String? url, String? label, AssetEntity? asset) {
+      String? url, String? label, AssetEntity? asset,
+      {String? assetPath}) {
     bool hc = provider.isHighContrast;
     final gradients = [
       const [Color(0xFFddd6fe), Color(0xFFc4b5fd)],
@@ -602,7 +666,13 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
             : null,
         image: url != null
             ? DecorationImage(image: NetworkImage(url), fit: BoxFit.cover)
-            : null,
+            : (assetPath != null && assetPath.isNotEmpty)
+                ? (assetPath.startsWith('assets/')
+                    ? DecorationImage(
+                        image: AssetImage(assetPath), fit: BoxFit.cover)
+                    : DecorationImage(
+                        image: FileImage(File(assetPath)), fit: BoxFit.cover))
+                : null,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
             color: hc ? const Color(0xFF333333) : const Color(0xFFede9fe),
@@ -669,7 +739,9 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
         gradient: const LinearGradient(
             colors: [Color(0xFF6C63FF), Color(0xFFA78BFA)]),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: hc ? const Color(0xFF333333) : const Color(0xFFede9fe), width: 1.5),
+        border: Border.all(
+            color: hc ? const Color(0xFF333333) : const Color(0xFFede9fe),
+            width: 1.5),
       ),
       child: const Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -703,10 +775,12 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
         decoration: BoxDecoration(
           color: hc ? const Color(0xFF1E1E1E) : const Color(0xFFfffbeb),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: hc ? const Color(0xFFd97706) : const Color(0xFFfde68a), width: 1.5),
+          border: Border.all(
+              color: hc ? const Color(0xFFd97706) : const Color(0xFFfde68a),
+              width: 1.5),
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisSize: MainAxisSize.min,
@@ -717,14 +791,19 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
                     style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: hc ? const Color(0xFFfbbf24) : const Color(0xFF92400e))),
+                        color: hc
+                            ? const Color(0xFFfbbf24)
+                            : const Color(0xFF92400e))),
               ],
             ),
             const SizedBox(height: 10),
             Text(
               '"بنحبك يا بابا ونشتاق إليك كتير — الجمعة الجاية إن شاء الله هنيجي 🌸"',
               style: TextStyle(
-                  fontSize: 18, color: hc ? Colors.white : const Color(0xFF78350f), height: 1.7, fontWeight: FontWeight.bold),
+                  fontSize: 18,
+                  color: hc ? Colors.white : const Color(0xFF78350f),
+                  height: 1.7,
+                  fontWeight: FontWeight.bold),
               textAlign: TextAlign.right,
             ),
             const SizedBox(height: 8),

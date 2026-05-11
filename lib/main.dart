@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart'; // مكتبة فلاتر الأساسية
 import 'package:flutter/services.dart'; // مكتبة التحكم في خصائص النظام
+import 'package:flutter_localizations/flutter_localizations.dart'; // دعم اللغة العربية
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // مكتبة إدارة الحالة
 import 'nav_wrapper.dart'; // غلاف التنقل
 import 'screens/auth/login_screen.dart'; // شاشة تسجيل الدخول
@@ -18,34 +19,46 @@ import 'services/notification_service.dart'; // خدمة التنبيهات
  * 2. تثبيت اتجاه الشاشة على الوضع الطولي (Portrait) فقط.
  * 3. تفعيل ProviderScope لربط إدارة الحالة بالتطبيق.
  */
-void main() { 
+void main() {
   WidgetsFlutterBinding.ensureInitialized(); // تهيئة النظام
-  SystemChrome.setPreferredOrientations([ // تثبيت وضع الشاشة
+  SystemChrome.setPreferredOrientations([
+    // تثبيت وضع الشاشة
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-  runApp( // تشغيل التطبيق
-    const ProviderScope( // تفعيل إدارة الحالة
+  runApp(
+    // تشغيل التطبيق
+    const ProviderScope(
+      // تفعيل إدارة الحالة
       child: MyApp(),
     ),
   );
 }
 
-class MyApp extends ConsumerWidget { // المكون الرئيسي
+class MyApp extends ConsumerWidget {
+  // المكون الرئيسي
   const MyApp({super.key}); // مشيد الفئة
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) { // بناء واجهة المستخدم
+  Widget build(BuildContext context, WidgetRef ref) {
+    // بناء واجهة المستخدم
     final provider = ref.watch(appRiverpod); // مراقبة الحالة
-    
-    // تهيئة خدمة التنبيهات (US-09-03)
-    ref.read(notificationServiceProvider).initialize(ref);
 
-    Widget getHomeWidget() { // تحديد الشاشة الحالية بناءً على حالة المستخدم
-      if (!provider.hasSeenOnboarding) return const OnboardingScreen(); // فحص شاشة البداية
-      if (!provider.isAuthenticated) return const LoginScreen(); // فحص تسجيل الدخول
-      
-      switch (provider.currentRole) { // فحص دور المستخدم وتوجيهه لشاشته
+    // تهيئة خدمة التنبيهات وجدولة المواعيد
+    final notifService = ref.read(notificationServiceProvider);
+    notifService.initialize(ref).then((_) {
+      provider.scheduleMedicationReminders(notifService);
+    });
+
+    Widget getHomeWidget() {
+      // تحديد الشاشة الحالية بناءً على حالة المستخدم
+      if (!provider.hasSeenOnboarding)
+        return const OnboardingScreen(); // فحص شاشة البداية
+      if (!provider.isAuthenticated)
+        return const LoginScreen(); // فحص تسجيل الدخول
+
+      switch (provider.currentRole) {
+        // فحص دور المستخدم وتوجيهه لشاشته
         case 'ممرض':
           return const NurseDashboardScreen();
         case 'متطوع':
@@ -63,60 +76,73 @@ class MyApp extends ConsumerWidget { // المكون الرئيسي
       }
     }
 
-    return MaterialApp( // تطبيق ماتيريال
-      debugShowCheckedModeBanner: false, // إخفاء علامة التصحيح
-      title: 'طبطبة', // اسم التطبيق
-      themeMode: (provider.isDarkMode || provider.isHighContrast) ? ThemeMode.dark : ThemeMode.light, // اختيار النمط
-      builder: (context, child) { // منشئ المحتوى
-        return Stack(
-          children: [
-            MediaQuery( // إعدادات الخطوط
-              data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(provider.fontScaleFactor)),
-              child: child!,
-            ),
-            if (provider.isRefreshingSession) // فحص تحديث الجلسة
-              Container(
-                color: Colors.black.withOpacity(0.5), // لون الخلفية
-                child: Center(
-                  child: Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
-                    child: const Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        CircularProgressIndicator(color: Color(0xFF6C63FF)), // مؤشر التحميل
-                        SizedBox(height: 16),
-                        Text('جاري تحديث الجلسة...', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
-                        Text('برجاء الانتظار لحظة واحدة', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                      ],
-                    ),
-                  ),
-                ),
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'طبطبة',
+      // ── Arabic RTL Configuration ──────────────────────────────
+      locale: const Locale('ar', 'SA'),
+      supportedLocales: const [Locale('ar', 'SA')],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      // ────────────────────────────────────────────────────────────
+      themeMode: (provider.isDarkMode || provider.isHighContrast)
+          ? ThemeMode.dark
+          : ThemeMode.light,
+      builder: (context, child) {
+        return Directionality(
+          textDirection: TextDirection.rtl, // إجبار اتجاه اليمين لليسار
+          child: Stack(
+            children: [
+              MediaQuery(
+                data: MediaQuery.of(context).copyWith(
+                    textScaler: TextScaler.linear(provider.fontScaleFactor)),
+                child: child!,
               ),
-          ],
+              if (provider.isRefreshingSession) _buildRefreshOverlay(),
+            ],
+          ),
         );
       },
-      theme: ThemeData( // النمط الفاتح
-        fontFamily: 'Cairo', // نوع الخط
-        useMaterial3: true, // تفعيل ماتيريال ٣
-        brightness: Brightness.light,
-        scaffoldBackgroundColor: const Color(0xFFF8FAFC),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
-          foregroundColor: Color(0xFF6C63FF),
-        ),
-      ),
-      darkTheme: ThemeData( // النمط الليلي
+      theme: ThemeData(
         fontFamily: 'Cairo',
         useMaterial3: true,
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: provider.isHighContrast ? const Color(0xFF000000) : const Color(0xFF0F172A),
-        appBarTheme: AppBarTheme(
-          backgroundColor: provider.isHighContrast ? const Color(0xFF000000) : const Color(0xFF1E293B),
-          foregroundColor: Colors.white,
+        brightness: Brightness.light,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+        scaffoldBackgroundColor: const Color(0xFFF8FAFC),
+        // ضبط اتجاه النص في الثيم
+        typography: Typography.material2021(platform: TargetPlatform.android),
+      ),
+      home: getHomeWidget(),
+    );
+  }
+
+  Widget _buildRefreshOverlay() {
+    return Container(
+      color: Colors.black.withOpacity(0.5),
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+              color: Colors.white, borderRadius: BorderRadius.circular(20)),
+          child: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(color: Color(0xFF6C63FF)),
+              SizedBox(height: 16),
+              Text('جاري تحديث الجلسة...',
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black)),
+              Text('برجاء الانتظار لحظة واحدة',
+                  style: TextStyle(fontSize: 12, color: Colors.grey)),
+            ],
+          ),
         ),
       ),
-      home: getHomeWidget(), // تعيين الشاشة الرئيسية
     );
   }
 }

@@ -126,7 +126,7 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
               Flexible(
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
-                  child: Text('اضغط لتسجيل رسالة للأسرة 🎤',
+                  child: Text('اضغط لتسجيل رسالة للأسرة',
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -154,7 +154,7 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('🎤 إرسال رسالة صوتية',
+                const Text('إرسال رسالة صوتية',
                     style:
                         TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
@@ -281,7 +281,7 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
               SafeArea(
                 bottom: false,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
                       padding: const EdgeInsets.symmetric(
@@ -289,11 +289,11 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                     ),
                     Padding(
                       padding:
-                          const EdgeInsets.only(right: 22, top: 4, bottom: 8),
+                          const EdgeInsets.only(right: 28, top: 4, bottom: 8),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('📞 الأسرة والتواصل',
+                          const Text('الأسرة والتواصل',
                               style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 28,
@@ -342,7 +342,7 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
         final x = sin(t * (duration / 7)) * 10;
         final y = cos(t * (duration / 7)) * 12;
         return Positioned(
-          right: right + x,
+          left: right + x,
           top: top + y,
           child: Container(
               width: size,
@@ -494,7 +494,7 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 AnimatedBuilder(
                                   animation: _ringController,
@@ -656,18 +656,11 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    const Text('اتصل بالأسرة',
-                        style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -0.5,
-                            color: Color(0xFF1a1a1a))),
-                    const SizedBox(width: 10),
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
@@ -677,6 +670,13 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                       child: const Icon(Icons.people_alt_rounded,
                           color: Color(0xFF6C63FF), size: 24),
                     ),
+                    const SizedBox(width: 10),
+                    const Text('اتصل بالأسرة',
+                        style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.5,
+                            color: Color(0xFF1a1a1a))),
                   ],
                 ),
                 const SizedBox(height: 20),
@@ -943,20 +943,16 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Row(
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                Expanded(
-                  child: FittedBox(
-                    alignment: Alignment.centerRight,
-                    fit: BoxFit.scaleDown,
-                    child: Text('🎙️ رسائل صوتية من الأسرة',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF6C63FF))),
-                  ),
-                ),
+                const Icon(Icons.mic_rounded,
+                    color: Color(0xFF6C63FF), size: 24),
+                const SizedBox(width: 8),
+                const Text('رسائل صوتية من الأسرة',
+                    style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF6C63FF))),
               ],
             ),
             const SizedBox(height: 10),
@@ -994,83 +990,32 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          GestureDetector(
-            onTap: () {
-              provider.toggleVoiceMessage(msg.id);
-            },
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                      colors: isPlaying
-                          ? const [Color(0xFF6C63FF), Color(0xFFA78BFA)]
-                          : const [Color(0xFFf472b6), Color(0xFFc084fc)]),
-                  shape: BoxShape.circle),
-              child: Icon(isPlaying ? Icons.pause : Icons.play_arrow,
-                  color: Colors.white, size: 22),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: isPlaying
-                ? Row(
-                    children: [
-                      _buildVoiceWave(4, 0, const Color(0xFFc4b5fd)),
-                      const SizedBox(width: 2),
-                      _buildVoiceWave(9, 1, const Color(0xFFc4b5fd)),
-                      const SizedBox(width: 2),
-                      _buildVoiceWave(13, 2, const Color(0xFFc4b5fd)),
-                      const SizedBox(width: 2),
-                      _buildVoiceWave(7, 3, const Color(0xFFc4b5fd)),
-                      const SizedBox(width: 2),
-                      _buildVoiceWave(10, 4, const Color(0xFFc4b5fd)),
-                    ],
+          // Right: Avatar
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+                gradient: LinearGradient(colors: gradient),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: gradient[0].withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
                   )
-                : Row(
-                    children: [
-                      Container(
-                          width: 3,
-                          height: 6,
-                          decoration: BoxDecoration(
-                              color: const Color(0xFFc4b5fd),
-                              borderRadius: BorderRadius.circular(2))),
-                      const SizedBox(width: 2),
-                      Container(
-                          width: 3,
-                          height: 11,
-                          decoration: BoxDecoration(
-                              color: const Color(0xFFa78bfa),
-                              borderRadius: BorderRadius.circular(2))),
-                      const SizedBox(width: 2),
-                      Container(
-                          width: 3,
-                          height: 5,
-                          decoration: BoxDecoration(
-                              color: const Color(0xFFc4b5fd),
-                              borderRadius: BorderRadius.circular(2))),
-                      const SizedBox(width: 2),
-                      Container(
-                          width: 3,
-                          height: 9,
-                          decoration: BoxDecoration(
-                              color: const Color(0xFF7c3aed),
-                              borderRadius: BorderRadius.circular(2))),
-                      const SizedBox(width: 2),
-                      Container(
-                          width: 3,
-                          height: 7,
-                          decoration: BoxDecoration(
-                              color: const Color(0xFFc4b5fd),
-                              borderRadius: BorderRadius.circular(2))),
-                    ],
-                  ),
+                ]),
+            child: Center(
+                child: Text(sender.initials,
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold))),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 12),
+          // Middle: Info
           Expanded(
-            flex: 2,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(msg.title,
                     maxLines: 1,
@@ -1078,35 +1023,43 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                     style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF0f172a))),
-                const SizedBox(height: 4),
+                        color: Color(0xFF1e293b))),
+                const SizedBox(height: 2),
                 Text(msg.timeDescription,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                        fontSize: 16, color: Color(0xFF94a3b8))),
+                        fontSize: 14, color: Color(0xFF64748b))),
               ],
             ),
           ),
-          const SizedBox(width: 10),
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-                gradient: LinearGradient(colors: gradient),
-                shape: BoxShape.circle),
-            child: Center(
-                child: Padding(
-              padding: const EdgeInsets.all(4.0),
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(sender.initials,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold)),
+          // Waveform
+          if (isPlaying)
+            Row(
+              children: [
+                _buildVoiceWave(4, 0, const Color(0xFFc4b5fd)),
+                const SizedBox(width: 2),
+                _buildVoiceWave(9, 1, const Color(0xFFa78bfa)),
+                const SizedBox(width: 2),
+                _buildVoiceWave(4, 2, const Color(0xFFc4b5fd)),
+              ],
+            ),
+          const SizedBox(width: 12),
+          // Left: Play Button
+          GestureDetector(
+            onTap: () => provider.toggleVoiceMessage(msg.id),
+            child: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: const Color(0xFFf3e8ff),
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFFe9d5ff)),
               ),
-            )),
+              child: Icon(
+                isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                color: const Color(0xFFa855f7),
+                size: 28,
+              ),
+            ),
           ),
         ],
       ),
@@ -1150,11 +1103,12 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             const Row(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                Text('📋 آخر المكالمات',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                Icon(Icons.assignment_rounded,
+                    color: Color(0xFF6C63FF), size: 24),
+                SizedBox(width: 8),
+                Text('آخر المكالمات',
                     style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -1200,59 +1154,56 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
       padding: const EdgeInsets.symmetric(vertical: 7),
       child: Row(
         children: [
+          // Right: Avatar
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-                color: badgeBg, borderRadius: BorderRadius.circular(12)),
-            child: Text(badge,
-                style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: badgeText)),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF0f172a))),
-                const SizedBox(height: 4),
-                Text(detail,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        fontSize: 14,
-                        color: Color(0xFF94a3b8),
-                        fontWeight: FontWeight.w500)),
-              ],
-            ),
-          ),
-          const SizedBox(width: 10),
-          Container(
-            width: 44,
-            height: 44,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
                 gradient: LinearGradient(colors: gradient),
-                shape: BoxShape.circle),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: gradient[0].withOpacity(0.2),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  )
+                ]),
             child: Center(
-                child: Padding(
-              padding: const EdgeInsets.all(4.0),
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
                 child: Text(initials,
                     style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold)),
-              ),
-            )),
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold))),
+          ),
+          const SizedBox(width: 12),
+          // Middle: Info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name,
+                    style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1e293b))),
+                const SizedBox(height: 2),
+                Text(detail,
+                    style: const TextStyle(
+                        fontSize: 13, color: Color(0xFF64748b))),
+              ],
+            ),
+          ),
+          // Left: Badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+                color: badgeBg.withOpacity(0.9),
+                borderRadius: BorderRadius.circular(10)),
+            child: Text(badge,
+                style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: badgeText)),
           ),
         ],
       ),

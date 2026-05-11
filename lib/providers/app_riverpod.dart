@@ -6,13 +6,32 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // مكتب
 import 'package:flutter_contacts/flutter_contacts.dart'; // مكتبة جهات الاتصال
 import 'package:url_launcher/url_launcher.dart'; // مكتبة تشغيل الروابط والمكالمات
 import 'package:photo_manager/photo_manager.dart'; // مكتبة إدارة الصور
+import 'package:image_picker/image_picker.dart'; // مكتبة اختيار الصور من المعرض
+import 'dart:io'; // للتعامل مع ملفات الصور المختارة
+
+import '../services/notification_service.dart';
 
 final appRiverpod = ChangeNotifierProvider((ref) => AppRiverpod());
 
-// مزود الحالة الرئيسي للتطبيق - يدير كافة البيانات والعمليات البرمجية
 class AppRiverpod extends ChangeNotifier {
-  // --- الحالة العامة للتطبيق ---
-  int selectedIndex = 0; // الفهرس الحالي للتبويب المختار
+  int selectedIndex = 0;
+
+  void scheduleMedicationReminders(NotificationService service) {
+    for (var med in medications) {
+      if (!med.isTaken &&
+          med.scheduledTime != null &&
+          med.scheduledTime!.isAfter(DateTime.now())) {
+        service.scheduleNotification(
+          id: med.id.hashCode,
+          title: 'موعد دواء 💊',
+          body: 'حان موعد تناول ${med.name} (${med.dosage})',
+          scheduledDate: med.scheduledTime!,
+          payload: 'medical',
+        );
+      }
+    }
+  }
+
   String currentRole = 'مسن'; // الدور الحالي للمستخدم (ممرض، متطوع، مدير، إلخ)
   bool hasSeenOnboarding = false; // هل شاهد المستخدم شاشات الترحيب؟
   bool isAuthenticated = false; // هل المستخدم مسجل دخوله؟
@@ -748,7 +767,7 @@ class AppRiverpod extends ChangeNotifier {
     ),
   ];
 
-  bool isAICompanionEnabled = false;
+  bool isAICompanionEnabled = true;
   List<CompanionMessage> companionChatHistory = [
     CompanionMessage(
       id: 'c1',
@@ -1352,6 +1371,13 @@ class AppRiverpod extends ChangeNotifier {
     }
   }
 
+  int get remainingSecondsToNextMed {
+    final next = nextMedication;
+    if (next == null || next.scheduledTime == null) return 0;
+    final diff = next.scheduledTime!.difference(DateTime.now()).inSeconds;
+    return diff > 0 ? diff : 0;
+  }
+
   List<FamilyMember> get familyMembers => familyMembersList;
 
   // --- CONTACTS & COMMUNICATION LOGIC ---
@@ -1360,8 +1386,7 @@ class AppRiverpod extends ChangeNotifier {
   Future<void> fetchFavoriteContacts() async {
     if (await FlutterContacts.requestPermission()) {
       // جلب جهات الاتصال مع الصور وأرقام الهواتف
-      final contacts =
-          await FlutterContacts.getContacts(withProperties: true);
+      final contacts = await FlutterContacts.getContacts(withProperties: true);
 
       // جلب جهات الاتصال المفضلة (Starred) فقط
       final favorites = contacts.where((c) => c.isStarred).toList();
@@ -2819,6 +2844,47 @@ class AppRiverpod extends ChangeNotifier {
     if (idx != -1) {
       notifications[idx].isRead = true;
       notifyListeners();
+    }
+  }
+
+  // --- MEMORIES METHODS ---
+  Future<void> pickMemoryImage() async {
+    // 1. طلب إذن الوصول للصور
+    final PermissionStatus status = await Permission.photos.request();
+
+    if (status.isGranted || status.isLimited) {
+      final ImagePicker picker = ImagePicker();
+      // 2. فتح معرض الصور لاختيار صورة
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85, // تقليل الجودة قليلاً لتوفير المساحة
+      );
+
+      if (image != null) {
+        // 3. إنشاء عنصر ذكرى جديد بالصورة المختارة
+        final newItem = MemoryItem(
+          id: 'mem_custom_${DateTime.now().millisecondsSinceEpoch}',
+          category: 'الاستوديو',
+          title: 'ذكرى من الاستوديو',
+          date: 'اليوم',
+          type: 'image',
+          assetPath: image.path, // تخزين المسار المحلي للملف
+        );
+
+        // 4. إضافتها إلى القائمة وتنبيه الواجهات
+        memoriesList.insert(0, newItem);
+        notifyListeners();
+
+        triggerNotification(
+          title: 'تمت إضافة ذكرى جديدة! 📸',
+          body: 'ستجدها الآن في صندوق ذكرياتك الجميل.',
+          type: 'social',
+          targetRole: 'مسن',
+        );
+      }
+    } else {
+      // التعامل مع حالة رفض الإذن
+      debugPrint('Permission denied for photos');
     }
   }
 }

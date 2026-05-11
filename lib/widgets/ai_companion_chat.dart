@@ -32,36 +32,50 @@ class _AICompanionChatState extends ConsumerState<AICompanionChat> {
     _scrollToBottom();
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.8,
+      height: MediaQuery.of(context).size.height * 0.85,
       decoration: const BoxDecoration(
-        color: Color(0xFFF8FAF9),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        color: Color(0xFFFBFBFF),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
       ),
       child: Column(
         children: [
-          // Header
+          // Header - Professional Design
           _buildHeader(context),
-          
-          // Disclaimer
-          _buildDisclaimer(),
 
           // Chat Messages
           Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(20),
-              itemCount: provider.companionChatHistory.length,
-              itemBuilder: (context, index) {
-                final msg = provider.companionChatHistory[index];
-                return _buildChatBubble(msg);
-              },
+            child: Stack(
+              children: [
+                // Background subtle pattern or glow
+                Positioned(
+                  top: 100,
+                  right: -50,
+                  child: Container(
+                    width: 200,
+                    height: 200,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF6366F1).withOpacity(0.05),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+                ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                  itemCount: provider.companionChatHistory.length,
+                  itemBuilder: (context, index) {
+                    final msg = provider.companionChatHistory[index];
+                    return _buildChatBubble(msg);
+                  },
+                ),
+              ],
             ),
           ),
 
           // Quick Replies
           _buildQuickReplies(provider),
 
-          // Input Area
+          // Input Area - Multi-functional
           _buildInputArea(provider),
         ],
       ),
@@ -70,50 +84,101 @@ class _AICompanionChatState extends ConsumerState<AICompanionChat> {
 
   Widget _buildHeader(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      decoration: const BoxDecoration(
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
+      decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 1)],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          IconButton(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.close_rounded, size: 28, color: Color(0xFF64748B)),
-          ),
-          const Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                'رفيقي الذكي ✨',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E293B), fontFamily: 'Cairo'),
-              ),
-              Text(
-                'دائماً معك للاستماع',
-                style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8), fontFamily: 'Cairo'),
-              ),
-            ],
-          ),
-          const CircleAvatar(
-            backgroundColor: Color(0xFFE0E7FF),
-            child: Icon(Icons.auto_awesome_rounded, color: Color(0xFF6366F1)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildDisclaimer() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      color: const Color(0xFFFEF3C7),
-      child: const Text(
-        'تنبيه: هذا رفيق ذكاء اصطناعي للدردشة الودية فقط، وليس بديلاً عن الاستشارة الطبية أو التواصل البشري.',
-        textAlign: TextAlign.center,
-        style: TextStyle(fontSize: 10, color: Color(0xFF92400E), fontFamily: 'Cairo', fontWeight: FontWeight.bold),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF6366F1).withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.auto_awesome_rounded,
+                    color: Colors.white, size: 28),
+              ),
+              const SizedBox(width: 12),
+              const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'رفيقي الذكي ✨',
+                    style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1E293B),
+                        fontFamily: 'Cairo'),
+                  ),
+                  Text(
+                    'دائماً معك للاستماع والمساعدة',
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF64748B),
+                        fontFamily: 'Cairo'),
+                  ),
+                ],
+              ),
+              const Spacer(),
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close_rounded,
+                    size: 28, color: Color(0xFF94A3B8)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFEF3C7).withOpacity(0.5),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFFDE68A), width: 1),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.info_outline_rounded,
+                    size: 16, color: Color(0xFF92400E)),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'هذا الرفيق للمساعدة والدردشة فقط، وليس بديلاً عن الاستشارة الطبية.',
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                        fontSize: 11,
+                        color: Color(0xFF92400E),
+                        fontFamily: 'Cairo',
+                        fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -121,34 +186,46 @@ class _AICompanionChatState extends ConsumerState<AICompanionChat> {
   Widget _buildChatBubble(CompanionMessage msg) {
     final isAI = msg.isFromAI;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: 20),
       child: Row(
-        mainAxisAlignment: isAI ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment:
+            isAI ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isAI) const Spacer(),
           Flexible(
-            flex: 4,
+            flex: 5,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
               decoration: BoxDecoration(
-                color: isAI ? Colors.white : const Color(0xFF6366F1),
+                gradient: isAI
+                    ? null
+                    : const LinearGradient(
+                        colors: [Color(0xFF6366F1), Color(0xFF4F46E5)]),
+                color: isAI ? Colors.white : null,
                 borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(20),
-                  topRight: const Radius.circular(20),
-                  bottomLeft: isAI ? const Radius.circular(20) : Radius.zero,
-                  bottomRight: isAI ? Radius.zero : const Radius.circular(20),
+                  topLeft: const Radius.circular(24),
+                  topRight: const Radius.circular(24),
+                  bottomLeft: isAI ? const Radius.circular(24) : Radius.zero,
+                  bottomRight: isAI ? Radius.zero : const Radius.circular(24),
                 ),
-                boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 2, offset: Offset(0, 1))],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Text(
                 msg.text,
                 textAlign: TextAlign.right,
                 style: TextStyle(
-                  fontSize: 15,
+                  fontSize: 16,
                   fontWeight: isAI ? FontWeight.w500 : FontWeight.bold,
-                  color: isAI ? const Color(0xFF1E293B) : Colors.white,
+                  color: isAI ? const Color(0xFF334155) : Colors.white,
                   fontFamily: 'Cairo',
-                  height: 1.5,
+                  height: 1.6,
                 ),
               ),
             ),
@@ -160,10 +237,15 @@ class _AICompanionChatState extends ConsumerState<AICompanionChat> {
   }
 
   Widget _buildQuickReplies(AppRiverpod provider) {
-    final replies = ['أشعر بالوحدة 😔', 'أنا سعيد اليوم! 😊', 'هل يمكنك مساعدتي؟ 🤔', 'أريد الحديث فقط 🗣️'];
+    final replies = [
+      'أشعر بالوحدة 😔',
+      'أنا سعيد اليوم! 😊',
+      'هل يمكنك مساعدتي؟ 🤔',
+      'أريد الحديث فقط 🗣️'
+    ];
     return Container(
-      height: 50,
-      margin: const EdgeInsets.symmetric(vertical: 8),
+      height: 44,
+      margin: const EdgeInsets.symmetric(vertical: 12),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         reverse: true,
@@ -171,12 +253,19 @@ class _AICompanionChatState extends ConsumerState<AICompanionChat> {
         itemCount: replies.length,
         itemBuilder: (context, index) {
           return Padding(
-            padding: const EdgeInsets.only(left: 8),
+            padding: const EdgeInsets.only(left: 10),
             child: ActionChip(
-              label: Text(replies[index], style: const TextStyle(fontSize: 11, fontFamily: 'Cairo')),
+              label: Text(replies[index],
+                  style: const TextStyle(
+                      fontSize: 12,
+                      fontFamily: 'Cairo',
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF6366F1))),
               onPressed: () => provider.sendCompanionMessage(replies[index]),
-              backgroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              backgroundColor: const Color(0xFFEEF2FF),
+              side: BorderSide.none,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
             ),
           );
         },
@@ -186,35 +275,92 @@ class _AICompanionChatState extends ConsumerState<AICompanionChat> {
 
   Widget _buildInputArea(AppRiverpod provider) {
     return Container(
-      padding: EdgeInsets.fromLTRB(16, 8, 16, MediaQuery.of(context).viewInsets.bottom + 16),
-      color: Colors.white,
+      padding: EdgeInsets.fromLTRB(
+          16, 12, 16, MediaQuery.of(context).viewInsets.bottom + 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
       child: Row(
         children: [
-          IconButton(
-            onPressed: () {
-              if (_messageController.text.isNotEmpty) {
-                provider.sendCompanionMessage(_messageController.text);
-                _messageController.clear();
-              }
+          // Voice Button
+          _buildActionButton(
+            icon: Icons.mic_rounded,
+            onTap: () {
+              // منطق التحدث الصوتي سيتم إضافته هنا
             },
-            icon: const Icon(Icons.send_rounded, color: Color(0xFF6366F1), size: 32),
+          ),
+          const SizedBox(width: 8),
+          // File Button
+          _buildActionButton(
+            icon: Icons.add_circle_outline_rounded,
+            onTap: () {
+              // منطق رفع الملفات سيتم إضافته هنا
+            },
           ),
           const SizedBox(width: 12),
+          // Input Field
           Expanded(
-            child: TextField(
-              controller: _messageController,
-              textAlign: TextAlign.right,
-              decoration: InputDecoration(
-                hintText: 'اكتب رسالتك هنا...',
-                hintStyle: const TextStyle(fontSize: 14, color: Color(0xFF94A3B8), fontFamily: 'Cairo'),
-                filled: true,
-                fillColor: const Color(0xFFF1F5F9),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(30),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _messageController,
+                      textAlign: TextAlign.right,
+                      style: const TextStyle(fontFamily: 'Cairo', fontSize: 15),
+                      decoration: const InputDecoration(
+                        hintText: 'اكتب رسالتك هنا...',
+                        hintStyle: TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF94A3B8),
+                            fontFamily: 'Cairo'),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(vertical: 14),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () {
+                      if (_messageController.text.isNotEmpty) {
+                        provider.sendCompanionMessage(_messageController.text);
+                        _messageController.clear();
+                      }
+                    },
+                    child: const Icon(Icons.send_rounded,
+                        color: Color(0xFF6366F1), size: 28),
+                  ),
+                ],
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton({required IconData icon, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF1F5F9),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: const Color(0xFF64748B), size: 26),
       ),
     );
   }

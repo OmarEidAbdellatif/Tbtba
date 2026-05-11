@@ -118,20 +118,20 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
               SafeArea(
                 bottom: false,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
                       padding: const EdgeInsets.only(left: 16.0, top: 16.0),
                     ),
                     Padding(
                       padding:
-                          const EdgeInsets.only(right: 22, top: 8, bottom: 12),
+                          const EdgeInsets.only(right: 28, top: 8, bottom: 12),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           const FittedBox(
                             fit: BoxFit.scaleDown,
-                            child: Text('💊 دواء اليوم', // Fixed to Today as default or dynamic
+                            child: Text('جدول الأدوية',
                                 style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 28,
@@ -147,9 +147,15 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          _buildHeroChip('✅ ${provider.getMedicationsForDay(selectedDay).where((m) => m.isTaken).length}', 'تم', 0),
+                          _buildHeroChip(
+                              '✅ ${provider.getMedicationsForDay(selectedDay).where((m) => m.isTaken).length}',
+                              'تم',
+                              0),
                           const SizedBox(width: 8),
-                          _buildHeroChip('⏰ ${provider.getMedicationsForDay(selectedDay).where((m) => !m.isTaken).length}', 'باقي', 1),
+                          _buildHeroChip(
+                              '⏰ ${provider.getMedicationsForDay(selectedDay).where((m) => !m.isTaken).length}',
+                              'باقي',
+                              1),
                           const SizedBox(width: 8),
                           _buildHeroChip('🔵 ٠', 'لاحقاً', 2),
                         ],
@@ -175,7 +181,7 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
         final x = sin(t * (duration / 7)) * 10;
         final y = cos(t * (duration / 7)) * 12;
         return Positioned(
-          right: right + x,
+          left: right + x,
           top: top + y,
           child: Container(
               width: size,
@@ -244,7 +250,9 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
                   border: Border(
                       bottom: BorderSide(
                           color: isActive
-                              ? (hc ? const Color(0xFF9FA8DA) : const Color(0xFF6C63FF))
+                              ? (hc
+                                  ? const Color(0xFF9FA8DA)
+                                  : const Color(0xFF6C63FF))
                               : Colors.transparent,
                           width: 2.5)),
                 ),
@@ -253,7 +261,9 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: isActive
-                            ? (hc ? const Color(0xFF9FA8DA) : const Color(0xFF6C63FF))
+                            ? (hc
+                                ? const Color(0xFF9FA8DA)
+                                : const Color(0xFF6C63FF))
                             : (hc ? Colors.white38 : const Color(0xFF94a3b8)))),
               ),
             );
@@ -276,23 +286,27 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
             decoration: BoxDecoration(
                 color: hc ? const Color(0xFF421515) : const Color(0xFFfff5f5),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: hc ? const Color(0xFFef4444) : const Color(0xFFfca5a5), width: 1.5)),
+                border: Border.all(
+                    color:
+                        hc ? const Color(0xFFef4444) : const Color(0xFFfca5a5),
+                    width: 1.5)),
             child: Row(
               children: [
-                Container(
-                    width: 10,
-                    height: 10,
-                    decoration: const BoxDecoration(
-                        shape: BoxShape.circle, color: Color(0xFFef4444))),
-                const SizedBox(width: 10),
                 Expanded(
                     child: Text(
                         'جرعة الأمس المسائية لم تُؤخذ — تم إشعار الممرضة 👩‍⚕️',
+                        textAlign: TextAlign.right,
                         style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                             color: hc ? Colors.white : const Color(0xFF7f1d1d),
                             height: 1.5))),
+                const SizedBox(width: 10),
+                Container(
+                    width: 10,
+                    height: 10,
+                    decoration: const BoxDecoration(
+                        shape: BoxShape.circle, color: Color(0xFFef4444))),
               ],
             ),
           ),
@@ -319,8 +333,12 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
     List<Widget> sections = [];
     grouped.forEach((time, meds) {
       if (meds.isEmpty) return;
-      
-      Color color = time == 'الصباح' ? const Color(0xFFfbbf24) : (time == 'الظهر' ? const Color(0xFF6C63FF) : const Color(0xFF818cf8));
+
+      Color color = time == 'الصباح'
+          ? const Color(0xFFfbbf24)
+          : (time == 'الظهر'
+              ? const Color(0xFF6C63FF)
+              : const Color(0xFF818cf8));
 
       sections.add(_buildSectionLabel(time, color));
       sections.add(const SizedBox(height: 8));
@@ -332,7 +350,8 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
           sections.add(const SizedBox(height: 10));
           sections.add(_buildConfirmButton(provider, m));
         } else {
-          sections.add(_buildMedCard(m.name, m.dosage, m.timeDescription, m.isTaken, false, false, i));
+          sections.add(_buildMedCard(
+              m.name, m.dosage, m.timeDescription, m.isTaken, false, false, i));
         }
         sections.add(const SizedBox(height: 8));
       }
@@ -344,19 +363,19 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
 
   Widget _buildSectionLabel(String text, Color color) {
     return Row(
-      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        Container(
-            width: 4,
-            height: 16,
-            decoration: BoxDecoration(
-                color: color, borderRadius: BorderRadius.circular(3))),
-        const SizedBox(width: 7),
         Text(text,
             style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF6C63FF))),
+        const SizedBox(width: 7),
+        Container(
+            width: 4,
+            height: 16,
+            decoration: BoxDecoration(
+                color: color, borderRadius: BorderRadius.circular(3))),
       ],
     );
   }
@@ -399,7 +418,8 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
         decoration: BoxDecoration(
             color: hc ? const Color(0xFF1E1E1E) : Colors.white,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: hc ? const Color(0xFF333333) : borderColor, width: 1.5),
+            border: Border.all(
+                color: hc ? const Color(0xFF333333) : borderColor, width: 1.5),
             boxShadow: [
               BoxShadow(
                   color: const Color(0xFF6C63FF).withOpacity(hc ? 0.2 : 0.06),
@@ -407,47 +427,38 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
                   offset: const Offset(0, 2))
             ]),
         child: Row(
+          textDirection: TextDirection.rtl,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                  color: bgColor, borderRadius: BorderRadius.circular(15)),
-              child: Center(child: _buildPillIcon(isDone, isLater)),
-            ),
-            const SizedBox(width: 8),
-            IconButton(
-              icon: const Icon(Icons.volume_up_rounded, color: Color(0xFF6C63FF), size: 24),
-              onPressed: () => ref.read(appRiverpod).startReading('دواء $name، الجرعة $dose، الموعد $time'),
-            ),
-            const SizedBox(width: 4),
+            // Right Side: Text Info (First in RTL)
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: hc ? Colors.white : const Color(0xFF0f172a))),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color:
+                                hc ? Colors.white : const Color(0xFF0f172a))),
+                  ),
                   const SizedBox(height: 4),
-                  Text(dose,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          fontSize: 14, color: Color(0xFF64748b))),
-                  const SizedBox(height: 6),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(dose,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            fontSize: 14, color: Color(0xFF64748b))),
+                  ),
+                  const SizedBox(height: 8),
                   Row(
-                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      Icon(Icons.access_time,
-                          size: 14,
-                          color: isLater
-                              ? const Color(0xFF94a3b8)
-                              : const Color(0xFF94a3b8)),
-                      const SizedBox(width: 6),
                       Text(time,
                           style: TextStyle(
                               fontSize: 14,
@@ -455,21 +466,52 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
                               color: isLater
                                   ? const Color(0xFF475569)
                                   : const Color(0xFF475569))),
+                      const SizedBox(width: 6),
+                      Icon(Icons.access_time,
+                          size: 14,
+                          color: isLater
+                              ? const Color(0xFF94a3b8)
+                              : const Color(0xFF94a3b8)),
                     ],
                   ),
                 ],
               ),
             ),
+            const SizedBox(width: 12),
+            // Middle/Left: Actions & Status
+            IconButton(
+              icon: const Icon(Icons.volume_up_rounded,
+                  color: Color(0xFF6C63FF), size: 24),
+              onPressed: () => ref
+                  .read(appRiverpod)
+                  .startReading('دواء $name، الجرعة $dose، الموعد $time'),
+            ),
             const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                  color: badgeColor, borderRadius: BorderRadius.circular(10)),
-              child: Text(badgeText,
-                  style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: badgeTextColor)),
+            // Left Side: Status Column
+            Column(
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                      color: bgColor, borderRadius: BorderRadius.circular(16)),
+                  child: Center(child: _buildPillIcon(isDone, isLater)),
+                ),
+                const SizedBox(height: 8),
+                if (badgeText.isNotEmpty)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                        color: badgeColor,
+                        borderRadius: BorderRadius.circular(8)),
+                    child: Text(badgeText,
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: badgeTextColor)),
+                  ),
+              ],
             ),
           ],
         ),
@@ -499,13 +541,67 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
           child: Padding(
             padding: const EdgeInsets.all(13),
             child: Row(
+              textDirection: TextDirection.rtl,
               children: [
+                // Right: Text info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(med.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white)),
+                      ),
+                      const SizedBox(height: 4),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(med.dosage,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.white.withOpacity(0.85))),
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Text('باقي ${formatTime(remainingSeconds)}',
+                              style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white)),
+                          const SizedBox(width: 8),
+                          AnimatedBuilder(
+                            animation: _ringController,
+                            builder: (context, child) => Transform.scale(
+                                scale: 1 +
+                                    (sin(_ringController.value * pi * 2) *
+                                        0.06),
+                                child: const Icon(Icons.timer_outlined,
+                                    size: 20, color: Colors.white)),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Left: Interactive Icon
                 GestureDetector(
                   onTap: () {
                     provider.takeMedication(med.id);
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('تم تسجيل الجرعة بنجاح! +10 نقاط 🌟', style: TextStyle(fontSize: 18, fontFamily: 'Cairo')),
+                        content: Text('تم تسجيل الجرعة بنجاح! +10 نقاط 🌟',
+                            style:
+                                TextStyle(fontSize: 18, fontFamily: 'Cairo')),
                         backgroundColor: Color(0xFF10b981),
                         duration: Duration(seconds: 2),
                       ),
@@ -540,16 +636,15 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
                               width: 44,
                               height: 44,
                               decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.15),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 3),
-                                  )
-                                ]
-                              ),
+                                  shape: BoxShape.circle,
+                                  color: Colors.white,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.15),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 3),
+                                    )
+                                  ]),
                               child: const Icon(Icons.touch_app,
                                   color: Color(0xFF7c3aed), size: 26),
                             ),
@@ -559,68 +654,12 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(med.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white)),
-                      const SizedBox(height: 4),
-                      Text(
-                        med.dosage,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.white.withOpacity(0.85))
-                      ),
-                      const SizedBox(height: 6),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          AnimatedBuilder(
-                            animation: _ringController,
-                            builder: (context, child) => Transform.scale(
-                                scale: 1 +
-                                    (sin(_ringController.value * pi * 2) *
-                                        0.06),
-                                child: const Icon(Icons.timer,
-                                    size: 16, color: Colors.white)),
-                          ),
-                          const SizedBox(width: 6),
-                          Text('⏱ باقي ${formatTime(remainingSeconds)}',
-                              style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white)),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
                 const SizedBox(width: 8),
                 IconButton(
-                  icon: const Icon(Icons.volume_up_rounded, color: Colors.white, size: 28),
-                  onPressed: () => provider.startReading('دواء ${med.name}، الجرعة ${med.dosage}، الآن'),
-                ),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.25),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.white.withOpacity(0.3))),
-                  child: const Text('الآن',
-                      style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white)),
+                  icon: const Icon(Icons.volume_up_rounded,
+                      color: Colors.white, size: 28),
+                  onPressed: () => provider.startReading(
+                      'دواء ${med.name}، الجرعة ${med.dosage}، الآن'),
                 ),
               ],
             ),
@@ -657,7 +696,8 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
                 provider.takeMedication(med.id);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('تم تسجيل الجرعة بنجاح! +10 نقاط 🌟', style: TextStyle(fontSize: 18, fontFamily: 'Cairo')),
+                    content: Text('تم تسجيل الجرعة بنجاح! +10 نقاط 🌟',
+                        style: TextStyle(fontSize: 18, fontFamily: 'Cairo')),
                     backgroundColor: Color(0xFF10b981),
                     duration: Duration(seconds: 2),
                   ),
@@ -696,28 +736,41 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
 
   Widget _buildAppointmentsSection(AppRiverpod provider) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(width: 4, height: 16, decoration: BoxDecoration(color: const Color(0xFFf472b6), borderRadius: BorderRadius.circular(3))),
+            Container(
+                width: 4,
+                height: 16,
+                decoration: BoxDecoration(
+                    color: const Color(0xFFf472b6),
+                    borderRadius: BorderRadius.circular(3))),
             const SizedBox(width: 7),
-            const Text('مواعيد وجلسات قادمة 📅', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF6C63FF))),
+            const Text('مواعيد وجلسات قادمة 📅',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF6C63FF))),
           ],
         ),
         const SizedBox(height: 12),
         if (provider.medicalSessions.isEmpty)
-          const Center(child: Text('لا توجد مواعيد مسجلة حالياً', style: TextStyle(color: Colors.white70, fontSize: 13)))
+          const Center(
+              child: Text('لا توجد مواعيد مسجلة حالياً',
+                  style: TextStyle(color: Colors.white70, fontSize: 13)))
         else
-          ...provider.medicalSessions.map((s) => _buildAppointmentCard(
-            s.date == 'اليوم' ? '٢١' : '٢٠',
-            'أبريل',
-            s.specialistName,
-            '${s.type == 'doctor' ? 'كشف طبي' : 'جلسة علاج'} · ${s.time}',
-            s.type == 'doctor',
-            0,
-          )).toList(),
+          ...provider.medicalSessions
+              .map((s) => _buildAppointmentCard(
+                    s.date == 'اليوم' ? '٢١' : '٢٠',
+                    'أبريل',
+                    s.specialistName,
+                    '${s.type == 'doctor' ? 'كشف طبي' : 'جلسة علاج'} · ${s.time}',
+                    s.type == 'doctor',
+                    0,
+                  ))
+              .toList(),
       ],
     );
   }
@@ -745,57 +798,68 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
             ]),
         child: Row(
           children: [
-            Container(
-              width: 58,
-              height: 68,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: isPurple
-                        ? const [Color(0xFF6C63FF), Color(0xFFA78BFA)]
-                        : const [Color(0xFF4f46e5), Color(0xFF818cf8)]),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(4.0),
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(day,
-                          style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white)),
-                      Text(month,
-                          style: TextStyle(fontSize: 14, color: Colors.white)),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
+            // Right: Info
             Expanded(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF0f172a))),
-                  const SizedBox(height: 6),
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF1e293b))),
+                  const SizedBox(height: 4),
                   Text(detail,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                          fontSize: 14,
+                          fontSize: 16,
                           color: Color(0xFF64748b),
-                          fontWeight: FontWeight.w500)),
+                          fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            // Left: Date Box
+            Container(
+              width: 70,
+              height: 80,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: isPurple
+                        ? const [Color(0xFF6C63FF), Color(0xFF818CF8)]
+                        : const [Color(0xFF4F46E5), Color(0xFF6366F1)]),
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    color: (isPurple
+                            ? const Color(0xFF6C63FF)
+                            : const Color(0xFF4F46E5))
+                        .withOpacity(0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  )
+                ],
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(day,
+                      style: const TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          height: 1.1)),
+                  Text(month,
+                      style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          height: 1.1)),
                 ],
               ),
             ),

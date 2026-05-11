@@ -207,12 +207,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                         child: Column( // عناصر الكارت الداخلية
                           crossAxisAlignment: CrossAxisAlignment.end, // محاذاة لليمين (عربي)
                           children: [
-                            const Text( // عنوان تسجيل الدخول
-                              'تسجيل الدخول',
-                              style: TextStyle(
-                                fontSize: 24, // حجم خط العنوان
-                                fontWeight: FontWeight.bold, // خط عريض
-                                color: Color(0xFF1e1b4b), // لون داكن
+                            const Align(
+                              alignment: Alignment.centerRight,
+                              child: Text(
+                                'تسجيل الدخول',
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF1e1b4b),
+                                ),
                               ),
                             ),
                             const SizedBox(height: 24), // مسافة فارغة
@@ -317,7 +320,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           hintStyle: const TextStyle(color: Color(0xFF94a3b8), fontSize: 15), // ستايل التلميح
           border: InputBorder.none, // إخفاء الإطار الافتراضي لفلاتر
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16), // حواف داخلية مريحة
-          suffixIcon: Icon(icon, color: const Color(0xFF94a3b8), size: 20), // الأيقونة في نهاية الحقل (يساراً)
+          prefixIcon: Icon(icon, color: const Color(0xFF94a3b8), size: 20), // الأيقونة في بداية الحقل (يميناً في RTL)
         ),
       ),
     );
