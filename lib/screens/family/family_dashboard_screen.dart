@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/app_riverpod.dart';
@@ -13,20 +14,33 @@ class FamilyDashboardScreen extends ConsumerStatefulWidget {
   const FamilyDashboardScreen({super.key});
 
   @override
-  ConsumerState<FamilyDashboardScreen> createState() => _FamilyDashboardScreenState();
+  ConsumerState<FamilyDashboardScreen> createState() =>
+      _FamilyDashboardScreenState();
 }
 
-class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> with TickerProviderStateMixin {
+class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
+    with TickerProviderStateMixin {
   int _selectedIndex = 0;
   late AnimationController _fadeController;
   late AnimationController _pulseController;
+  late AnimationController _rotationController;
+  late AnimationController _floatController;
   late List<Animation<double>> _fadeAnimations;
 
   @override
   void initState() {
     super.initState();
-    _fadeController = AnimationController(vsync: this, duration: const Duration(milliseconds: 1000));
-    _pulseController = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat(reverse: true);
+    _fadeController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 1000));
+    _pulseController =
+        AnimationController(vsync: this, duration: const Duration(seconds: 2))
+          ..repeat(reverse: true);
+    _rotationController =
+        AnimationController(vsync: this, duration: const Duration(seconds: 25))
+          ..repeat();
+    _floatController =
+        AnimationController(vsync: this, duration: const Duration(seconds: 3))
+          ..repeat(reverse: true);
 
     _fadeAnimations = List.generate(10, (index) {
       return Tween<double>(begin: 0, end: 1).animate(
@@ -44,6 +58,8 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
   void dispose() {
     _fadeController.dispose();
     _pulseController.dispose();
+    _rotationController.dispose();
+    _floatController.dispose();
     super.dispose();
   }
 
@@ -55,21 +71,16 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
       title: 'طبطبـة',
       titleColor: const Color(0xFFea580c),
       overrideRole: 'عائلة',
+      useNestedScrollView: true,
+      sliverHeader: _buildHero(provider),
       bottomNavigationBar: _buildBottomNav(),
-      body: Column(
+      body: IndexedStack(
+        index: _selectedIndex,
         children: [
-          _buildHero(provider),
-          Expanded(
-            child: IndexedStack(
-              index: _selectedIndex,
-              children: [
-                _buildHomeView(provider),
-                _buildCareView(provider),
-                _buildVisitsView(provider),
-                _buildBillingView(provider),
-              ],
-            ),
-          ),
+          _buildHomeView(provider),
+          _buildCareView(provider),
+          _buildVisitsView(provider),
+          _buildBillingView(provider),
         ],
       ),
     );
@@ -77,7 +88,6 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
 
   Widget _buildHero(AppRiverpod provider) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -86,23 +96,166 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
         ),
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
       ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              const Spacer(),
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+      child: ClipRRect(
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
+        child: Stack(
+          children: [
+            Positioned.fill(child: _buildAnimatedBackground()),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
+              child: Column(
                 children: [
-                  Text('مرحباً سارة 👋', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                  Text('الابنة · آخر زيارة: منذ ٣ أيام', style: TextStyle(color: Colors.white70, fontSize: 11)),
+                  Row(
+                    children: [
+                      const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('مرحباً سارة 👋',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold)),
+                          Text('الابنة · آخر زيارة: منذ ٣ أيام',
+                              style: TextStyle(
+                                  color: Colors.white70, fontSize: 11)),
+                        ],
+                      ),
+                      const Spacer(),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  _buildWellnessPulse(provider),
                 ],
               ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          _buildWellnessPulse(provider),
-        ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnimatedBackground() {
+    return AnimatedBuilder(
+      animation: Listenable.merge([_floatController, _rotationController]),
+      builder: (context, child) {
+        return Stack(
+          children: [
+            // Orb 1 - Top Right
+            Positioned(
+              top: -60 + (30 * _floatController.value),
+              right: -50 + (20 * _floatController.value),
+              child: _buildRealisticOrb(220, [
+                const Color(0xFFfb923c).withOpacity(0.35),
+                const Color(0xFFea580c).withOpacity(0.15),
+                Colors.transparent,
+              ]),
+            ),
+            // Orb 2 - Bottom Left
+            Positioned(
+              bottom: -40 + (40 * (1 - _floatController.value)),
+              left: -50 + (25 * _floatController.value),
+              child: _buildRealisticOrb(190, [
+                const Color(0xFFfdba74).withOpacity(0.3),
+                const Color(0xFFf97316).withOpacity(0.1),
+                Colors.transparent,
+              ]),
+            ),
+            // Orb 3 - Center Left
+            Positioned(
+              top: 50 + (40 * sin(_floatController.value * pi)),
+              left: 20 + (50 * cos(_floatController.value * pi)),
+              child: _buildRealisticOrb(110, [
+                const Color(0xFFfed7aa).withOpacity(0.25),
+                const Color(0xFFfb923c).withOpacity(0.08),
+                Colors.transparent,
+              ]),
+            ),
+            // Orb 4 - Center Right
+            Positioned(
+              bottom: 40 + (30 * _floatController.value),
+              right: 80 + (20 * _floatController.value),
+              child: _buildRealisticOrb(130, [
+                const Color(0xFFea580c).withOpacity(0.18),
+                Colors.white.withOpacity(0.08),
+                Colors.transparent,
+              ]),
+            ),
+            // Orb 5 - Top Left
+            Positioned(
+              top: -30 + (20 * (1 - _floatController.value)),
+              left: 100 + (40 * _floatController.value),
+              child: _buildRealisticOrb(95, [
+                const Color(0xFFfb923c).withOpacity(0.15),
+                Colors.transparent,
+              ]),
+            ),
+            // Orb 6 - Near Pulse (Center)
+            Positioned(
+              top: 140 - (30 * _floatController.value),
+              right: 40 + (60 * _floatController.value),
+              child: _buildRealisticOrb(85, [
+                const Color(0xFFfdba74).withOpacity(0.12),
+                Colors.transparent,
+              ]),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildRealisticOrb(double size, List<Color> baseColors) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: const BoxDecoration(shape: BoxShape.circle),
+      child: ClipOval(
+        child: Stack(
+          children: [
+            // Base Gradient
+            Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: baseColors,
+                  stops: const [0.0, 0.6, 1.0],
+                ),
+              ),
+            ),
+            // Rotating Effect
+            RotationTransition(
+              turns: _rotationController,
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: SweepGradient(
+                    colors: [
+                      Colors.transparent,
+                      Colors.white.withOpacity(0.15),
+                      Colors.transparent,
+                      Colors.white.withOpacity(0.08),
+                      Colors.transparent,
+                    ],
+                    stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+                  ),
+                ),
+              ),
+            ),
+            // Glassy Reflection
+            Positioned(
+              top: size * 0.1,
+              left: size * 0.15,
+              child: Container(
+                width: size * 0.4,
+                height: size * 0.2,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.1),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -119,56 +272,12 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
         ),
         child: Row(
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  const Text('نبض العافية — الحاج محمود', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 4),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Text(
-                        provider.currentMood == 'happy' ? 'سعيد ومبتهج 😊' :
-                        provider.currentMood == 'calm' ? 'هادئ ومستقر 😌' :
-                        provider.currentMood == 'tired' ? 'يحتاج للراحة 😴' :
-                        provider.currentMood == 'active' ? 'نشيط وحيوي 🔥' : 'مستقر ومطمئن',
-                        style: const TextStyle(color: Colors.white70, fontSize: 10)
-                      ),
-                      const SizedBox(width: 6),
-                      AnimatedBuilder(
-                        animation: _pulseController,
-                        builder: (context, child) {
-                          return Container(
-                            width: 8, height: 8,
-                            decoration: BoxDecoration(
-                              color: provider.currentMood == 'tired' ? const Color(0xFFfbbf24) : const Color(0xFF4ade80),
-                              shape: BoxShape.circle,
-                              boxShadow: [BoxShadow(color: (provider.currentMood == 'tired' ? const Color(0xFFfbbf24) : const Color(0xFF4ade80)).withOpacity(0.6), blurRadius: 4 + _pulseController.value * 8, spreadRadius: _pulseController.value * 4)],
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      _buildMiniBadge('🥣 فطر جيداً', const Color(0xFFfef3c7)),
-                      const SizedBox(width: 6),
-                      _buildMiniBadge('😴 نوم هادئ', const Color(0xFFdbeafe)),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 16),
             Stack(
               alignment: Alignment.center,
               children: [
                 SizedBox(
-                  width: 64, height: 64,
+                  width: 64,
+                  height: 64,
                   child: CircularProgressIndicator(
                     value: ref.watch(appRiverpod).compliancePercentage / 100,
                     strokeWidth: 4,
@@ -177,11 +286,83 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
                   ),
                 ),
                 Container(
-                  width: 52, height: 52,
-                  decoration: const BoxDecoration(color: Colors.white24, shape: BoxShape.circle),
-                  child: const Center(child: Text('مح', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold))),
+                  width: 52,
+                  height: 52,
+                  decoration: const BoxDecoration(
+                      color: Colors.white24, shape: BoxShape.circle),
+                  child: const Center(
+                      child: Text('مح',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold))),
                 ),
               ],
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('نبض العافية — الحاج محمود',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Text(
+                          provider.currentMood == 'happy'
+                              ? 'سعيد ومبتهج 😊'
+                              : provider.currentMood == 'calm'
+                                  ? 'هادئ ومستقر 😌'
+                                  : provider.currentMood == 'tired'
+                                      ? 'يحتاج للراحة 😴'
+                                      : provider.currentMood == 'active'
+                                          ? 'نشيط وحيوي 🔥'
+                                          : 'مستقر ومطمئن',
+                          style: const TextStyle(
+                              color: Colors.white70, fontSize: 10)),
+                      const SizedBox(width: 6),
+                      AnimatedBuilder(
+                        animation: _pulseController,
+                        builder: (context, child) {
+                          return Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: provider.currentMood == 'tired'
+                                  ? const Color(0xFFfbbf24)
+                                  : const Color(0xFF4ade80),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                    color: (provider.currentMood == 'tired'
+                                            ? const Color(0xFFfbbf24)
+                                            : const Color(0xFF4ade80))
+                                        .withOpacity(0.6),
+                                    blurRadius: 4 + _pulseController.value * 8,
+                                    spreadRadius: _pulseController.value * 4)
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      _buildMiniBadge('🥣 فطر جيداً', const Color(0xFFfef3c7)),
+                      const SizedBox(width: 6),
+                      _buildMiniBadge('😴 نوم هادئ', const Color(0xFFdbeafe)),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -192,8 +373,11 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
   Widget _buildMiniBadge(String text, Color bg) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(color: bg.withOpacity(0.2), borderRadius: BorderRadius.circular(8)),
-      child: Text(text, style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w500)),
+      decoration: BoxDecoration(
+          color: bg.withOpacity(0.2), borderRadius: BorderRadius.circular(8)),
+      child: Text(text,
+          style: const TextStyle(
+              color: Colors.white, fontSize: 9, fontWeight: FontWeight.w500)),
     );
   }
 
@@ -207,7 +391,9 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
 
     return Container(
       height: 48,
-      decoration: const BoxDecoration(color: Colors.white, border: Border(bottom: BorderSide(color: Color(0xFFf1f5f9)))),
+      decoration: const BoxDecoration(
+          color: Colors.white,
+          border: Border(bottom: BorderSide(color: Color(0xFFf1f5f9)))),
       child: Row(
         children: List.generate(tabs.length, (index) {
           final isAct = _selectedIndex == index;
@@ -217,14 +403,30 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
               child: Container(
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  border: Border(bottom: BorderSide(color: isAct ? const Color(0xFFea580c) : Colors.transparent, width: 2.5)),
+                  border: Border(
+                      bottom: BorderSide(
+                          color: isAct
+                              ? const Color(0xFFea580c)
+                              : Colors.transparent,
+                          width: 2.5)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(tabs[index]['lbl'] as String, style: TextStyle(color: isAct ? const Color(0xFFea580c) : const Color(0xFF94a3b8), fontSize: 10, fontWeight: isAct ? FontWeight.bold : FontWeight.w500)),
+                    Text(tabs[index]['lbl'] as String,
+                        style: TextStyle(
+                            color: isAct
+                                ? const Color(0xFFea580c)
+                                : const Color(0xFF94a3b8),
+                            fontSize: 10,
+                            fontWeight:
+                                isAct ? FontWeight.bold : FontWeight.w500)),
                     const SizedBox(width: 4),
-                    Icon(tabs[index]['icon'] as IconData, size: 14, color: isAct ? const Color(0xFFea580c) : const Color(0xFF94a3b8)),
+                    Icon(tabs[index]['icon'] as IconData,
+                        size: 14,
+                        color: isAct
+                            ? const Color(0xFFea580c)
+                            : const Color(0xFF94a3b8)),
                   ],
                 ),
               ),
@@ -260,22 +462,39 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
   }
 
   Widget _buildMemoryWall(AppRiverpod provider) {
-    final moments = provider.memoryMoments.where((m) => m.residentId == 'r1').toList();
-    
+    final moments =
+        provider.memoryMoments.where((m) => m.residentId == 'r1').toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.end,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            GestureDetector(
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FamilyBridgeScreen())),
-              child: const Text('عرض الكل / إضافة', style: TextStyle(color: Color(0xFF0ea5e9), fontSize: 10, fontWeight: FontWeight.bold)),
-            ),
-            const Spacer(),
-            const Text('حائط الذكريات ✨', style: TextStyle(color: Color(0xFF1f2937), fontSize: 14, fontWeight: FontWeight.bold)),
+            Container(
+                width: 4,
+                height: 16,
+                decoration: BoxDecoration(
+                    color: const Color(0xFF0ea5e9),
+                    borderRadius: BorderRadius.circular(2))),
             const SizedBox(width: 8),
-            Container(width: 4, height: 16, decoration: BoxDecoration(color: const Color(0xFF0ea5e9), borderRadius: BorderRadius.circular(2))),
+            const Text('حائط الذكريات ✨',
+                style: TextStyle(
+                    color: Color(0xFF1f2937),
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold)),
+            const Spacer(),
+            GestureDetector(
+              onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const FamilyBridgeScreen())),
+              child: const Text('عرض الكل / إضافة',
+                  style: TextStyle(
+                      color: Color(0xFF0ea5e9),
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold)),
+            ),
           ],
         ),
         const SizedBox(height: 12),
@@ -294,7 +513,12 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(color: const Color(0xFFf1f5f9)),
-                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
+                  boxShadow: [
+                    BoxShadow(
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4))
+                  ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -302,7 +526,8 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
                     Expanded(
                       flex: 3,
                       child: ClipRRect(
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                        borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(24)),
                         child: Image.network(m.imageUrl, fit: BoxFit.cover),
                       ),
                     ),
@@ -313,27 +538,44 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            Text(m.activityTitle, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF1e293b))),
-                            Text(m.date, style: const TextStyle(fontSize: 8, color: Color(0xFF94a3b8))),
+                            Text(m.activityTitle,
+                                style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF1e293b))),
+                            Text(m.date,
+                                style: const TextStyle(
+                                    fontSize: 8, color: Color(0xFF94a3b8))),
                             const Spacer(),
                             Row(
                               children: [
                                 GestureDetector(
                                   onTap: () => provider.addAppreciation(m.id),
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(color: const Color(0xFFfff1f2), borderRadius: BorderRadius.circular(20)),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                        color: const Color(0xFFfff1f2),
+                                        borderRadius:
+                                            BorderRadius.circular(20)),
                                     child: Row(
                                       children: [
-                                        Text('${m.appreciations}', style: const TextStyle(color: Color(0xFFe11d48), fontSize: 9, fontWeight: FontWeight.bold)),
+                                        Text('${m.appreciations}',
+                                            style: const TextStyle(
+                                                color: Color(0xFFe11d48),
+                                                fontSize: 9,
+                                                fontWeight: FontWeight.bold)),
                                         const SizedBox(width: 4),
-                                        const Icon(Icons.favorite, color: Color(0xFFe11d48), size: 12),
+                                        const Icon(Icons.favorite,
+                                            color: Color(0xFFe11d48), size: 12),
                                       ],
                                     ),
                                   ),
                                 ),
                                 const Spacer(),
-                                const Text('ممتنـون ❤️', style: TextStyle(fontSize: 8, color: Color(0xFF64748b))),
+                                const Text('ممتنـون ❤️',
+                                    style: TextStyle(
+                                        fontSize: 8, color: Color(0xFF64748b))),
                               ],
                             ),
                           ],
@@ -355,11 +597,20 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.end,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            const Text('الزيارة الافتراضية (AR) 🕶️', style: TextStyle(color: Color(0xFF1f2937), fontSize: 14, fontWeight: FontWeight.bold)),
+            Container(
+                width: 4,
+                height: 16,
+                decoration: BoxDecoration(
+                    color: const Color(0xFFa855f7),
+                    borderRadius: BorderRadius.circular(2))),
             const SizedBox(width: 8),
-            Container(width: 4, height: 16, decoration: BoxDecoration(color: const Color(0xFFa855f7), borderRadius: BorderRadius.circular(2))),
+            const Text('الزيارة الافتراضية (AR) 🕶️',
+                style: TextStyle(
+                    color: Color(0xFF1f2937),
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold)),
           ],
         ),
         const SizedBox(height: 12),
@@ -368,7 +619,8 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
             image: const DecorationImage(
-              image: NetworkImage('https://images.unsplash.com/photo-1513161455079-7dc1de15ef3e?q=80&w=1000'),
+              image: NetworkImage(
+                  'https://images.unsplash.com/photo-1513161455079-7dc1de15ef3e?q=80&w=1000'),
               fit: BoxFit.cover,
             ),
           ),
@@ -377,27 +629,44 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(24),
-                  gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.black.withOpacity(0.1), Colors.black.withOpacity(0.6)]),
+                  gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.black.withOpacity(0.1),
+                        Colors.black.withOpacity(0.6)
+                      ]),
                 ),
               ),
               const Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.view_in_ar_rounded, color: Colors.white, size: 48),
+                    Icon(Icons.view_in_ar_rounded,
+                        color: Colors.white, size: 48),
                     SizedBox(height: 8),
-                    Text('ابدأ جولة ٣٦٠ درجة في الغرفة', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    Text('ابدأ جولة ٣٦٠ درجة في الغرفة',
+                        style: TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold)),
                   ],
                 ),
               ),
               Positioned(
-                bottom: 15, right: 15,
+                bottom: 15,
+                right: 15,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(10)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                      color: Colors.white24,
+                      borderRadius: BorderRadius.circular(10)),
                   child: const Row(
                     children: [
-                      Text('مباشر الآن', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                      Text('مباشر الآن',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold)),
                       SizedBox(width: 5),
                       Icon(Icons.circle, color: Colors.red, size: 8),
                     ],
@@ -415,18 +684,31 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
     return Column(
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.end,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            const Text('مؤشرات الحالة اليوم', style: TextStyle(color: Color(0xFF1f2937), fontSize: 14, fontWeight: FontWeight.bold)),
+            Container(
+                width: 4,
+                height: 16,
+                decoration: BoxDecoration(
+                    color: const Color(0xFFea580c),
+                    borderRadius: BorderRadius.circular(2))),
             const SizedBox(width: 8),
-            Container(width: 4, height: 16, decoration: BoxDecoration(color: const Color(0xFFea580c), borderRadius: BorderRadius.circular(2))),
+            const Text('مؤشرات الحالة اليوم',
+                style: TextStyle(
+                    color: Color(0xFF1f2937),
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold)),
           ],
         ),
         const SizedBox(height: 12),
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, crossAxisSpacing: 12, mainAxisSpacing: 12, childAspectRatio: 1.4),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 1.4),
           itemCount: provider.familyHealthMetrics.length,
           itemBuilder: (context, i) {
             final m = provider.familyHealthMetrics[i];
@@ -436,29 +718,46 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: const Color(0xFFf1f5f9)),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black.withOpacity(0.02), blurRadius: 10)
+                ],
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                       _buildTrendIcon(m.trend),
-                       const Spacer(),
-                       Text(m.label, style: const TextStyle(color: Color(0xFF64748b), fontSize: 10, fontWeight: FontWeight.w500)),
+                      Expanded(
+                        child: Text(m.label,
+                            textAlign: TextAlign.right,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                color: Color(0xFF000000),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w900)),
+                      ),
+                      const SizedBox(width: 4),
+                      _buildTrendIcon(m.trend),
                     ],
                   ),
+                  const Spacer(),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                       Container(
-                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                         decoration: BoxDecoration(color: _getMetricBg(m.status), borderRadius: BorderRadius.circular(6)),
-                         child: Text(_getMetricStatus(m.status), style: TextStyle(color: _getMetricFg(m.status), fontSize: 8, fontWeight: FontWeight.bold)),
-                       ),
-                       const Spacer(),
-                       Text('${(m.value * 100).toInt()}%', style: const TextStyle(color: Color(0xFF1f2937), fontSize: 18, fontWeight: FontWeight.bold)),
+                      Expanded(
+                        child: Text('${(m.value * 100).toInt()}%',
+                            textAlign: TextAlign.right,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                color: Color(0xFF000000),
+                                fontSize: 22,
+                                fontWeight: FontWeight.w900)),
+                      ),
+                      const SizedBox(width: 4),
+                      _buildMetricBadge(m.status),
                     ],
                   ),
                 ],
@@ -470,79 +769,176 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
     );
   }
 
+  Widget _buildMetricBadge(String status) {
+    Color bg = const Color(0xFFf1f5f9);
+    Color fg = const Color(0xFF64748b);
+    String label = 'مستقر';
+
+    if (status == 'critical') {
+      bg = const Color(0xFFfee2e2);
+      fg = const Color(0xFFef4444);
+      label = 'تنبيه';
+    } else if (status == 'good') {
+      bg = const Color(0xFFdcfce7);
+      fg = const Color(0xFF16a34a);
+      label = 'ممتاز';
+    } else if (status == 'medium') {
+      bg = const Color(0xFFfef3c7);
+      fg = const Color(0xFFd97706);
+      label = 'جيد';
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(label,
+          style:
+              TextStyle(color: fg, fontSize: 10, fontWeight: FontWeight.w900)),
+    );
+  }
+
+  Widget _buildTrendIcon(String trend) {
+    IconData icon = Icons.trending_flat_rounded;
+    Color color = const Color(0xFF64748b);
+
+    if (trend == 'up') {
+      icon = Icons.trending_up_rounded;
+      color = const Color(0xFF10b981);
+    } else if (trend == 'down') {
+      icon = Icons.trending_down_rounded;
+      color = const Color(0xFFef4444);
+    }
+
+    return Icon(icon, color: color, size: 18);
+  }
+
   Widget _buildNextmedCard(AppRiverpod provider) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [Color(0xFFeff6ff), Color(0xFFdbeafe)]),
+        gradient: const LinearGradient(
+            colors: [Color(0xFFeff6ff), Color(0xFFdbeafe)]),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: const Color(0xFFbfdbfe)),
       ),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(color: const Color(0xFF3b82f6), borderRadius: BorderRadius.circular(12)),
-            child: const Text('تذكير', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
-          ),
+          const Icon(Icons.medication_liquid_rounded,
+              color: Color(0xFF3b82f6), size: 28),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('الجرعة القادمة: ${ref.watch(appRiverpod).nextMedication?.name ?? "مكتملة ✅"}', style: const TextStyle(color: Color(0xFF1e3a8a), fontSize: 12, fontWeight: FontWeight.bold)),
-                Text(ref.watch(appRiverpod).nextMedication != null ? 'موعد ${ref.watch(appRiverpod).nextMedication!.timeOfDay} — ${ref.watch(appRiverpod).nextMedication!.timeDescription}' : 'جميع الأدوية تم أخذها بنجاح', style: const TextStyle(color: Color(0xFF3b82f6), fontSize: 10)),
+                Text(
+                    'الجرعة القادمة: ${ref.watch(appRiverpod).nextMedication?.name ?? "مكتملة ✅"}',
+                    style: const TextStyle(
+                        color: Color(0xFF1e3a8a),
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold)),
+                Text(
+                    ref.watch(appRiverpod).nextMedication != null
+                        ? 'موعد ${ref.watch(appRiverpod).nextMedication!.timeOfDay} — ${ref.watch(appRiverpod).nextMedication!.timeDescription}'
+                        : 'جميع الأدوية تم أخذها بنجاح',
+                    style: const TextStyle(
+                        color: Color(0xFF3b82f6), fontSize: 10)),
               ],
             ),
           ),
           const SizedBox(width: 12),
-          const Icon(Icons.medication_liquid_rounded, color: Color(0xFF3b82f6), size: 28),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+                color: const Color(0xFF3b82f6),
+                borderRadius: BorderRadius.circular(12)),
+            child: const Text('تذكير',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold)),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildUpcomingVisit(AppRiverpod provider) {
-    final visit = provider.familyVisits.firstWhere((v) => v.status == 'upcoming');
+    final upcomingVisits =
+        provider.familyVisits.where((v) => v.status == 'upcoming').toList();
+    if (upcomingVisits.isEmpty) return const SizedBox.shrink();
+
+    final visit = upcomingVisits.first;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: const Color(0xFFf1f5f9)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15)],
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15)
+        ],
       ),
       child: Column(
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(color: const Color(0xFFdcfce7), borderRadius: BorderRadius.circular(8)),
-                child: const Text('مؤكدة', style: TextStyle(color: Color(0xFF166534), fontSize: 9, fontWeight: FontWeight.bold)),
-              ),
+              const Text('زيارتك القادمة',
+                  style: TextStyle(
+                      color: Color(0xFF1f2937),
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold)),
               const Spacer(),
-              const Text('زيارتك القادمة', style: TextStyle(color: Color(0xFF1f2937), fontSize: 12, fontWeight: FontWeight.bold)),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                    color: const Color(0xFFdcfce7),
+                    borderRadius: BorderRadius.circular(8)),
+                child: const Text('مؤكدة',
+                    style: TextStyle(
+                        color: Color(0xFF166534),
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold)),
+              ),
             ],
           ),
           const SizedBox(height: 16),
           Row(
             children: [
-              _buildVisitInfo(Icons.access_time_filled, visit.time),
-              const SizedBox(width: 20),
               _buildVisitInfo(Icons.calendar_today_rounded, visit.date),
+              const SizedBox(width: 20),
+              _buildVisitInfo(Icons.access_time_filled, visit.time),
               const Spacer(),
-              const CircleAvatar(radius: 18, backgroundColor: Color(0xFFf3f4f6), child: Text('س', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF6b7280)))),
+              const CircleAvatar(
+                  radius: 18,
+                  backgroundColor: Color(0xFFf3f4f6),
+                  child: Text('س',
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF0f172a)))),
             ],
           ),
           const SizedBox(height: 16),
           GestureDetector(
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VisitBookingScreen())),
+            onTap: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const VisitBookingScreen())),
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 10),
-              decoration: BoxDecoration(color: const Color(0xFFfff7ed), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFfed7aa))),
-              child: const Center(child: Text('تعديل الموعد', style: TextStyle(color: Color(0xFFea580c), fontSize: 11, fontWeight: FontWeight.bold))),
+              decoration: BoxDecoration(
+                  color: const Color(0xFFfff7ed),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFfed7aa))),
+              child: const Center(
+                  child: Text('تعديل الموعد',
+                      style: TextStyle(
+                          color: Color(0xFFea580c),
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold))),
             ),
           ),
         ],
@@ -552,10 +948,15 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
 
   Widget _buildVisitInfo(IconData icon, String text) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Text(text, style: const TextStyle(color: Color(0xFF4b5563), fontSize: 11, fontWeight: FontWeight.w500)),
+        Text(text,
+            style: const TextStyle(
+                color: Color(0xFF000000),
+                fontSize: 12,
+                fontWeight: FontWeight.w900)),
         const SizedBox(width: 4),
-        Icon(icon, size: 14, color: const Color(0xFF94a3b8)),
+        Icon(icon, size: 14, color: const Color(0xFF334155)),
       ],
     );
   }
@@ -564,13 +965,17 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        const Text('سجل الأدوية اليوم', textAlign: TextAlign.right, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 12),
+        _buildSectionHeader('سجل الأدوية اليوم'),
+        const SizedBox(height: 16),
         ...provider.medications.map((m) => _buildCareLogCard(m)).toList(),
-        const SizedBox(height: 24),
-        const Text('آخر التقارير الطبية', textAlign: TextAlign.right, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 12),
-        _buildReportCard('تقييم ربع سنوي — أخصائي اجتماعي', '١٨ أبريل ٢٠٢٤', 'تحسن ملحوظ في مستوى المشاركة الاجتماعية والمزاج العام رغبة في الأنشطة الجماعية.', const Color(0xFF6366f1)),
+        const SizedBox(height: 32),
+        _buildSectionHeader('آخر التقارير الطبية'),
+        const SizedBox(height: 16),
+        _buildReportCard(
+            'تقييم ربع سنوي — أخصائي اجتماعي',
+            '١٨ أبريل ٢٠٢٤',
+            'تحسن ملحوظ في مستوى المشاركة الاجتماعية والمزاج العام رغبة في الأنشطة الجماعية.',
+            const Color(0xFF6366f1)),
       ],
     );
   }
@@ -582,34 +987,56 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: m.isTaken ? const Color(0xFFdcfce7) : const Color(0xFFf1f5f9)),
+        border: Border.all(
+            color:
+                m.isTaken ? const Color(0xFFdcfce7) : const Color(0xFFf1f5f9)),
       ),
       child: Row(
         children: [
-          if (m.isTaken)
-           const Icon(Icons.check_circle, color: Color(0xFF10b981), size: 20)
-          else
-           const Icon(Icons.pending_actions_rounded, color: Color(0xFFf59e0b), size: 20),
-          const Spacer(),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(m.name, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-              Text('${m.dosage} · ${m.timeDescription}', style: const TextStyle(fontSize: 10, color: Color(0xFF64748b))),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(m.name,
+                    textAlign: TextAlign.right,
+                    style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF000000))),
+                const SizedBox(height: 2),
+                Text('${m.dosage} · ${m.timeDescription}',
+                    textAlign: TextAlign.right,
+                    style: const TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF1e293b),
+                        fontWeight: FontWeight.w800)),
+              ],
+            ),
           ),
           const SizedBox(width: 12),
           Container(
-             width: 40, height: 40,
-             decoration: BoxDecoration(color: const Color(0xFFf8fafc), borderRadius: BorderRadius.circular(10)),
-             child: const Center(child: Icon(Icons.medication, color: Color(0xFFea580c), size: 20)),
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+                color: const Color(0xFFfff7ed),
+                borderRadius: BorderRadius.circular(10)),
+            child: const Center(
+                child:
+                    Icon(Icons.medication, color: Color(0xFFea580c), size: 22)),
           ),
+          const SizedBox(width: 12),
+          if (m.isTaken)
+            const Icon(Icons.check_circle, color: Color(0xFF10b981), size: 26)
+          else
+            const Icon(Icons.pending_actions_rounded,
+                color: Color(0xFFf59e0b), size: 26),
         ],
       ),
     );
   }
 
-  Widget _buildReportCard(String title, String date, String excerpt, Color col) {
+  Widget _buildReportCard(
+      String title, String date, String excerpt, Color col) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -618,21 +1045,59 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
         border: Border.all(color: const Color(0xFFf1f5f9)),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(date, style: const TextStyle(color: Color(0xFF94a3b8), fontSize: 10)),
-              Text(title, style: TextStyle(color: col, fontSize: 11, fontWeight: FontWeight.bold)),
+              Expanded(
+                child: Text(title,
+                    textAlign: TextAlign.right,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        color: col, fontSize: 16, fontWeight: FontWeight.w900)),
+              ),
+              const SizedBox(width: 8),
+              Text(date,
+                  textAlign: TextAlign.left,
+                  style: const TextStyle(
+                      color: Color(0xFF334155),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900)),
             ],
           ),
-          const SizedBox(height: 10),
-          Text(excerpt, textAlign: TextAlign.right, style: const TextStyle(color: Color(0xFF4b5563), fontSize: 10, height: 1.5)),
+          const SizedBox(height: 12),
+          Text(
+            excerpt,
+            textAlign: TextAlign.right,
+            style: const TextStyle(
+                color: Color(0xFF000000),
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                height: 1.5),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
           const SizedBox(height: 12),
           GestureDetector(
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => CareReportDetailScreen(title: title, date: date))),
-            child: const Text('عرض التقرير الكامل ←', style: TextStyle(color: Color(0xFFea580c), fontSize: 10, fontWeight: FontWeight.bold)),
+            onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) =>
+                        CareReportDetailScreen(title: title, date: date))),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                const Icon(Icons.arrow_back_ios,
+                    size: 12, color: Color(0xFFea580c)),
+                const SizedBox(width: 4),
+                const Text('عرض التقرير الكامل',
+                    style: TextStyle(
+                        color: Color(0xFFea580c),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900)),
+              ],
+            ),
           ),
         ],
       ),
@@ -654,15 +1119,26 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
                   indicatorColor: const Color(0xFFea580c),
                   indicatorSize: TabBarIndicatorSize.label,
                   tabs: [
-                    Tab(child: Text('الزيارات القادمة (${provider.familyVisits.where((v) => v.status == 'upcoming').length})', style: const TextStyle(fontWeight: FontWeight.bold))),
-                    Tab(child: Text('السجل السابق', style: const TextStyle(fontWeight: FontWeight.bold))),
+                    Tab(
+                        child: Text(
+                            'الزيارات القادمة (${provider.familyVisits.where((v) => v.status == 'upcoming').length})',
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold))),
+                    Tab(
+                        child: Text('السجل السابق',
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold))),
                   ],
                 ),
                 Expanded(
                   child: TabBarView(
                     children: [
-                      _buildVisitsList(provider.familyVisits.where((v) => v.status == 'upcoming').toList()),
-                      _buildVisitsList(provider.familyVisits.where((v) => v.status != 'upcoming').toList()),
+                      _buildVisitsList(provider.familyVisits
+                          .where((v) => v.status == 'upcoming')
+                          .toList()),
+                      _buildVisitsList(provider.familyVisits
+                          .where((v) => v.status != 'upcoming')
+                          .toList()),
                     ],
                   ),
                 ),
@@ -678,7 +1154,8 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
     return Padding(
       padding: const EdgeInsets.all(20),
       child: GestureDetector(
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VisitBookingScreen())),
+        onTap: () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const VisitBookingScreen())),
         child: Container(
           width: double.infinity,
           padding: const EdgeInsets.all(24),
@@ -698,12 +1175,13 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
           ),
           child: const Row(
             children: [
-              Icon(Icons.add_circle_outline_rounded, color: Colors.white, size: 40),
-              SizedBox(width: 16),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              const Icon(Icons.add_circle_outline_rounded,
+                  color: Colors.white, size: 40),
+              const SizedBox(width: 16),
+              const Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('حجز موعد زيارة جديد',
+                  Text('جدولة لقاء مودة',
                       style: TextStyle(
                           color: Colors.white,
                           fontSize: 18,
@@ -712,8 +1190,9 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
                       style: TextStyle(color: Colors.white70, fontSize: 12)),
                 ],
               ),
-              Spacer(),
-              Icon(Icons.chevron_right_rounded, color: Colors.white, size: 24),
+              const Spacer(),
+              const Icon(Icons.chevron_left_rounded,
+                  color: Colors.white, size: 28),
             ],
           ),
         ),
@@ -763,19 +1242,40 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
         children: [
           Row(
             children: [
-              _buildVisitBadge(v.status),
-              const Spacer(),
-              Text(
-                  v.type == 'physical' ? '🏠 زيارة واقعية' : '📹 مكالمة فيديو',
+              Text(v.type == 'physical' ? '🏠 لقاء مودة' : '📹 مكالمة فيديو',
                   style: const TextStyle(
                       color: Color(0xFF64748b),
                       fontSize: 12,
                       fontWeight: FontWeight.bold)),
+              const Spacer(),
+              _buildVisitBadge(v.status),
             ],
           ),
           const SizedBox(height: 16),
           Row(
             children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('الزائر: ${v.visitorName}',
+                        style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1e293b))),
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        _buildVisitInfo(Icons.calendar_month_rounded, v.date),
+                        const SizedBox(width: 12),
+                        _buildVisitInfo(Icons.access_time_rounded, v.time),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
               Container(
                 width: 48,
                 height: 48,
@@ -788,28 +1288,6 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
                         : Icons.videocam_rounded,
                     color: const Color(0xFFea580c)),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text('الزائر: ${v.visitorName}',
-                        style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1e293b))),
-                    const SizedBox(height: 4),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        _buildVisitInfo(Icons.access_time_rounded, v.time),
-                        const SizedBox(width: 12),
-                        _buildVisitInfo(Icons.calendar_month_rounded, v.date),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
             ],
           ),
           if (isUpcoming) ...[
@@ -819,6 +1297,24 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
             Row(
               children: [
                 Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFfff7ed),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12))),
+                    onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const VisitBookingScreen())),
+                    child: const Text('تعديل الموعد',
+                        style: TextStyle(
+                            color: Color(0xFFea580c),
+                            fontWeight: FontWeight.bold)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
                   child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Color(0xFFcbd5e1)),
@@ -827,21 +1323,6 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
                     onPressed: () {},
                     child: const Text('إلغاء',
                         style: TextStyle(color: Color(0xFF64748b))),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFfff7ed),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12))),
-                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VisitBookingScreen())),
-                    child: const Text('تعديل الموعد',
-                        style: TextStyle(
-                            color: Color(0xFFea580c),
-                            fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],
@@ -875,8 +1356,8 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
       decoration:
           BoxDecoration(color: bg, borderRadius: BorderRadius.circular(8)),
       child: Text(label,
-          style: TextStyle(
-              color: col, fontSize: 10, fontWeight: FontWeight.bold)),
+          style:
+              TextStyle(color: col, fontSize: 10, fontWeight: FontWeight.bold)),
     );
   }
 
@@ -920,13 +1401,16 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('المستحقات الحالية',
-                  style: TextStyle(color: Colors.white60, fontSize: 14)),
-              Icon(Icons.account_balance_wallet_rounded,
-                  color: Colors.white24, size: 24),
+              const Text('المستحقات الحالية',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900)),
+              const Icon(Icons.account_balance_wallet_rounded,
+                  color: Colors.white, size: 28),
             ],
           ),
           const SizedBox(height: 8),
@@ -934,8 +1418,8 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
               '${provider.unpaidBillsAmount.toString().replaceAllMapped(RegExp(r"(\d{1,3})(?=(\d{3})+(?!\d))"), (Match m) => "${m[1]},")} ج.م',
               style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 36,
-                  fontWeight: FontWeight.bold)),
+                  fontSize: 38,
+                  fontWeight: FontWeight.w900)),
           const SizedBox(height: 24),
           Row(
             children: [
@@ -984,7 +1468,8 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
                   decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(16)),
-                  child: const Icon(Icons.download_rounded, color: Colors.white),
+                  child:
+                      const Icon(Icons.download_rounded, color: Colors.white),
                 ),
               ),
             ],
@@ -1015,12 +1500,18 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
                   borderRadius: BorderRadius.circular(2)),
             ),
             const SizedBox(height: 32),
-            const Text('تأكيد الدفع',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            const Align(
+              alignment: Alignment.centerRight,
+              child: Text('تأكيد الدفع',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            ),
             const SizedBox(height: 12),
-            Text('سيتم خصم المبلغ من بطاقتك المسجلة المنتهية بـ 4242',
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Color(0xFF64748b), fontSize: 16)),
+            const Align(
+              alignment: Alignment.centerRight,
+              child: Text('سيتم خصم المبلغ من بطاقتك المسجلة المنتهية بـ 4242',
+                  textAlign: TextAlign.right,
+                  style: TextStyle(color: Color(0xFF64748b), fontSize: 16)),
+            ),
             const SizedBox(height: 32),
             Container(
               padding: const EdgeInsets.all(24),
@@ -1128,32 +1619,32 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
+        _buildSectionHeader(title),
         Text(action,
             style: const TextStyle(
                 color: Color(0xFFea580c),
                 fontSize: 14,
                 fontWeight: FontWeight.bold)),
-        _buildSectionHeader(title),
       ],
     );
   }
 
   Widget _buildSectionHeader(String title) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        Text(title,
-            style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1e293b))),
-        const SizedBox(width: 10),
         Container(
             width: 4,
             height: 18,
             decoration: BoxDecoration(
                 color: const Color(0xFFea580c),
                 borderRadius: BorderRadius.circular(2))),
+        const SizedBox(width: 10),
+        Text(title,
+            style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1e293b))),
       ],
     );
   }
@@ -1166,52 +1657,64 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-            color: b.isPaid ? const Color(0xFFdcfce7) : const Color(0xFFf1f5f9)),
+            color:
+                b.isPaid ? const Color(0xFFdcfce7) : const Color(0xFFf1f5f9)),
       ),
       child: Row(
         children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(b.title,
+                    textAlign: TextAlign.right,
+                    style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF000000))),
+                Text(b.month,
+                    textAlign: TextAlign.right,
+                    style: const TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF334155),
+                        fontWeight: FontWeight.w700)),
+                const SizedBox(height: 6),
+                Text(
+                    b.isPaid
+                        ? 'تم الدفع بنجاح'
+                        : 'تاريخ الاستحقاق: ${b.dueDate}',
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                        color: b.isPaid
+                            ? const Color(0xFF166534)
+                            : const Color(0xFFbe123c),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900)),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          Text('${b.amount.toInt()} ج.م',
+              style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF000000))),
+          const SizedBox(width: 16),
           Container(
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-                color: b.isPaid ? const Color(0xFFf0fdf4) : const Color(0xFFfff1f2),
+                color: b.isPaid
+                    ? const Color(0xFFf0fdf4)
+                    : const Color(0xFFfff1f2),
                 shape: BoxShape.circle),
             child: Icon(
                 b.isPaid ? Icons.check_rounded : Icons.priority_high_rounded,
-                color: b.isPaid ? const Color(0xFF16a34a) : const Color(0xFFe11d48),
+                color: b.isPaid
+                    ? const Color(0xFF16a34a)
+                    : const Color(0xFFe11d48),
                 size: 20),
           ),
-          const Spacer(),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(b.title,
-                  style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1e293b))),
-              Text(b.month,
-                  style:
-                      const TextStyle(fontSize: 12, color: Color(0xFF64748b))),
-              const SizedBox(height: 6),
-              Text(
-                  b.isPaid
-                      ? 'تم الدفع بنجاح'
-                      : 'تاريخ الاستحقاق: ${b.dueDate}',
-                  style: TextStyle(
-                      color: b.isPaid
-                          ? const Color(0xFF16a34a)
-                          : const Color(0xFFe11d48),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500)),
-            ],
-          ),
-          const SizedBox(width: 20),
-          Text('${b.amount.toInt()} ج.م',
-              style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1e293b))),
         ],
       ),
     );
@@ -1227,10 +1730,17 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
       ),
       child: Row(
         children: [
-          const Icon(Icons.chevron_left_rounded, color: Color(0xFF94a3b8)),
-          const Spacer(),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+                color: const Color(0xFFf8fafc),
+                borderRadius: BorderRadius.circular(10)),
+            child:
+                const Icon(Icons.credit_card_rounded, color: Color(0xFF1e293b)),
+          ),
+          const SizedBox(width: 16),
           const Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('Visa **** 4242',
                   style: TextStyle(
@@ -1239,24 +1749,11 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
                   style: TextStyle(color: Color(0xFF64748b), fontSize: 11)),
             ],
           ),
-          const SizedBox(width: 16),
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-                color: const Color(0xFFf8fafc),
-                borderRadius: BorderRadius.circular(10)),
-            child: const Icon(Icons.credit_card_rounded,
-                color: Color(0xFF1e293b)),
-          ),
+          const Spacer(),
+          const Icon(Icons.chevron_left_rounded, color: Color(0xFF94a3b8)),
         ],
       ),
     );
-  }
-
-  Widget _buildTrendIcon(String trend) {
-     if (trend == 'up') return const Icon(Icons.trending_up, color: Color(0xFF10b981), size: 14);
-     if (trend == 'down') return const Icon(Icons.trending_down, color: Color(0xFFef4444), size: 14);
-     return const Icon(Icons.trending_flat, color: Color(0xFF94a3b8), size: 14);
   }
 
   String _getMetricStatus(String s) {
@@ -1282,7 +1779,12 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
       height: 72,
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))],
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, -5))
+        ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -1302,17 +1804,25 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> w
     return GestureDetector(
       onTap: () {
         if (index == 4) {
-           Navigator.push(context, MaterialPageRoute(builder: (_) => const ResidentIdScreen()));
+          Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const ResidentIdScreen()));
         } else {
-           setState(() => _selectedIndex = index);
+          setState(() => _selectedIndex = index);
         }
       },
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: isAct ? const Color(0xFFea580c) : const Color(0xFF94a3b8), size: 24),
+          Icon(icon,
+              color: isAct ? const Color(0xFFea580c) : const Color(0xFF475569),
+              size: 26),
           const SizedBox(height: 4),
-          Text(label, style: TextStyle(color: isAct ? const Color(0xFFea580c) : const Color(0xFF94a3b8), fontSize: 9, fontWeight: isAct ? FontWeight.bold : FontWeight.normal)),
+          Text(label,
+              style: TextStyle(
+                  color:
+                      isAct ? const Color(0xFFea580c) : const Color(0xFF475569),
+                  fontSize: 10,
+                  fontWeight: isAct ? FontWeight.w900 : FontWeight.w600)),
         ],
       ),
     );

@@ -11,7 +11,8 @@ class VisitApprovalView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final provider = ref.watch(appRiverpod);
-    final pendingVisits = provider.familyVisits.where((v) => v.status == 'pending').toList();
+    final pendingVisits =
+        provider.familyVisits.where((v) => v.status == 'pending').toList();
 
     return Column(
       children: [
@@ -70,17 +71,21 @@ class VisitApprovalView extends ConsumerWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(color: const Color(0xFFf8fafc), shape: BoxShape.circle),
-            child: Icon(Icons.event_available_rounded, size: 48, color: Colors.grey[300]),
+            decoration: BoxDecoration(
+                color: const Color(0xFFf8fafc), shape: BoxShape.circle),
+            child: Icon(Icons.event_available_rounded,
+                size: 48, color: Colors.grey[300]),
           ),
           const SizedBox(height: 16),
-          const Text('لا توجد طلبات زيارة حالياً', style: TextStyle(color: Color(0xFF94a3b8), fontSize: 14)),
+          const Text('لا توجد طلبات زيارة حالياً',
+              style: TextStyle(color: Color(0xFF94a3b8), fontSize: 14)),
         ],
       ),
     );
   }
 
-  Widget _buildVisitRequestCard(BuildContext context, WidgetRef ref, FamilyVisit v) {
+  Widget _buildVisitRequestCard(
+      BuildContext context, WidgetRef ref, FamilyVisit v) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(20),
@@ -88,7 +93,12 @@ class VisitApprovalView extends ConsumerWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: const Color(0xFFf1f5f9)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 4))
+        ],
       ),
       child: Column(
         children: [
@@ -109,14 +119,21 @@ class VisitApprovalView extends ConsumerWidget {
           const SizedBox(height: 16),
           Row(
             children: [
-              const Icon(Icons.account_circle_rounded, size: 40, color: Color(0xFFcbd5e1)),
+              const Icon(Icons.account_circle_rounded,
+                  size: 40, color: Color(0xFFcbd5e1)),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('الزائر: ${v.visitorName}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF1e293b))),
-                    Text('الموعد: ${v.time}', style: const TextStyle(fontSize: 12, color: Color(0xFF64748b))),
+                    Text('الزائر: ${v.visitorName}',
+                        style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1e293b))),
+                    Text('الموعد: ${v.time}',
+                        style: const TextStyle(
+                            fontSize: 12, color: Color(0xFF64748b))),
                   ],
                 ),
               ),
@@ -131,15 +148,18 @@ class VisitApprovalView extends ConsumerWidget {
                 child: ElevatedButton(
                   onPressed: () {
                     ref.read(appRiverpod).approveVisit(v.id);
-                    _showActionFeedback(context, 'تمت الموافقة على الزيارة بنجاح ✅');
+                    _showActionFeedback(
+                        context, 'تمت الموافقة على الزيارة بنجاح ✅');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFdcfce7),
                     foregroundColor: const Color(0xFF166534),
                     elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: const Text('موافقة', style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: const Text('موافقة',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ),
               const SizedBox(width: 12),
@@ -147,14 +167,17 @@ class VisitApprovalView extends ConsumerWidget {
                 child: OutlinedButton(
                   onPressed: () {
                     ref.read(appRiverpod).rejectVisit(v.id);
-                    _showActionFeedback(context, 'تم رفض طلب الزيارة ❌', isError: true);
+                    _showActionFeedback(context, 'تم رفض طلب الزيارة ❌',
+                        isError: true);
                   },
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Color(0xFFfee2e2)),
                     foregroundColor: const Color(0xFFb91c1c),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: const Text('رفض', style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: const Text('رفض',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -175,19 +198,31 @@ class VisitApprovalView extends ConsumerWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(isPhysical ? Icons.people_alt_rounded : Icons.videocam_rounded, size: 12, color: isPhysical ? const Color(0xFF2563eb) : const Color(0xFF7c3aed)),
+          Icon(isPhysical ? Icons.people_alt_rounded : Icons.videocam_rounded,
+              size: 12,
+              color: isPhysical
+                  ? const Color(0xFF2563eb)
+                  : const Color(0xFF7c3aed)),
           const SizedBox(width: 6),
-          Text(isPhysical ? 'زيارة واقعية' : 'مكالمة فيديو', style: TextStyle(color: isPhysical ? const Color(0xFF2563eb) : const Color(0xFF7c3aed), fontSize: 9, fontWeight: FontWeight.bold)),
+          Text(isPhysical ? 'لقاء مودة' : 'مكالمة فيديو',
+              style: TextStyle(
+                  color: isPhysical
+                      ? const Color(0xFF2563eb)
+                      : const Color(0xFF7c3aed),
+                  fontSize: 9,
+                  fontWeight: FontWeight.bold)),
         ],
       ),
     );
   }
 
-  void _showActionFeedback(BuildContext context, String msg, {bool isError = false}) {
+  void _showActionFeedback(BuildContext context, String msg,
+      {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(msg),
-        backgroundColor: isError ? const Color(0xFFef4444) : const Color(0xFF10b981),
+        backgroundColor:
+            isError ? const Color(0xFFef4444) : const Color(0xFF10b981),
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.all(20),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

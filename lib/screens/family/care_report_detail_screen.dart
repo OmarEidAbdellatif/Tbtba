@@ -1,6 +1,7 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 
-class CareReportDetailScreen extends StatelessWidget {
+class CareReportDetailScreen extends StatefulWidget {
   final String title;
   final String date;
 
@@ -8,26 +9,39 @@ class CareReportDetailScreen extends StatelessWidget {
       {super.key, required this.title, required this.date});
 
   @override
+  State<CareReportDetailScreen> createState() => _CareReportDetailScreenState();
+}
+
+class _CareReportDetailScreenState extends State<CareReportDetailScreen>
+    with TickerProviderStateMixin {
+  late AnimationController _floatController;
+  late AnimationController _rotationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _floatController =
+        AnimationController(vsync: this, duration: const Duration(seconds: 3))
+          ..repeat(reverse: true);
+    _rotationController =
+        AnimationController(vsync: this, duration: const Duration(seconds: 25))
+          ..repeat();
+  }
+
+  @override
+  void dispose() {
+    _floatController.dispose();
+    _rotationController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF1F1F6),
-      appBar: AppBar(
-        title: const Text('تفاصيل التقرير',
-            style: TextStyle(
-                color: Color(0xFF1e293b),
-                fontSize: 20,
-                fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
-              color: Color(0xFF1e293b), size: 22),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
       body: Column(
         children: [
+          _buildHeader(),
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -63,6 +77,133 @@ class CareReportDetailScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildHeader() {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Color(0xFFea580c),
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
+      ),
+      child: ClipRRect(
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
+        child: Stack(
+          children: [
+            Positioned.fill(child: _buildAnimatedBackground()),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                        color: Colors.white, size: 22),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  const Text('تفاصيل التقرير',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold)),
+                  const SizedBox(width: 48),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnimatedBackground() {
+    return AnimatedBuilder(
+      animation: Listenable.merge([_floatController, _rotationController]),
+      builder: (context, child) {
+        return Stack(
+          children: [
+            Positioned(
+              top: -50 + (30 * _floatController.value),
+              right: -40 + (20 * _floatController.value),
+              child: _buildRealisticOrb(180, [
+                const Color(0xFFfb923c).withOpacity(0.35),
+                const Color(0xFFea580c).withOpacity(0.15),
+                Colors.transparent,
+              ]),
+            ),
+            Positioned(
+              bottom: -30 + (40 * (1 - _floatController.value)),
+              left: -40 + (25 * _floatController.value),
+              child: _buildRealisticOrb(160, [
+                const Color(0xFFfdba74).withOpacity(0.3),
+                const Color(0xFFf97316).withOpacity(0.1),
+                Colors.transparent,
+              ]),
+            ),
+            Positioned(
+              top: 40,
+              left: 100,
+              child: _buildRealisticOrb(70, [
+                const Color(0xFFfb923c).withOpacity(0.1),
+                Colors.transparent,
+              ]),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildRealisticOrb(double size, List<Color> baseColors) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: const BoxDecoration(shape: BoxShape.circle),
+      child: ClipOval(
+        child: Stack(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: baseColors,
+                  stops: const [0.0, 0.6, 1.0],
+                ),
+              ),
+            ),
+            RotationTransition(
+              turns: _rotationController,
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: SweepGradient(
+                    colors: [
+                      Colors.transparent,
+                      Colors.white.withOpacity(0.15),
+                      Colors.transparent,
+                      Colors.white.withOpacity(0.08),
+                      Colors.transparent,
+                    ],
+                    stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: size * 0.1,
+              left: size * 0.15,
+              child: Container(
+                width: size * 0.4,
+                height: size * 0.2,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.1),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildMainCard() {
     return Container(
       width: double.infinity,
@@ -82,7 +223,7 @@ class CareReportDetailScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(date,
+              Text(widget.date,
                   style:
                       const TextStyle(color: Color(0xFF94a3b8), fontSize: 14)),
               const Text('تقرير تقييم دوري',
@@ -93,7 +234,7 @@ class CareReportDetailScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          Text(title,
+          Text(widget.title,
               textAlign: TextAlign.center,
               style: const TextStyle(
                   fontSize: 24,
@@ -139,11 +280,23 @@ class CareReportDetailScreen extends StatelessWidget {
   }
 
   Widget _buildSectionHeader(String title) {
-    return Text(title,
-        style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFFea580c)));
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        Container(
+            width: 4,
+            height: 18,
+            decoration: BoxDecoration(
+                color: const Color(0xFFea580c),
+                borderRadius: BorderRadius.circular(2))),
+        const SizedBox(width: 10),
+        Text(title,
+            style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFFea580c))),
+      ],
+    );
   }
 
   Widget _buildContentCard(String text) {

@@ -1,16 +1,49 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 
-class ResidentIdScreen extends StatelessWidget {
+class ResidentIdScreen extends StatefulWidget {
   const ResidentIdScreen({super.key});
+
+  @override
+  State<ResidentIdScreen> createState() => _ResidentIdScreenState();
+}
+
+class _ResidentIdScreenState extends State<ResidentIdScreen>
+    with TickerProviderStateMixin {
+  late AnimationController _floatController;
+  late AnimationController _rotationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _floatController =
+        AnimationController(vsync: this, duration: const Duration(seconds: 3))
+          ..repeat(reverse: true);
+    _rotationController =
+        AnimationController(vsync: this, duration: const Duration(seconds: 25))
+          ..repeat();
+  }
+
+  @override
+  void dispose() {
+    _floatController.dispose();
+    _rotationController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF1e1b4b), // Dark elegant background
       appBar: AppBar(
-        title: const Text('الهوية الرقمية', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+        title: const Text('الهوية الرقمية',
+            style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold)),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.close_rounded, color: Colors.white, size: 24),
           onPressed: () => Navigator.pop(context),
@@ -37,7 +70,12 @@ class ResidentIdScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(32),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.5), blurRadius: 40, offset: const Offset(0, 20))],
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.5),
+              blurRadius: 40,
+              offset: const Offset(0, 20))
+        ],
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -49,8 +87,13 @@ class ResidentIdScreen extends StatelessWidget {
               children: [
                 _buildQRCodeMock(),
                 const SizedBox(height: 32),
-                const Text('الحاج محمود الجوهري', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1e1b4b))),
-                const Text('الغرفة: ١٠١ — الجناح الشرقي', style: TextStyle(color: Color(0xFF64748b), fontSize: 13)),
+                const Text('الحاج محمود الجوهري',
+                    style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1e1b4b))),
+                const Text('الغرفة: ١٠١ — الجناح الشرقي',
+                    style: TextStyle(color: Color(0xFF64748b), fontSize: 13)),
                 const SizedBox(height: 24),
                 const Divider(color: Color(0xFFf1f5f9)),
                 const SizedBox(height: 16),
@@ -62,7 +105,12 @@ class ResidentIdScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 12),
             width: double.infinity,
             color: const Color(0xFFea580c),
-            child: const Center(child: Text('صالحة للزيارة اليوم', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold))),
+            child: const Center(
+                child: Text('صالحة للزيارة اليوم',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold))),
           ),
         ],
       ),
@@ -71,22 +119,112 @@ class ResidentIdScreen extends StatelessWidget {
 
   Widget _buildCardHeader() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+      height: 100,
+      width: double.infinity,
       decoration: const BoxDecoration(
         gradient: LinearGradient(colors: [Color(0xFFea580c), Color(0xFFf97316)]),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Stack(
         children: [
-           Image.network('https://cdn-icons-png.flaticon.com/512/3665/3665922.png', width: 30, height: 30, color: Colors.white),
-           const Column(
-             crossAxisAlignment: CrossAxisAlignment.end,
-             children: [
-                Text('طبطبـة', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
-                Text('تصريح دخول الأقارب', style: TextStyle(color: Colors.white70, fontSize: 8)),
-             ],
-           ),
+          Positioned.fill(child: _buildAnimatedBackground()),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Image.network(
+                    'https://cdn-icons-png.flaticon.com/512/3665/3665922.png',
+                    width: 30,
+                    height: 30,
+                    color: Colors.white),
+                const Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text('طبطبـة',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2)),
+                    Text('تصريح دخول الأقارب',
+                        style: TextStyle(color: Colors.white70, fontSize: 8)),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAnimatedBackground() {
+    return AnimatedBuilder(
+      animation: Listenable.merge([_floatController, _rotationController]),
+      builder: (context, child) {
+        return Stack(
+          children: [
+            Positioned(
+              top: -20 + (10 * _floatController.value),
+              right: -10 + (10 * _floatController.value),
+              child: _buildRealisticOrb(80, [
+                const Color(0xFFfb923c).withOpacity(0.3),
+                const Color(0xFFea580c).withOpacity(0.1),
+                Colors.transparent,
+              ]),
+            ),
+            Positioned(
+              bottom: -10,
+              left: 20 + (20 * _floatController.value),
+              child: _buildRealisticOrb(60, [
+                const Color(0xFFfdba74).withOpacity(0.2),
+                Colors.transparent,
+              ]),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildRealisticOrb(double size, List<Color> baseColors) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: const BoxDecoration(shape: BoxShape.circle),
+      child: ClipOval(
+        child: Stack(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: baseColors,
+                  stops: const [0.0, 0.6, 1.0],
+                ),
+              ),
+            ),
+            RotationTransition(
+              turns: _rotationController,
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: SweepGradient(
+                    colors: [
+                      Colors.transparent,
+                      Colors.white.withOpacity(0.15),
+                      Colors.transparent,
+                      Colors.white.withOpacity(0.08),
+                      Colors.transparent,
+                    ],
+                    stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -94,8 +232,14 @@ class ResidentIdScreen extends StatelessWidget {
   Widget _buildQRCodeMock() {
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFFf1f5f9), width: 2)),
-      child: Image.network('https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=MahmoudAlGohary_Room101', width: 160, height: 160),
+      decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFf1f5f9), width: 2)),
+      child: Image.network(
+          'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=MahmoudAlGohary_Room101',
+          width: 160,
+          height: 160),
     );
   }
 
@@ -115,8 +259,10 @@ class ResidentIdScreen extends StatelessWidget {
   Widget _buildMiniInfo(String val, String label) {
     return Column(
       children: [
-        Text(val, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-        Text(label, style: const TextStyle(color: Color(0xFF94a3b8), fontSize: 9)),
+        Text(val,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+        Text(label,
+            style: const TextStyle(color: Color(0xFF94a3b8), fontSize: 9)),
       ],
     );
   }
@@ -130,7 +276,11 @@ class ResidentIdScreen extends StatelessWidget {
       children: [
         Icon(Icons.contactless_rounded, color: Color(0xFFfb923c), size: 32),
         SizedBox(height: 12),
-        Text('امسح الرمز عند مدخل الدار لتأكيد الهوية وتسهيل عملية الدخول المباشر للغرفة.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white60, fontSize: 12, height: 1.5)),
+        Text(
+            'امسح الرمز عند مدخل الدار لتأكيد الهوية وتسهيل عملية الدخول المباشر للغرفة.',
+            textAlign: TextAlign.center,
+            style:
+                TextStyle(color: Colors.white60, fontSize: 12, height: 1.5)),
       ],
     );
   }

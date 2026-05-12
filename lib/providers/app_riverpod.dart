@@ -69,8 +69,8 @@ class AppRiverpod extends ChangeNotifier {
       required String email,
       required String password,
       required String role}) {
-    accounts.add(AppAccount(
-        name: name, email: email, password: password, role: role));
+    accounts.add(
+        AppAccount(name: name, email: email, password: password, role: role));
     notifyListeners();
   }
 
@@ -80,8 +80,8 @@ class AppRiverpod extends ChangeNotifier {
       required String email,
       required String password,
       required String role}) {
-    accounts.add(AppAccount(
-        name: name, email: email, password: password, role: role));
+    accounts.add(
+        AppAccount(name: name, email: email, password: password, role: role));
     notifyListeners();
   }
 
@@ -526,8 +526,8 @@ class AppRiverpod extends ChangeNotifier {
   // عملية تسجيل الدخول وحفظ البيانات آمنياً مع ضبط موعد انتهاء الجلسة (US-SmartLogin)
   Future<bool> login(String identifier, String password) async {
     // البحث في الحسابات المسجلة
-    final accountIdx = accounts.indexWhere(
-        (a) => a.email == identifier && a.password == password);
+    final accountIdx = accounts
+        .indexWhere((a) => a.email == identifier && a.password == password);
 
     if (accountIdx != -1) {
       final acc = accounts[accountIdx];

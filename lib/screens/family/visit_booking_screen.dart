@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/app_riverpod.dart';
@@ -10,10 +11,31 @@ class VisitBookingScreen extends ConsumerStatefulWidget {
   ConsumerState<VisitBookingScreen> createState() => _VisitBookingScreenState();
 }
 
-class _VisitBookingScreenState extends ConsumerState<VisitBookingScreen> {
+class _VisitBookingScreenState extends ConsumerState<VisitBookingScreen> with TickerProviderStateMixin {
+  late AnimationController _floatController;
+  late AnimationController _rotationController;
   int _selectedType = 0; // 0: Physical, 1: Video
-  int _selectedDay = 25;
+  int _selectedDay = DateTime.now().day;
   String? _selectedSlot;
+  final DateTime _now = DateTime.now();
+  
+  int get _daysInMonth => DateTime(_now.year, _now.month + 1, 0).day;
+  String get _monthName => _arabicMonths[_now.month - 1];
+
+  final List<String> _arabicMonths = [
+    'يناير',
+    'فبراير',
+    'مارس',
+    'أبريل',
+    'مايو',
+    'يونيو',
+    'يوليو',
+    'أغسطس',
+    'سبتمبر',
+    'أكتوبر',
+    'نوفمبر',
+    'ديسمبر'
+  ];
 
   final List<String> _slots = [
     '١٠:٠٠ ص',
@@ -25,33 +47,176 @@ class _VisitBookingScreenState extends ConsumerState<VisitBookingScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _floatController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat(reverse: true);
+
+    _rotationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 20),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _floatController.dispose();
+    _rotationController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      body: Column(
-        children: [
-          _buildHeader(),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(110),
+        child: _buildHeader(),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            _buildSectionTitle('نوع الزيارة'),
+            const SizedBox(height: 16),
+            _buildVisitTypeTabs(),
+            const SizedBox(height: 32),
+            _buildSectionTitle('تحديد التاريخ'),
+            const SizedBox(height: 16),
+            _buildCalendar(),
+            const SizedBox(height: 32),
+            _buildSectionTitle('الأوقات المتاحة'),
+            const SizedBox(height: 16),
+            _buildSlotsGrid(),
+            const SizedBox(height: 40),
+            _buildConfirmButton(),
+            const SizedBox(height: 40),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Color(0xFFea580c),
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
+      ),
+      child: ClipRRect(
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
+        child: Stack(
+          children: [
+            Positioned.fill(child: _buildAnimatedBackground()),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildSectionTitle('نوع الزيارة'),
-                  const SizedBox(height: 16),
-                  _buildVisitTypeTabs(),
-                  const SizedBox(height: 32),
-                  _buildSectionTitle('تحديد التاريخ'),
-                  const SizedBox(height: 16),
-                  _buildCalendar(),
-                  const SizedBox(height: 32),
-                  _buildSectionTitle('الأوقات المتاحة'),
-                  const SizedBox(height: 16),
-                  _buildSlotsGrid(),
-                  const SizedBox(height: 40),
-                  _buildConfirmButton(),
-                  const SizedBox(height: 40),
+                  const SizedBox(width: 48), // Spacer for balance
+                  const Text('جدولة لقاء مودة',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold)),
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                        color: Colors.white, size: 22),
+                    onPressed: () => Navigator.pop(context),
+                  ),
                 ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnimatedBackground() {
+    return AnimatedBuilder(
+      animation: Listenable.merge([_floatController, _rotationController]),
+      builder: (context, child) {
+        return Stack(
+          children: [
+            // Orb 1 - Top Right
+            Positioned(
+              top: -50 + (30 * _floatController.value),
+              right: -40 + (20 * _floatController.value),
+              child: _buildRealisticOrb(180, [
+                const Color(0xFFfb923c).withOpacity(0.3),
+                const Color(0xFFea580c).withOpacity(0.15),
+                Colors.transparent,
+              ]),
+            ),
+            // Orb 2 - Bottom Left
+            Positioned(
+              bottom: -30 + (40 * (1 - _floatController.value)),
+              left: -40 + (25 * _floatController.value),
+              child: _buildRealisticOrb(160, [
+                const Color(0xFFfdba74).withOpacity(0.25),
+                const Color(0xFFf97316).withOpacity(0.1),
+                Colors.transparent,
+              ]),
+            ),
+            // Orb 3 - Center (Floating)
+            Positioned(
+              top: 40 + (30 * sin(_floatController.value * pi)),
+              left: 100 + (20 * cos(_floatController.value * pi)),
+              child: _buildRealisticOrb(80, [
+                const Color(0xFFfed7aa).withOpacity(0.15),
+                Colors.transparent,
+              ]),
+            ),
+            // Orb 4 - Near Back Button
+            Positioned(
+              top: 20,
+              left: -10,
+              child: _buildRealisticOrb(60, [
+                const Color(0xFFfb923c).withOpacity(0.1),
+                Colors.transparent,
+              ]),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildRealisticOrb(double size, List<Color> baseColors) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: const BoxDecoration(shape: BoxShape.circle),
+      child: Stack(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: baseColors,
+                stops: const [0.0, 0.6, 1.0],
+              ),
+            ),
+          ),
+          RotationTransition(
+            turns: _rotationController,
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: SweepGradient(
+                  colors: [
+                    Colors.transparent,
+                    Colors.white.withOpacity(0.1),
+                    Colors.transparent,
+                    Colors.white.withOpacity(0.05),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+                ),
               ),
             ),
           ),
@@ -60,48 +225,22 @@ class _VisitBookingScreenState extends ConsumerState<VisitBookingScreen> {
     );
   }
 
-  Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
-      decoration: const BoxDecoration(
-        color: Color(0xFFea580c),
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                color: Colors.white, size: 22),
-            onPressed: () => Navigator.pop(context),
-          ),
-          const Text('جدولة زيارة',
-              style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold)),
-          const SizedBox(width: 48), // Spacer for balance
-        ],
-      ),
-    );
-  }
-
   Widget _buildSectionTitle(String title) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        Text(title,
-            style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1e293b))),
-        const SizedBox(width: 10),
         Container(
             width: 4,
             height: 20,
             decoration: BoxDecoration(
                 color: const Color(0xFFea580c),
                 borderRadius: BorderRadius.circular(2))),
+        const SizedBox(width: 10),
+        Text(title,
+            style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1e293b))),
       ],
     );
   }
@@ -115,7 +254,7 @@ class _VisitBookingScreenState extends ConsumerState<VisitBookingScreen> {
         const SizedBox(width: 16),
         Expanded(
             child: _buildTypeCard(
-                0, 'زيارة واقعية', Icons.people_alt_rounded)),
+                0, 'لقاء مودة', Icons.people_alt_rounded)),
       ],
     );
   }
@@ -178,8 +317,8 @@ class _VisitBookingScreenState extends ConsumerState<VisitBookingScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Icon(Icons.chevron_left, color: Color(0xFF94a3b8)),
-              const Text('أبريل ٢٠٢٤',
-                  style: TextStyle(
+              Text('$_monthName ${_now.year}',
+                  style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF1e293b))),
@@ -192,11 +331,11 @@ class _VisitBookingScreenState extends ConsumerState<VisitBookingScreen> {
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 7, childAspectRatio: 1),
-            itemCount: 30,
+            itemCount: _daysInMonth,
             itemBuilder: (context, i) {
               int day = i + 1;
               bool isSelected = day == _selectedDay;
-              bool isPast = day < 21;
+              bool isPast = day < _now.day;
               return GestureDetector(
                 onTap: isPast ? null : () => setState(() => _selectedDay = day),
                 child: Container(
@@ -303,7 +442,7 @@ class _VisitBookingScreenState extends ConsumerState<VisitBookingScreen> {
                 provider.addFamilyVisit(FamilyVisit(
                   id: 'v${DateTime.now().millisecondsSinceEpoch}',
                   visitorName: 'سارة',
-                  date: '$_selectedDay أبريل',
+                  date: '$_selectedDay $_monthName',
                   time: _selectedSlot!,
                   type: _selectedType == 0 ? 'physical' : 'video',
                   status: 'pending',

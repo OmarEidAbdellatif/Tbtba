@@ -18,6 +18,9 @@ class TaptabaScaffold extends ConsumerStatefulWidget {
   final bool extendBodyBehindAppBar; // تمديد المحتوى خلف شريط العنوان
   final bool transparentAppBar; // جعل شريط العنوان شفافاً
   final bool hideAppBar; // إخفاء شريط العنوان بالكامل
+  final bool useNestedScrollView; // استخدام التمرير المتداخل (للهيدر المتحرك)
+  final double? appBarHeight; // ارتفاع مخصص لشريط العنوان
+  final Widget? sliverHeader; // محتوى إضافي يتحرك مع شريط العنوان (كالـ Hero)
 
   const TaptabaScaffold({
     // مشيد الفئة مع البارامترات المطلوبة والاختيارية
@@ -34,6 +37,9 @@ class TaptabaScaffold extends ConsumerStatefulWidget {
     this.extendBodyBehindAppBar = false,
     this.transparentAppBar = false,
     this.hideAppBar = false,
+    this.useNestedScrollView = true,
+    this.appBarHeight,
+    this.sliverHeader,
   });
 
   @override
@@ -66,6 +72,70 @@ class _TaptabaScaffoldState extends ConsumerState<TaptabaScaffold>
     super.dispose();
   }
 
+  Widget _buildSliverAppBar(bool innerBoxIsScrolled) {
+    return SliverAppBar(
+      floating: false,
+      snap: false,
+      pinned: true,
+      backgroundColor:
+          widget.transparentAppBar ? Colors.transparent : Colors.white,
+      elevation: 0,
+      centerTitle: true,
+      forceElevated: innerBoxIsScrolled,
+      iconTheme: const IconThemeData(color: Color(0xFF64748b)),
+      leading: IconButton(
+        icon: const Icon(Icons.menu_rounded, color: Color(0xFF64748b)),
+        onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+      ),
+      title: _buildTitle(),
+      actions: _buildActions(),
+    );
+  }
+
+  Widget _buildFixedAppBar() {
+    return AppBar(
+      backgroundColor:
+          widget.transparentAppBar ? Colors.transparent : Colors.white,
+      elevation: 0,
+      centerTitle: true,
+      iconTheme: const IconThemeData(color: Color(0xFF64748b)),
+      leading: IconButton(
+        icon: const Icon(Icons.menu_rounded, color: Color(0xFF64748b)),
+        onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+      ),
+      title: _buildTitle(),
+      actions: _buildActions(),
+    );
+  }
+
+  Widget _buildTitle() {
+    return Text(
+      widget.title,
+      style: TextStyle(
+        color: widget.titleColor ?? const Color(0xFF6C63FF),
+        fontWeight: FontWeight.w900,
+        fontSize: 24,
+        letterSpacing: 1.2,
+      ),
+    );
+  }
+
+  List<Widget> _buildActions() {
+    return widget.actions ??
+        [
+          if ((widget.overrideRole ?? ref.watch(appRiverpod).currentRole) ==
+              'مسن')
+            IconButton(
+              icon: const Text('🏆', style: TextStyle(fontSize: 22)),
+              onPressed: () {
+                ref.read(appRiverpod).setElderlyTabIndex(4);
+              },
+            ),
+          const TaptabaBell(),
+          const SizedBox(width: 8),
+        ];
+  }
+
   @override
   Widget build(BuildContext context) {
     // دالة بناء الواجهة
@@ -80,55 +150,24 @@ class _TaptabaScaffoldState extends ConsumerState<TaptabaScaffold>
           overrideRole: widget.overrideRole), // القائمة الجانبية الموحدة
       body: widget.hideAppBar
           ? widget.body
-          : NestedScrollView(
-              headerSliverBuilder:
-                  (BuildContext context, bool innerBoxIsScrolled) {
-                return <Widget>[
-                  SliverAppBar(
-                    floating: true, // يظهر بمجرد السحب لأسفل
-                    snap: true, // يظهر بالكامل عند سحب بسيط
-                    pinned: false, // لا يظل ثابتاً في الأعلى
-                    backgroundColor: widget.transparentAppBar
-                        ? Colors.transparent
-                        : Colors.white,
-                    elevation: 0,
-                    centerTitle: true,
-                    forceElevated: innerBoxIsScrolled,
-                    iconTheme: const IconThemeData(color: Color(0xFF64748b)),
-                    leading: IconButton(
-                      icon: const Icon(Icons.menu_rounded,
-                          color: Color(0xFF64748b)),
-                      onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-                    ),
-                    title: Text(
-                      'طبطبـة',
-                      style: TextStyle(
-                        color: widget.titleColor ?? const Color(0xFF6C63FF),
-                        fontWeight: FontWeight.w900,
-                        fontSize: 24,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                    actions: widget.actions ??
-                        [
-                          if ((widget.overrideRole ??
-                                  ref.watch(appRiverpod).currentRole) ==
-                              'مسن')
-                            IconButton(
-                              icon: const Text('🏆',
-                                  style: TextStyle(fontSize: 22)),
-                              onPressed: () {
-                                ref.read(appRiverpod).setElderlyTabIndex(4);
-                              },
-                            ),
-                          const TaptabaBell(),
-                          const SizedBox(width: 8),
-                        ],
-                  ),
-                ];
-              },
-              body: widget.body,
-            ),
+          : (widget.useNestedScrollView
+              ? NestedScrollView(
+                  headerSliverBuilder:
+                      (BuildContext context, bool innerBoxIsScrolled) {
+                    return <Widget>[
+                      _buildSliverAppBar(innerBoxIsScrolled),
+                      if (widget.sliverHeader != null)
+                        SliverToBoxAdapter(child: widget.sliverHeader!),
+                    ];
+                  },
+                  body: widget.body,
+                )
+              : Column(
+                  children: [
+                    _buildFixedAppBar(),
+                    Expanded(child: widget.body),
+                  ],
+                )),
       bottomNavigationBar:
           widget.bottomNavigationBar, // شريط التنقل السفلي إن وجد
       floatingActionButton: widget.floatingActionButton, // الزر العائم إن وجد
