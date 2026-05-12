@@ -541,6 +541,7 @@ class SpecialistResidentFile {
   final String initials;
   final String? phone; // رقم التواصل
   final int? age; // العمر
+  final String? familyEmail; // بريد العائلة المرتبط (لصلاحيات الوصول)
   final List<FamilyMember> familyMembers; // الربط العائلي
 
   SpecialistResidentFile({
@@ -554,6 +555,7 @@ class SpecialistResidentFile {
     required this.initials,
     this.phone,
     this.age,
+    this.familyEmail,
     this.familyMembers = const [],
   });
 }
@@ -877,5 +879,18 @@ class CompanionMessage {
     required this.text,
     required this.isFromAI,
     required this.timestamp,
+  });
+}
+class AppAccount {
+  final String name;
+  final String email;
+  final String password;
+  final String role;
+
+  AppAccount({
+    required this.name,
+    required this.email,
+    required this.password,
+    required this.role,
   });
 }

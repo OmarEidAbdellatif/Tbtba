@@ -35,21 +35,17 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
 
     return Column(
       children: [
-        _buildHeroSummary(provider),
         _buildTabSelector(),
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-            physics: const BouncingScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (_activeTabIndex == 0) ..._buildRateSection(provider),
-                if (_activeTabIndex == 1) ..._buildMyRatingsSection(provider),
-                if (_activeTabIndex == 2) ..._buildPerformanceSummary(provider),
-                const SizedBox(height: 40),
-              ],
-            ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (_activeTabIndex == 0) ..._buildRateSection(provider),
+              if (_activeTabIndex == 1) ..._buildMyRatingsSection(provider),
+              if (_activeTabIndex == 2) ..._buildPerformanceSummary(provider),
+              const SizedBox(height: 40),
+            ],
           ),
         ),
       ],
@@ -63,7 +59,7 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF312e81), Color(0xFF4338ca), Color(0xFF6366f1)],
+          colors: [Color(0xFF064e3b), Color(0xFF059669), Color(0xFF10b981)],
         ),
       ),
       child: Column(
@@ -78,24 +74,22 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
               ),
               child: Row(
                 children: [
-                  _buildCircularScore(provider.averageRating),
-                  const SizedBox(width: 16),
                   Expanded(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
+                          mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            const Text('/ ٥',
-                                style: TextStyle(
-                                    color: Colors.white60, fontSize: 12)),
-                            const SizedBox(width: 4),
                             Text('${provider.averageRating}',
                                 style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 28,
                                     fontWeight: FontWeight.bold)),
+                            const SizedBox(width: 4),
+                            const Text('/ ٥',
+                                style: TextStyle(
+                                    color: Colors.white60, fontSize: 12)),
                           ],
                         ),
                         _buildFloatingStars(provider.averageRating),
@@ -108,6 +102,8 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
                       ],
                     ),
                   ),
+                  const SizedBox(width: 16),
+                  _buildCircularScore(provider.averageRating),
                 ],
               ),
             ),
@@ -142,11 +138,11 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
 
   Widget _buildFloatingStars(double score) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
+      mainAxisAlignment: MainAxisAlignment.start,
       children: List.generate(5, (index) {
         final isLast = index == score.floor();
         return Padding(
-          padding: const EdgeInsets.only(left: 3),
+          padding: const EdgeInsets.only(right: 3),
           child: AnimatedBuilder(
             animation: widget.floatController,
             builder: (context, child) {
@@ -211,7 +207,7 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
       const SizedBox(height: 12),
       ...pending.map((r) => _buildInteractiveRatingCard(r)).toList(),
       const SizedBox(height: 24),
-      _buildSectionLabel('تاريخ تقييماتي للمقيمين', const Color(0xFFf59e0b), 1),
+      _buildSectionLabel('تاريخ تقييماتي للمقيمين', const Color(0xFF10b981), 1),
       const SizedBox(height: 12),
       _buildRatingsHistory(
           provider.volunteerReviews.where((r) => !r.isPending).toList()),
@@ -252,22 +248,25 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
           children: [
             Row(
               children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.25),
-                      shape: BoxShape.circle),
-                  child: Center(
-                      child: Text(review.icon,
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold))),
+                Flexible(
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8)),
+                    child: const Text('⏰ منذ يوم',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold)),
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text('قيّم الجلسة مع',
                           textAlign: TextAlign.right,
@@ -287,20 +286,17 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Flexible(
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(8)),
-                    child: const Text('⏰ منذ يوم',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold)),
-                  ),
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.25),
+                      shape: BoxShape.circle),
+                  child: Center(
+                      child: Text(review.icon,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold))),
                 ),
               ],
             ),
@@ -397,6 +393,9 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
+          Text(label,
+              style: const TextStyle(color: Colors.white, fontSize: 11)),
+          const Spacer(),
           Row(
             children: List.generate(5, (index) {
               return GestureDetector(
@@ -410,9 +409,6 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
               );
             }),
           ),
-          const Spacer(),
-          Text(label,
-              style: const TextStyle(color: Colors.white, fontSize: 11)),
         ],
       ),
     );
@@ -437,14 +433,36 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
           border: Border(bottom: BorderSide(color: Color(0xFFf0fdf4)))),
       child: Row(
         children: [
-          const Flexible(
-            child: Text('تم ✓',
-                style: TextStyle(
-                    color: Color(0xFF10b981),
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold)),
+          Container(
+            width: 36,
+            height: 36,
+            decoration: const BoxDecoration(
+                color: Color(0xFFf0fdf4), shape: BoxShape.circle),
+            child: Center(
+                child: Text(r.icon,
+                    style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF059669)))),
           ),
-          const Spacer(),
+          const SizedBox(width: 12),
+          Expanded(
+            flex: 3,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(r.toName,
+                    textAlign: TextAlign.right,
+                    style: const TextStyle(
+                        fontSize: 12, fontWeight: FontWeight.bold)),
+                Text('${r.session} · ${r.date}',
+                    textAlign: TextAlign.right,
+                    style:
+                        const TextStyle(color: Color(0xFF94a3b8), fontSize: 9)),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
           Flexible(
             flex: 2,
             child: Row(
@@ -459,35 +477,13 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
                           fontSize: 12))),
             ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            flex: 3,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(r.toName,
-                    textAlign: TextAlign.right,
-                    style: const TextStyle(
-                        fontSize: 12, fontWeight: FontWeight.bold)),
-                Text('${r.session} · ${r.date}',
-                    textAlign: TextAlign.right,
-                    style:
-                        const TextStyle(color: Color(0xFF94a3b8), fontSize: 9)),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          Container(
-            width: 36,
-            height: 36,
-            decoration: const BoxDecoration(
-                color: Color(0xFFf0fdf4), shape: BoxShape.circle),
-            child: Center(
-                child: Text(r.icon,
-                    style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF059669)))),
+          const Spacer(),
+          const Flexible(
+            child: Text('تم ✓',
+                style: TextStyle(
+                    color: Color(0xFF10b981),
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -502,7 +498,7 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
       _buildDetailedBreakdown(provider),
       const SizedBox(height: 24),
       _buildSectionLabel(
-          'آخر ما قاله عنك المقيمون', const Color(0xFF6366f1), 1),
+          'آخر ما قاله عنك المقيمون', const Color(0xFF10b981), 1),
       const SizedBox(height: 12),
       ...provider.volunteerRatings.map((r) => _buildReviewCard(r)).toList(),
     ];
@@ -520,7 +516,7 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
         'score': 5.0,
         'color': const Color(0xFF10b981)
       },
-      {'label': 'جودة التحضير', 'score': 4.0, 'color': const Color(0xFFf59e0b)},
+      {'label': 'جودة التحضير', 'score': 4.0, 'color': const Color(0xFF10b981)},
       {
         'label': 'الإبداع في الجلسة',
         'score': 4.7,
@@ -549,9 +545,25 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
       child: Row(
         children: [
           Flexible(
-            child: Text('$score',
-                style: TextStyle(
-                    color: color, fontSize: 11, fontWeight: FontWeight.bold)),
+            flex: 3,
+            child: Text(label,
+                textAlign: TextAlign.right,
+                style: const TextStyle(color: Color(0xFF374151), fontSize: 11)),
+          ),
+          const SizedBox(width: 12),
+          Flexible(
+            flex: 2,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: List.generate(
+                  5,
+                  (index) => Text(index < score.floor() ? '★' : '☆',
+                      style: TextStyle(
+                          color: index < score.floor()
+                              ? const Color(0xFFfbbf24)
+                              : const Color(0xFFe5e7eb),
+                          fontSize: 12))),
+            ),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -572,25 +584,9 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
           ),
           const SizedBox(width: 8),
           Flexible(
-            flex: 2,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: List.generate(
-                  5,
-                  (index) => Text(index < score.floor() ? '★' : '☆',
-                      style: TextStyle(
-                          color: index < score.floor()
-                              ? const Color(0xFFfbbf24)
-                              : const Color(0xFFe5e7eb),
-                          fontSize: 12))),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Flexible(
-            flex: 3,
-            child: Text(label,
-                textAlign: TextAlign.right,
-                style: const TextStyle(color: Color(0xFF374151), fontSize: 11)),
+            child: Text('$score',
+                style: TextStyle(
+                    color: color, fontSize: 11, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -612,6 +608,27 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
           children: [
             Row(
               children: [
+                Container(
+                    width: 40,
+                    height: 40,
+                    decoration: const BoxDecoration(
+                        color: Color(0xFFf0fdf4), shape: BoxShape.circle),
+                    child: Center(
+                        child: Text(rating.icon,
+                            style: const TextStyle(fontSize: 20)))),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(rating.fromName,
+                        style: const TextStyle(
+                            fontSize: 13, fontWeight: FontWeight.bold)),
+                    Text(rating.date,
+                        style: const TextStyle(
+                            color: Color(0xFF94a3b8), fontSize: 9)),
+                  ],
+                ),
+                const Spacer(),
                 Row(
                   children: List.generate(
                       5,
@@ -622,27 +639,6 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
                                   : const Color(0xFFe5e7eb),
                               fontSize: 14))),
                 ),
-                const Spacer(),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(rating.fromName,
-                        style: const TextStyle(
-                            fontSize: 13, fontWeight: FontWeight.bold)),
-                    Text(rating.date,
-                        style: const TextStyle(
-                            color: Color(0xFF94a3b8), fontSize: 9)),
-                  ],
-                ),
-                const SizedBox(width: 12),
-                Container(
-                    width: 40,
-                    height: 40,
-                    decoration: const BoxDecoration(
-                        color: Color(0xFFf0fdf4), shape: BoxShape.circle),
-                    child: Center(
-                        child: Text(rating.icon,
-                            style: const TextStyle(fontSize: 20)))),
               ],
             ),
             const SizedBox(height: 10),
@@ -701,8 +697,6 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
           border: Border.all(color: const Color(0xFFd1fae5), width: 1.5)),
       child: Row(
         children: [
-          _buildPerformanceRing(),
-          const SizedBox(width: 20),
           Expanded(
             child: Column(
               children: [
@@ -711,12 +705,14 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
                 _buildStatTextRow('أعلى نقطة', provider.topSkill,
                     isShimmer: true),
                 _buildStatTextRow('يحتاج تحسين', provider.skillNeedsImprovement,
-                    valColor: const Color(0xFFf59e0b)),
+                    valColor: const Color(0xFF10b981)),
                 _buildStatTextRow('معلّقة للإرسال', '١ تقييم',
                     valColor: Colors.red),
               ],
             ),
           ),
+          const SizedBox(width: 20),
+          _buildPerformanceRing(),
         ],
       ),
     );
@@ -758,6 +754,12 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          Flexible(
+            child: Text(lbl,
+                textAlign: TextAlign.right,
+                style: const TextStyle(color: Color(0xFF64748b), fontSize: 10)),
+          ),
+          const SizedBox(width: 12),
           if (isShimmer)
             Flexible(
               child: AnimatedBuilder(
@@ -788,12 +790,6 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
                       fontSize: 11,
                       fontWeight: FontWeight.bold)),
             ),
-          const SizedBox(width: 12),
-          Flexible(
-            child: Text(lbl,
-                textAlign: TextAlign.right,
-                style: const TextStyle(color: Color(0xFF64748b), fontSize: 10)),
-          ),
         ],
       ),
     );
@@ -804,7 +800,7 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
       opacity:
           widget.fadeAnimations[min(index, widget.fadeAnimations.length - 1)],
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
           Text(label,
               style: TextStyle(

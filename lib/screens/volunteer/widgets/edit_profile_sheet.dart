@@ -64,7 +64,7 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
           Expanded(
             child: SingleChildScrollView(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildSectionTitle('المعلومات الأساسية'),
                   _buildTextField(_nameController, 'الاسم الكامل', Icons.person_outline),
@@ -144,7 +144,7 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
           const SizedBox(width: 8),
           Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                 Text(hasFile ? fileName : 'لم يتم الرفع بعد', style: TextStyle(fontSize: 11, color: hasFile ? const Color(0xFF059669) : Colors.grey)),

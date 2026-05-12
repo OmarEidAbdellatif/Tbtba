@@ -16,21 +16,22 @@ class VisitApprovalView extends ConsumerWidget {
     return Column(
       children: [
         _buildHeader(pendingVisits.length),
-        Expanded(
-          child: pendingVisits.isEmpty
-              ? _buildEmptyState()
-              : ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
-                  itemCount: pendingVisits.length,
-                  itemBuilder: (context, index) {
-                    final v = pendingVisits[index];
-                    return FadeTransition(
-                      opacity: fadeAnimations[index % fadeAnimations.length],
-                      child: _buildVisitRequestCard(context, ref, v),
-                    );
-                  },
-                ),
-        ),
+        if (pendingVisits.isEmpty)
+          _buildEmptyState()
+        else
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              children: List.generate(pendingVisits.length, (index) {
+                final v = pendingVisits[index];
+                return FadeTransition(
+                  opacity: fadeAnimations[index % fadeAnimations.length],
+                  child: _buildVisitRequestCard(context, ref, v),
+                );
+              }),
+            ),
+          ),
+        const SizedBox(height: 40),
       ],
     );
   }
@@ -41,12 +42,22 @@ class VisitApprovalView extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          const Text('طلبات الزيارة المعلقة',
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1e293b))),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(color: const Color(0xFFfee2e2), borderRadius: BorderRadius.circular(8)),
-            child: Text('$count طلبات', style: const TextStyle(color: Color(0xFFb91c1c), fontSize: 12, fontWeight: FontWeight.bold)),
+            decoration: BoxDecoration(
+                color: const Color(0xFFfee2e2),
+                borderRadius: BorderRadius.circular(8)),
+            child: Text('$count طلبات',
+                style: const TextStyle(
+                    color: Color(0xFFb91c1c),
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold)),
           ),
-          const Text('طلبات الزيارة المعلقة', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1e293b))),
         ],
       ),
     );
@@ -83,11 +94,16 @@ class VisitApprovalView extends ConsumerWidget {
         children: [
           Row(
             children: [
-              _buildTypeBadge(v.type),
-              const Spacer(),
-              Text(v.date, style: const TextStyle(color: Color(0xFF64748b), fontSize: 12, fontWeight: FontWeight.bold)),
+              const Icon(Icons.calendar_month_rounded,
+                  size: 14, color: Color(0xFF94a3b8)),
               const SizedBox(width: 8),
-              const Icon(Icons.calendar_month_rounded, size: 14, color: Color(0xFF94a3b8)),
+              Text(v.date,
+                  style: const TextStyle(
+                      color: Color(0xFF64748b),
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold)),
+              const Spacer(),
+              _buildTypeBadge(v.type),
             ],
           ),
           const SizedBox(height: 16),
@@ -97,7 +113,7 @@ class VisitApprovalView extends ConsumerWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('الزائر: ${v.visitorName}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF1e293b))),
                     Text('الموعد: ${v.time}', style: const TextStyle(fontSize: 12, color: Color(0xFF64748b))),

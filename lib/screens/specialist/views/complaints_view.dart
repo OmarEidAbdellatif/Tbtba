@@ -37,27 +37,19 @@ class SpecialistComplaintsView extends ConsumerWidget {
      * لضمان ظهور كل شكوى في القسم المخصص لها في واجهة المستخدم.
      */
 
-    return CustomScrollView(
-      physics: const BouncingScrollPhysics(),
-      slivers: [
-        SliverToBoxAdapter(
+    return Column(
+      children: [
+        _buildHeroKPI(provider),
+        _buildSearchRow(context, provider),
+        _buildFilterRow(provider),
+        _buildKanbanPreview(provider),
+        Padding(
+          padding: const EdgeInsets.all(14),
           child: Column(
             children: [
-              _buildHeroKPI(provider),
-              _buildSearchRow(context, provider),
-              _buildFilterRow(provider),
-              _buildKanbanPreview(provider),
-            ],
-          ),
-        ),
-        SliverPadding(
-          padding: const EdgeInsets.all(14),
-          sliver: SliverList(
-            delegate: SliverChildListDelegate([
               _buildSectionLabel('تحتاج تدخل فوري', const Color(0xFFef4444), 3,
-                  isBlink: true), // قسم الشكاوى عالية الأهمية التي تتطلب تحركاً سريعاً
+                  isBlink: true),
               const SizedBox(height: 8),
-              // جلب وعرض الشكاوى المفتوحة ذات الأولوية القصوى
               ...provider.filteredSocialComplaints
                   .where((c) => c.status == 'open' && c.priority == 'high')
                   .map((c) => _buildDetailedComplaintCard(context, ref, c))
@@ -79,7 +71,7 @@ class SpecialistComplaintsView extends ConsumerWidget {
               const SizedBox(height: 24),
               _buildMonthlyStats(),
               const SizedBox(height: 40),
-            ]),
+            ],
           ),
         ),
       ],
@@ -428,7 +420,7 @@ class SpecialistComplaintsView extends ConsumerWidget {
                               : const Color(0xFFf1f5f9)),
                     ),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(item.title,
                             maxLines: 1,
@@ -515,7 +507,7 @@ class SpecialistComplaintsView extends ConsumerWidget {
                     const Spacer(),
                     Expanded(
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(complaint.title,
                               textAlign: TextAlign.right,
@@ -621,7 +613,7 @@ class SpecialistComplaintsView extends ConsumerWidget {
                       children: [
                         Expanded(
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(complaint.title,
                                   style: const TextStyle(

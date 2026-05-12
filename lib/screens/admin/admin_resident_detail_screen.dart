@@ -22,7 +22,7 @@ class AdminResidentDetailScreen extends ConsumerWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            _buildProfileHeader(resident), // واجهة التعريف بالمقيم (الاسم، الغرفة)
+            _buildProfileHeader(context, resident), // واجهة التعريف بالمقيم (الاسم، الغرفة)
             _buildQuickStatus(resident), // ملخص الحالة الصحية والاجتماعية الحالية
             _buildFamilySection(resident), // قسم بيانات الأقارب وجهات الاتصال
             _buildCategoriesSection(resident), // الملفات والتقييمات المرتبطة بالمقيم
@@ -33,43 +33,70 @@ class AdminResidentDetailScreen extends ConsumerWidget {
     );
   }
 
-  // بناء الجزء العلوي للملف الشخصي مع خلفية متدرجة احترافية
-  Widget _buildProfileHeader(SpecialistResidentFile resident) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(24, 40, 24, 30),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF0f172a), Color(0xFF1e293b)], // ألوان كحلية رسمية تليق بنظام المدير
-        ),
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(40)),
-      ),
-      child: Column(
-        children: [
-          // عرض الحروف الأولى من اسم المقيم (Avatar)
-          CircleAvatar(
-            radius: 50,
-            backgroundColor: Colors.white.withOpacity(0.1),
-            child: Text(resident.initials, style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white)),
+  // بناء الجزء العلوي للملف الشخصي مع خلفية متدرجة واختصار للرجوع
+  Widget _buildProfileHeader(BuildContext context, SpecialistResidentFile resident) {
+    return Stack(
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(24, 40, 24, 30),
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF0f172a), Color(0xFF1e293b)],
+            ),
+            borderRadius: BorderRadius.vertical(bottom: Radius.circular(40)),
           ),
-          const SizedBox(height: 16),
-          Text(resident.name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
-          Text(resident.nameEn, style: TextStyle(fontSize: 14, color: Colors.white.withOpacity(0.6), fontStyle: FontStyle.italic)),
-          const SizedBox(height: 4),
-          Text('غرفة ${resident.room} — ${resident.age ?? "??"} عاماً', style: TextStyle(fontSize: 14, color: Colors.white.withOpacity(0.7))),
-          const SizedBox(height: 20),
-          // أزرار سريعة للتواصل مع المقيم أو المسؤولين عنه
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: Column(
             children: [
-              _headerAction(Icons.phone_rounded, 'اتصال'),
-              const SizedBox(width: 12),
-              _headerAction(Icons.message_rounded, 'رسالة'),
+              // عرض الحروف الأولى من اسم المقيم (Avatar)
+              CircleAvatar(
+                radius: 50,
+                backgroundColor: Colors.white.withOpacity(0.1),
+                child: Text(resident.initials,
+                    style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white)),
+              ),
+              const SizedBox(height: 16),
+              Text(resident.name,
+                  style: const TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white)),
+              Text(resident.nameEn,
+                  style: TextStyle(
+                      fontSize: 15,
+                      color: Colors.white.withOpacity(0.6),
+                      fontStyle: FontStyle.italic)),
+              const SizedBox(height: 6),
+              Text('غرفة ${resident.room} — ${resident.age ?? "??"} عاماً',
+                  style: TextStyle(
+                      fontSize: 16, color: Colors.white.withOpacity(0.9))),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _headerAction(Icons.phone_rounded, 'اتصال'),
+                  const SizedBox(width: 12),
+                  _headerAction(Icons.message_rounded, 'رسالة'),
+                ],
+              ),
             ],
           ),
-        ],
-      ),
+        ),
+        Positioned(
+          top: 40,
+          left: 20,
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                color: Colors.white, size: 22),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
+      ],
     );
   }
 
@@ -96,7 +123,7 @@ class AdminResidentDetailScreen extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text('ملخص الحالة', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1e293b))),
           const SizedBox(height: 12),
@@ -119,7 +146,7 @@ class AdminResidentDetailScreen extends ConsumerWidget {
                 ),
                 const Spacer(),
                 Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // وسام (Badge) يظهر حالة المقيم الحالية
                     Container(
@@ -143,13 +170,21 @@ class AdminResidentDetailScreen extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('تعديل', style: TextStyle(color: Color(0xFF0ea5e9), fontSize: 12, fontWeight: FontWeight.bold)),
-              const Text('الأقارب والاتصال', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1e293b))),
+              const Text('الأقارب والاتصال',
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1e293b))),
+              const Text('تعديل',
+                  style: TextStyle(
+                      color: Color(0xFF0ea5e9),
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: 12),
@@ -183,20 +218,37 @@ class AdminResidentDetailScreen extends ConsumerWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFFf1f5f9))),
+      decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFf1f5f9))),
       child: Row(
         children: [
-          const Icon(Icons.phone_in_talk_rounded, color: Color(0xFF10b981), size: 20),
-          const Spacer(),
+          // 1. أيقونة التعريف (أقصى اليمين)
+          CircleAvatar(
+              backgroundColor: const Color(0xFFf1f5f9),
+              radius: 20,
+              child: Text(f.initials,
+                  style: const TextStyle(fontSize: 12, color: Color(0xFF1e293b)))),
+          const SizedBox(width: 12),
+          // 2. الاسم والعلاقة (محاذاة لليمين)
           Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(f.name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF1e293b))),
-              Text(f.relation, style: const TextStyle(fontSize: 11, color: Color(0xFF64748b))),
+              Text(f.name,
+                  style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1e293b))),
+              Text(f.relation,
+                  style:
+                      const TextStyle(fontSize: 11, color: Color(0xFF64748b))),
             ],
           ),
-          const SizedBox(width: 12),
-          CircleAvatar(backgroundColor: const Color(0xFFf1f5f9), radius: 20, child: Text(f.initials, style: const TextStyle(fontSize: 12, color: Color(0xFF1e293b)))),
+          const Spacer(),
+          // 3. أيقونة الاتصال (أقصى اليسار)
+          const Icon(Icons.phone_in_talk_rounded,
+              color: Color(0xFF10b981), size: 20),
         ],
       ),
     );
@@ -207,14 +259,14 @@ class AdminResidentDetailScreen extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text('الملفات النشطة', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1e293b))),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            alignment: WrapAlignment.end,
+            alignment: WrapAlignment.start,
             children: resident.categories.map((c) => _categoryChip(c)).toList(),
           ),
         ],

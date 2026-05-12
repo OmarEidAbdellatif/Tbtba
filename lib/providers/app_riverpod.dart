@@ -39,13 +39,74 @@ class AppRiverpod extends ChangeNotifier {
   bool isHighContrast = false; // تفعيل وضع التباين العالي
   bool isDarkMode = false; // تفعيل الوضع الليلي
 
-  // إدارة الجلسة (Session Management) - US-02-04
-  DateTime? _sessionExpiry; // موعد انتهاء الجلسة
-  bool isRefreshingSession = false; // هل يجري حالياً تجديد الجلسة؟
-  String selectedAdminDateFilter =
-      'اليوم'; // فلتر التاريخ النشط للوحة تحكم المدير (اليوم، أسبوع، شهر)
-
   final _storage = const FlutterSecureStorage(); // إنشاء كائن التخزين الآمن
+  bool isRefreshingSession = false;
+  String selectedAdminDateFilter = 'اليوم';
+  DateTime? _sessionExpiry;
+
+  // --- إدارة الحسابات (Account Management) ---
+  List<AppAccount> accounts = [
+    AppAccount(
+        email: 'admin@admin.com',
+        password: '123',
+        role: 'إدارة',
+        name: 'م. إبراهيم الجوهري'),
+    AppAccount(
+        email: 'nurse@nurse.com',
+        password: '123',
+        role: 'ممرض',
+        name: 'أ. منى زكي'),
+    AppAccount(
+        email: 'specialist@specialist.com',
+        password: '123',
+        role: 'أخصائي اجتماعي',
+        name: 'د. سارة عثمان'),
+  ];
+
+  // دالة للمدير لإنشاء حسابات جديدة
+  void createAccount(
+      {required String name,
+      required String email,
+      required String password,
+      required String role}) {
+    accounts.add(AppAccount(
+        name: name, email: email, password: password, role: role));
+    notifyListeners();
+  }
+
+  // دالة للتسجيل الذاتي (للمتطوعين والأهالي)
+  void selfRegister(
+      {required String name,
+      required String email,
+      required String password,
+      required String role}) {
+    accounts.add(AppAccount(
+        name: name, email: email, password: password, role: role));
+    notifyListeners();
+  }
+
+  // ربط عائلة بمسن
+  void linkFamilyToResident(String residentId, String familyEmail) {
+    final idx = residentFiles.indexWhere((r) => r.id == residentId);
+    if (idx != -1) {
+      final r = residentFiles[idx];
+      residentFiles[idx] = SpecialistResidentFile(
+        id: r.id,
+        name: r.name,
+        nameEn: r.nameEn,
+        room: r.room,
+        status: r.status,
+        lastUpdate: r.lastUpdate,
+        categories: r.categories,
+        initials: r.initials,
+        phone: r.phone,
+        age: r.age,
+        familyMembers: r.familyMembers,
+        familyEmail: familyEmail, // الحقل الجديد للربط
+      );
+      notifyListeners();
+    }
+  }
 
   AppRiverpod() {
     _loadAuthState(); // تحميل حالة الدخول عند بدء تشغيل المزود
@@ -463,34 +524,49 @@ class AppRiverpod extends ChangeNotifier {
   }
 
   // عملية تسجيل الدخول وحفظ البيانات آمنياً مع ضبط موعد انتهاء الجلسة (US-SmartLogin)
-  Future<void> login(String identifier, String password) async {
-    // منطق ذكي لتحديد الدور بناءً على المعرف (رقم الهاتف أو البريد الإلكتروني)
-    String role = 'أسرة'; // الدور الافتراضي
+  Future<bool> login(String identifier, String password) async {
+    // البحث في الحسابات المسجلة
+    final accountIdx = accounts.indexWhere(
+        (a) => a.email == identifier && a.password == password);
 
-    if (identifier.contains('@admin.com')) {
-      role = 'إدارة';
-    } else if (identifier.contains('@nurse.com')) {
-      role = 'ممرض';
-    } else if (identifier.contains('@specialist.com')) {
-      role = 'أخصائي اجتماعي';
-    } else if (identifier.startsWith('01')) {
-      role = 'مسن';
-    } else if (identifier.contains('@volunteer.com')) {
-      role = 'متطوع';
+    if (accountIdx != -1) {
+      final acc = accounts[accountIdx];
+      currentRole = acc.role;
+      isAuthenticated = true;
+      _sessionExpiry = DateTime.now().add(const Duration(hours: 2));
+
+      await _storage.write(key: 'isAuthenticated', value: 'true');
+      await _storage.write(key: 'currentRole', value: currentRole);
+      await _storage.write(
+          key: 'sessionExpiry', value: _sessionExpiry!.toIso8601String());
+
+      notifyListeners();
+      return true;
     }
 
-    currentRole = role;
-    isAuthenticated = true;
-    _sessionExpiry =
-        DateTime.now().add(const Duration(hours: 2)); // الجلسة صالحة لساعتين
+    // دعم الدخول السريع للمحاكاة (Legacy Support)
+    if (password == '123') {
+      String role = 'أسرة';
+      if (identifier.contains('@admin.com')) {
+        role = 'إدارة';
+      } else if (identifier.contains('@nurse.com')) {
+        role = 'ممرض';
+      } else if (identifier.contains('@specialist.com')) {
+        role = 'أخصائي اجتماعي';
+      } else if (identifier.startsWith('01')) {
+        role = 'مسن';
+      } else if (identifier.contains('@volunteer.com')) {
+        role = 'متطوع';
+      }
 
-    // حفظ البيانات في التخزين الآمن (Secure Storage)
-    await _storage.write(key: 'isAuthenticated', value: 'true');
-    await _storage.write(key: 'currentRole', value: role);
-    await _storage.write(
-        key: 'sessionExpiry', value: _sessionExpiry!.toIso8601String());
+      currentRole = role;
+      isAuthenticated = true;
+      _sessionExpiry = DateTime.now().add(const Duration(hours: 2));
+      notifyListeners();
+      return true;
+    }
 
-    notifyListeners(); // إعلام الواجهات بالتغيير
+    return false;
   }
 
   // عملية تسجيل الخروج ومسح البيانات الآمنة تماماً
@@ -925,7 +1001,7 @@ class AppRiverpod extends ChangeNotifier {
       icon: '🥇',
       name: 'المتطوع المميز',
       date: 'مارس ٢٠٢٥',
-      awardTitle: '🥇 المتطوع المميز',
+      awardTitle: 'المتطوع المميز',
       description:
           'قد أتمّ بتفانٍ وااحتراف مسيرته التطوعية المتميزة وأسهم في تحسين جودة حياة مقيمينا الكرام',
     ),
@@ -934,7 +1010,7 @@ class AppRiverpod extends ChangeNotifier {
       icon: '📚',
       name: 'القارئ المحترف',
       date: 'فبراير ٢٠٢٥',
-      awardTitle: '📚 القارئ المحترف',
+      awardTitle: 'القارئ المحترف',
       description:
           'تقديراً لجهوده المخلصة في إثراء المحتوى المعرفي للمقيمين من خلال جلسات القراءة الأسبوعية',
     ),
@@ -943,7 +1019,7 @@ class AppRiverpod extends ChangeNotifier {
       icon: '🔥',
       name: '١٠ جلسات',
       date: 'يناير ٢٠٢٥',
-      awardTitle: '🔥 بطل الالتزام (١٠ جلسات)',
+      awardTitle: 'بطل الالتزام (١٠ جلسات)',
       description: 'لإتمامه ١٠ جلسات تطوعية متتالية بروح عالية وإيجابية ملحوظة',
     ),
     VolunteerCertificate(

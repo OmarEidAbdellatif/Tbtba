@@ -11,6 +11,7 @@ class VolunteerProfileView extends ConsumerWidget {
   final AnimationController floatController;
   final AnimationController shimmerController;
   final AnimationController popController;
+  final VoidCallback onSeeAllOpportunities;
 
   const VolunteerProfileView({
     super.key,
@@ -18,65 +19,77 @@ class VolunteerProfileView extends ConsumerWidget {
     required this.floatController,
     required this.shimmerController,
     required this.popController,
+    required this.onSeeAllOpportunities,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final provider = ref.watch(appRiverpod);
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-      physics: const BouncingScrollPhysics(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildSectionLabel('ملفي الشخصي', const Color(0xFF065f46), 0),
-          const SizedBox(height: 12),
-          _buildProfileCard(context, ref),
-          const SizedBox(height: 24),
-          _buildSectionLabel('فرص تطوعية جديدة', const Color(0xFF059669), 1),
-          const SizedBox(height: 12),
-          ...provider.volunteerOpportunities
-              .map((o) => _buildOpportunityCard(context, o))
-              .toList(),
-          const SizedBox(height: 24),
-          _buildSectionLabel('حجوزاتي القادمة', const Color(0xFF059669), 2),
-          const SizedBox(height: 12),
-          ...provider.volunteerBookings
-              .map((b) => _buildBookingCard(context, b))
-              .toList(),
-          const SizedBox(height: 24),
-          _buildSectionLabel('سجل الساعات', const Color(0xFF059669), 3),
-          const SizedBox(height: 12),
-          _buildHoursLog(context, provider),
-          const SizedBox(height: 24),
-          _buildSectionLabel('شهاداتي ومكافآتي 🏅', const Color(0xFFf59e0b), 4),
-          const SizedBox(height: 12),
-          _buildCertificatesCarousel(provider),
-          const SizedBox(height: 24),
-          _buildSectionLabel('التقييم المتبادل ⭐', const Color(0xFF6366f1), 5),
-          const SizedBox(height: 12),
-          _buildRatingSection(),
-          const SizedBox(height: 40),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildSectionLabel('ملفي الشخصي', const Color(0xFF065f46), 0),
+        const SizedBox(height: 12),
+        _buildProfileCard(context, ref),
+        const SizedBox(height: 24),
+        _buildSectionLabel('فرص تطوعية جديدة', const Color(0xFF059669), 1,
+            action: GestureDetector(
+              onTap: onSeeAllOpportunities,
+              child: const Text('عرض الكل',
+                  style: TextStyle(
+                      color: Color(0xFF059669),
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold)),
+            )),
+        const SizedBox(height: 12),
+        ...provider.volunteerOpportunities
+            .map((o) => _buildOpportunityCard(context, o))
+            .toList(),
+        const SizedBox(height: 24),
+        _buildSectionLabel('حجوزاتي القادمة', const Color(0xFF059669), 2),
+        const SizedBox(height: 12),
+        ...provider.volunteerBookings
+            .map((b) => _buildBookingCard(context, b))
+            .toList(),
+        const SizedBox(height: 24),
+        _buildSectionLabel('سجل الساعات', const Color(0xFF059669), 3),
+        const SizedBox(height: 12),
+        _buildHoursLog(context, provider),
+        const SizedBox(height: 24),
+        _buildSectionLabel('شهاداتي ومكافآتي 🏅', const Color(0xFFf59e0b), 4),
+        const SizedBox(height: 12),
+        _buildCertificatesCarousel(provider),
+        const SizedBox(height: 24),
+        _buildSectionLabel('التقييم المتبادل ⭐', const Color(0xFF6366f1), 5),
+        const SizedBox(height: 12),
+        _buildRatingSection(),
+        const SizedBox(height: 40),
+      ],
     );
   }
 
-  Widget _buildSectionLabel(String label, Color color, int index) {
+  Widget _buildSectionLabel(String label, Color color, int index,
+      {Widget? action}) {
     return FadeTransition(
       opacity: fadeAnimations[min(index, 11)],
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          Row(
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+              ),
+              const SizedBox(width: 8),
+              Text(label,
+                  style: TextStyle(
+                      color: color, fontSize: 14, fontWeight: FontWeight.bold)),
+            ],
           ),
-          const SizedBox(width: 8),
-          Text(label,
-              style: TextStyle(
-                  color: color, fontSize: 14, fontWeight: FontWeight.bold)),
+          if (action != null) action,
         ],
       ),
     );
@@ -98,30 +111,38 @@ class VolunteerProfileView extends ConsumerWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Column(
-                  children: [
-                    IconButton(
-                      onPressed: () => _showEditProfile(context),
-                      icon: const Icon(Icons.edit_note_rounded,
-                          color: Color(0xFF059669)),
-                    ),
-                    IconButton(
-                      onPressed: () => _simulateShare(context, profile),
-                      icon: const Icon(Icons.share_rounded,
-                          color: Color(0xFF059669), size: 20),
-                    ),
-                  ],
+                Container(
+                  width: 58,
+                  height: 58,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                        colors: [Color(0xFF059669), Color(0xFF10b981)]),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                      child: Text(
+                          profile.name
+                              .substring(0, min(2, profile.name.length)),
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold))),
                 ),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Wrap(
-                        alignment: WrapAlignment.end,
+                        alignment: WrapAlignment.start,
                         crossAxisAlignment: WrapCrossAlignment.center,
                         spacing: 8,
                         runSpacing: 4,
                         children: [
+                          Text(profile.name,
+                              textAlign: TextAlign.right,
+                              style: const TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold)),
                           Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 4),
@@ -134,10 +155,6 @@ class VolunteerProfileView extends ConsumerWidget {
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold)),
                           ),
-                          Text(profile.name,
-                              textAlign: TextAlign.right,
-                              style: const TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.bold)),
                         ],
                       ),
                       Text('${profile.location} · مسجل منذ مارس ٢٠٢٤',
@@ -146,7 +163,7 @@ class VolunteerProfileView extends ConsumerWidget {
                               TextStyle(fontSize: 10, color: Colors.grey[600])),
                       const SizedBox(height: 8),
                       Wrap(
-                        alignment: WrapAlignment.end,
+                        alignment: WrapAlignment.start,
                         spacing: 8,
                         runSpacing: 4,
                         children: [
@@ -165,22 +182,19 @@ class VolunteerProfileView extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Container(
-                  width: 58,
-                  height: 58,
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                        colors: [Color(0xFF059669), Color(0xFF10b981)]),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                      child: Text(
-                          profile.name
-                              .substring(0, min(2, profile.name.length)),
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold))),
+                Column(
+                  children: [
+                    IconButton(
+                      onPressed: () => _showEditProfile(context),
+                      icon: const Icon(Icons.edit_note_rounded,
+                          color: Color(0xFF059669)),
+                    ),
+                    IconButton(
+                      onPressed: () => _simulateShare(context, profile),
+                      icon: const Icon(Icons.share_rounded,
+                          color: Color(0xFF059669), size: 20),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -212,12 +226,12 @@ class VolunteerProfileView extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(10)),
                 child: Row(
                   children: [
-                    const Icon(Icons.check_circle,
-                        color: Color(0xFF10b981), size: 14),
-                    const SizedBox(width: 8),
                     Text('تم إرفاق الملفات المهنية بنجاح',
                         style: const TextStyle(
                             fontSize: 9, color: Color(0xFF065f46))),
+                    const SizedBox(width: 8),
+                    const Icon(Icons.check_circle,
+                        color: Color(0xFF10b981), size: 14),
                   ],
                 ),
               ),
@@ -281,19 +295,19 @@ class VolunteerProfileView extends ConsumerWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (!isAction && ref != null)
-            GestureDetector(
-              onTap: () => ref.read(appRiverpod).removeVolunteerSkill(label),
-              child: const Padding(
-                padding: EdgeInsets.only(right: 6),
-                child: Icon(Icons.close, size: 12, color: Color(0xFF065f46)),
-              ),
-            ),
           Text(label,
               style: const TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF065f46))),
+          if (!isAction && ref != null)
+            GestureDetector(
+              onTap: () => ref.read(appRiverpod).removeVolunteerSkill(label),
+              child: const Padding(
+                padding: EdgeInsets.only(left: 6),
+                child: Icon(Icons.close, size: 12, color: Color(0xFF065f46)),
+              ),
+            ),
         ],
       ),
     );
@@ -352,24 +366,21 @@ class VolunteerProfileView extends ConsumerWidget {
                 ),
               Row(
                 children: [
-                  Flexible(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        _buildGlowButton('احجز الآن'),
-                        const SizedBox(height: 8),
-                        Text('⏱ ${opp.hours} ساعة · يضيف لرصيدك',
-                            textAlign: TextAlign.right,
-                            style: TextStyle(
-                                color: Colors.grey[600], fontSize: 10)),
-                      ],
-                    ),
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                        color: const Color(0xFFf0fdf4),
+                        borderRadius: BorderRadius.circular(12)),
+                    child: Center(
+                        child: Text(opp.icon,
+                            style: const TextStyle(fontSize: 20))),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     flex: 2,
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(opp.title,
                             textAlign: TextAlign.right,
@@ -381,7 +392,7 @@ class VolunteerProfileView extends ConsumerWidget {
                                 color: Colors.grey[600], fontSize: 10)),
                         const SizedBox(height: 8),
                         Wrap(
-                          alignment: WrapAlignment.end,
+                          alignment: WrapAlignment.start,
                           spacing: 4,
                           runSpacing: 4,
                           children:
@@ -391,15 +402,18 @@ class VolunteerProfileView extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                        color: const Color(0xFFf0fdf4),
-                        borderRadius: BorderRadius.circular(12)),
-                    child: Center(
-                        child: Text(opp.icon,
-                            style: const TextStyle(fontSize: 20))),
+                  Flexible(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildGlowButton('احجز الآن'),
+                        const SizedBox(height: 8),
+                        Text('⏱ ${opp.hours} ساعة · يضيف لرصيدك',
+                            textAlign: TextAlign.right,
+                            style: TextStyle(
+                                color: Colors.grey[600], fontSize: 10)),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -468,33 +482,6 @@ class VolunteerProfileView extends ConsumerWidget {
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                  color: const Color(0xFFd1fae5),
-                  borderRadius: BorderRadius.circular(8)),
-              child: const Text('✓ مؤكد',
-                  style: TextStyle(
-                      color: Color(0xFF065f46),
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold)),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(booking.title,
-                      textAlign: TextAlign.right,
-                      style: const TextStyle(
-                          fontSize: 12, fontWeight: FontWeight.bold)),
-                  Text(booking.timeInfo,
-                      textAlign: TextAlign.right,
-                      style: TextStyle(color: Colors.grey[600], fontSize: 10)),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            Container(
               width: 44,
               height: 48,
               decoration: BoxDecoration(
@@ -514,6 +501,33 @@ class VolunteerProfileView extends ConsumerWidget {
                       style: const TextStyle(color: Colors.white, fontSize: 8)),
                 ],
               ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(booking.title,
+                      textAlign: TextAlign.right,
+                      style: const TextStyle(
+                          fontSize: 12, fontWeight: FontWeight.bold)),
+                  Text(booking.timeInfo,
+                      textAlign: TextAlign.right,
+                      style: TextStyle(color: Colors.grey[600], fontSize: 10)),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                  color: const Color(0xFFd1fae5),
+                  borderRadius: BorderRadius.circular(8)),
+              child: const Text('✓ مؤكد',
+                  style: TextStyle(
+                      color: Color(0xFF065f46),
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold)),
             ),
           ],
         ),
@@ -547,23 +561,6 @@ class VolunteerProfileView extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('${provider.volunteerGoal}',
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold)),
-                      Text('الهدف',
-                          style: TextStyle(
-                              color: Colors.white.withOpacity(0.7),
-                              fontSize: 9)),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Flexible(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
                       Text('⏱ ${provider.volunteerHours}',
                           style: const TextStyle(
                               color: Colors.white,
@@ -574,6 +571,23 @@ class VolunteerProfileView extends ConsumerWidget {
                           style: TextStyle(
                               color: Colors.white.withOpacity(0.8),
                               fontSize: 11)),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('${provider.volunteerGoal}',
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold)),
+                      Text('الهدف',
+                          style: TextStyle(
+                              color: Colors.white.withOpacity(0.7),
+                              fontSize: 9)),
                     ],
                   ),
                 ),
@@ -718,11 +732,9 @@ class VolunteerProfileView extends ConsumerWidget {
                 border: Border.all(color: const Color(0xFFfde68a))),
             child: Row(
               children: [
-                const Text('🙏', style: TextStyle(fontSize: 18)),
-                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text('قيّم جلسة القراءة — الحاج محمود',
                           style: TextStyle(
@@ -731,7 +743,7 @@ class VolunteerProfileView extends ConsumerWidget {
                           style: TextStyle(fontSize: 10, color: Colors.grey)),
                       const SizedBox(height: 8),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
+                        mainAxisAlignment: MainAxisAlignment.start,
                         children: List.generate(
                             5,
                             (index) => Text(index < 4 ? '★' : '☆',
@@ -744,24 +756,26 @@ class VolunteerProfileView extends ConsumerWidget {
                     ],
                   ),
                 ),
+                const SizedBox(width: 12),
+                const Text('🙏', style: TextStyle(fontSize: 18)),
               ],
             ),
           ),
           const SizedBox(height: 16),
           Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              const Text('تقييمات المقيمين لي',
-                  style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFFfbbf24))),
-              const SizedBox(width: 8),
               Container(
                   width: 7,
                   height: 7,
                   decoration: const BoxDecoration(
                       color: Color(0xFFfbbf24), shape: BoxShape.circle)),
+              const SizedBox(width: 8),
+              const Text('تقييمات المقيمين لي',
+                  style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFFfbbf24))),
             ],
           ),
           const SizedBox(height: 8),
@@ -778,14 +792,12 @@ class VolunteerProfileView extends ConsumerWidget {
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(
         children: [
-          Text('$rating',
-              style: TextStyle(
-                  color: rating >= 5
-                      ? const Color(0xFF10b981)
-                      : const Color(0xFFf59e0b),
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold)),
-          const Spacer(),
+          SizedBox(
+              width: 60,
+              child: Text(label,
+                  style:
+                      const TextStyle(color: Color(0xFF374151), fontSize: 11))),
+          const SizedBox(width: 12),
           Row(
             children: List.generate(
                 5,
@@ -794,12 +806,14 @@ class VolunteerProfileView extends ConsumerWidget {
                         color: i < rating ? Colors.amber : Colors.grey[300],
                         fontSize: 12))),
           ),
-          const SizedBox(width: 12),
-          SizedBox(
-              width: 60,
-              child: Text(label,
-                  textAlign: TextAlign.right,
-                  style: const TextStyle(fontSize: 10, color: Colors.grey))),
+          const Spacer(),
+          Text('$rating',
+              style: TextStyle(
+                  color: rating >= 5
+                      ? const Color(0xFF10b981)
+                      : const Color(0xFFf59e0b),
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -830,21 +844,12 @@ class VolunteerProfileView extends ConsumerWidget {
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                              color: const Color(0xFFf0fdf4),
-                              borderRadius: BorderRadius.circular(12)),
-                          child: Text(opp.icon,
-                              style: const TextStyle(fontSize: 24)),
-                        ),
-                        if (opp.isNew)
+                        if (opp.isNew) ...[
                           Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 4),
@@ -857,6 +862,17 @@ class VolunteerProfileView extends ConsumerWidget {
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold)),
                           ),
+                          const SizedBox(width: 12),
+                        ],
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                              color: const Color(0xFFf0fdf4),
+                              borderRadius: BorderRadius.circular(12)),
+                          child: Text(opp.icon,
+                              style: const TextStyle(fontSize: 24)),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 20),
@@ -874,7 +890,7 @@ class VolunteerProfileView extends ConsumerWidget {
                             fontWeight: FontWeight.w500)),
                     const SizedBox(height: 24),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         _buildDetailChip(
                             '${opp.hours} ساعة', Icons.timer_outlined),
@@ -885,7 +901,7 @@ class VolunteerProfileView extends ConsumerWidget {
                     ),
                     const SizedBox(height: 16),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         _buildDetailChip(opp.dateInfo, Icons.calendar_today),
                         const SizedBox(width: 12),
@@ -920,7 +936,7 @@ class VolunteerProfileView extends ConsumerWidget {
                             color: Color(0xFF1e293b))),
                     const SizedBox(height: 12),
                     Wrap(
-                      alignment: WrapAlignment.end,
+                      alignment: WrapAlignment.start,
                       spacing: 8,
                       runSpacing: 8,
                       children: opp.tags.map((t) => _buildBadge(t)).toList(),
@@ -1009,20 +1025,11 @@ class VolunteerProfileView extends ConsumerWidget {
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                              color: const Color(0xFFf0fdf4),
-                              borderRadius: BorderRadius.circular(12)),
-                          child:
-                              const Text('📋', style: TextStyle(fontSize: 24)),
-                        ),
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 4),
@@ -1034,6 +1041,16 @@ class VolunteerProfileView extends ConsumerWidget {
                                   color: Color(0xFF065f46),
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold)),
+                        ),
+                        const SizedBox(width: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                              color: const Color(0xFFf0fdf4),
+                              borderRadius: BorderRadius.circular(12)),
+                          child:
+                              const Text('📋', style: TextStyle(fontSize: 24)),
                         ),
                       ],
                     ),
@@ -1159,7 +1176,7 @@ class VolunteerProfileView extends ConsumerWidget {
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1269,7 +1286,7 @@ class VolunteerProfileView extends ConsumerWidget {
                 ],
               ),
               Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('${provider.volunteerHours} س',
                       style: const TextStyle(
@@ -1341,7 +1358,7 @@ class VolunteerProfileView extends ConsumerWidget {
                   fontSize: 13)),
           const Spacer(),
           Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(title,
                   textAlign: TextAlign.right,
@@ -1368,15 +1385,15 @@ class VolunteerProfileView extends ConsumerWidget {
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         children: [
+          Icon(icon, size: 20, color: const Color(0xFF059669)),
+          const SizedBox(width: 12),
+          Text(title, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+          const Spacer(),
           Text(val,
               style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF1e293b))),
-          const Spacer(),
-          Text(title, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
-          const SizedBox(width: 12),
-          Icon(icon, size: 20, color: const Color(0xFF059669)),
         ],
       ),
     );

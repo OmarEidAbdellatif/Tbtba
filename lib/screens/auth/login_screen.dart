@@ -248,11 +248,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                             FadeTransition( // أنيميشن ظهور زر الدخول
                               opacity: _fadeAnimations[4], // خامس حركة ظهور
                               child: GestureDetector( // كاشف للمسات المستخدم
-                                onTap: () { // دالة التنفيذ عند الضغط
-                                  ref.read(appRiverpod).login(
-                                    _identifierController.text,
-                                    _passwordController.text,
-                                  ); // تنفيذ عملية الدخول الذكي
+                                onTap: () async {
+                                  final success = await ref
+                                      .read(appRiverpod)
+                                      .login(
+                                        _identifierController.text,
+                                        _passwordController.text,
+                                      );
+                                  if (!success && context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                            'خطأ في الدخول، يرجى التأكد من البيانات'),
+                                        backgroundColor: Colors.redAccent,
+                                      ),
+                                    );
+                                  }
                                 },
                                 child: Container( // وعاء الزر المتدرج
                                   width: double.infinity, // تمديد الزر بكامل العرض
@@ -283,7 +294,34 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 16), // إزالة رابط إنشاء الحساب
+                            const SizedBox(height: 16),
+                            FadeTransition(
+                              opacity: _fadeAnimations[5],
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        _showRegisterSheet(context),
+                                    child: const Text(
+                                      'أنشئ حساباً الآن',
+                                      style: TextStyle(
+                                        color: Color(0xFF6C63FF),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                  ),
+                                  const Text(
+                                    'ليس لديك حساب؟',
+                                    style: TextStyle(
+                                      color: Color(0xFF64748b),
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -321,6 +359,155 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           border: InputBorder.none, // إخفاء الإطار الافتراضي لفلاتر
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16), // حواف داخلية مريحة
           prefixIcon: Icon(icon, color: const Color(0xFF94a3b8), size: 20), // الأيقونة في بداية الحقل (يميناً في RTL)
+        ),
+      ),
+    );
+  }
+
+  void _showRegisterSheet(BuildContext context) {
+    final nameController = TextEditingController();
+    final emailController = TextEditingController();
+    final passwordController = TextEditingController();
+    String selectedRole = 'أسرة';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          ),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+            left: 24,
+            right: 24,
+            top: 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Center(
+                  child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(10)))),
+              const SizedBox(height: 20),
+              const Text('إنشاء حساب جديد ✨',
+                  style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1e1b4b))),
+              const Text('خاص بالمتطوعين وأفراد الأسرة فقط',
+                  style: TextStyle(fontSize: 14, color: Color(0xFF64748b))),
+              const SizedBox(height: 24),
+              _buildInput(
+                  controller: nameController,
+                  label: 'الاسم الكامل',
+                  icon: Icons.person_outline),
+              const SizedBox(height: 16),
+              _buildInput(
+                  controller: emailController,
+                  label: 'البريد الإلكتروني',
+                  icon: Icons.email_outlined),
+              const SizedBox(height: 16),
+              _buildInput(
+                  controller: passwordController,
+                  label: 'كلمة المرور',
+                  icon: Icons.lock_outline,
+                  isPassword: true),
+              const SizedBox(height: 20),
+              const Text('أنا أسجل كـ:',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _roleOption(
+                      'متطوع',
+                      selectedRole == 'متطوع',
+                      () => setModalState(() => selectedRole = 'متطوع'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _roleOption(
+                      'فرد أسرة',
+                      selectedRole == 'أسرة',
+                      () => setModalState(() => selectedRole = 'أسرة'),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                height: 55,
+                child: ElevatedButton(
+                  onPressed: () {
+                    ref.read(appRiverpod).selfRegister(
+                          name: nameController.text,
+                          email: emailController.text,
+                          password: passwordController.text,
+                          role: selectedRole,
+                        );
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content:
+                            Text('تم إنشاء الحساب بنجاح! يمكنك الدخول الآن'),
+                        backgroundColor: Color(0xFF10b981),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6C63FF),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: const Text('إنشاء الحساب',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _roleOption(String label, bool isSelected, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFf5f3ff) : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color:
+                isSelected ? const Color(0xFF6C63FF) : const Color(0xFFe2e8f0),
+            width: 2,
+          ),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected
+                  ? const Color(0xFF6C63FF)
+                  : const Color(0xFF64748b),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ),
       ),
     );

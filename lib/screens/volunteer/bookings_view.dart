@@ -70,45 +70,47 @@ class _VolunteerBookingsViewState extends ConsumerState<VolunteerBookingsView> {
       children: [
         _buildSummaryStrip(provider),
         _buildTabFilter(),
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-            physics: const BouncingScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (provider.volunteerBookings
-                    .any((b) => b.isRatingRequired)) ...[
-                  _buildRatingPrompt(provider.volunteerBookings
-                      .firstWhere((b) => b.isRatingRequired)),
-                  const SizedBox(height: 16),
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (provider.volunteerBookings
+                      .any((b) => b.isRatingRequired)) ...[
+                    _buildRatingPrompt(provider.volunteerBookings
+                        .firstWhere((b) => b.isRatingRequired)),
+                    const SizedBox(height: 16),
+                  ],
+                  _buildSectionLabel(
+                      'الجلسة القادمة', const Color(0xFF10b981), 0),
+                  const SizedBox(height: 12),
+                  _buildNextSessionCard(provider.volunteerBookings
+                      .firstWhere((b) => b.status == 'confirmed')),
+                  const SizedBox(height: 24),
+                  _buildSectionLabel(
+                      'حجوزاتي القادمة', const Color(0xFF6366f1), 1),
+                  const SizedBox(height: 12),
+                  ...provider.volunteerBookings
+                      .where((b) => b.status == 'confirmed')
+                      .skip(1)
+                      .map((b) => _buildBookingCard(b))
+                      .toList(),
+                  const SizedBox(height: 24),
+                  _buildSectionLabel(
+                      'آخر جلسة مكتملة', const Color(0xFF6366f1), 2),
+                  const SizedBox(height: 12),
+                  _buildCompletedSessionCard(provider.volunteerBookings
+                      .firstWhere((b) => b.status == 'done')),
+                  const SizedBox(height: 24),
+                  _buildMonthlyStats(provider),
+                  const SizedBox(height: 40),
                 ],
-                _buildSectionLabel(
-                    'الجلسة القادمة', const Color(0xFF10b981), 0),
-                const SizedBox(height: 12),
-                _buildNextSessionCard(provider.volunteerBookings
-                    .firstWhere((b) => b.status == 'confirmed')),
-                const SizedBox(height: 24),
-                _buildSectionLabel(
-                    'حجوزاتي القادمة', const Color(0xFF6366f1), 1),
-                const SizedBox(height: 12),
-                ...provider.volunteerBookings
-                    .where((b) => b.status == 'confirmed')
-                    .skip(1)
-                    .map((b) => _buildBookingCard(b))
-                    .toList(),
-                const SizedBox(height: 24),
-                _buildSectionLabel(
-                    'آخر جلسة مكتملة', const Color(0xFF6366f1), 2),
-                const SizedBox(height: 12),
-                _buildCompletedSessionCard(provider.volunteerBookings
-                    .firstWhere((b) => b.status == 'done')),
-                const SizedBox(height: 24),
-                _buildMonthlyStats(provider),
-                const SizedBox(height: 40),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
       ],
     );
@@ -129,12 +131,12 @@ class _VolunteerBookingsViewState extends ConsumerState<VolunteerBookingsView> {
       ),
       child: Row(
         children: [
-          _buildSummaryCell('$upcomingCount', 'قادمة', const Color(0xFF059669)),
-          _buildSummaryCell('$doneCount', 'مكتملة', const Color(0xFF6366f1)),
-          _buildSummaryCell(
-              '$ratingCount', 'تقييم مطلوب', const Color(0xFFf59e0b)),
           _buildSummaryCell('${provider.volunteerHours}', 'ساعة هذا الشهر',
               const Color(0xFF0f172a)),
+          _buildSummaryCell(
+              '$ratingCount', 'تقييم مطلوب', const Color(0xFFf59e0b)),
+          _buildSummaryCell('$doneCount', 'مكتملة', const Color(0xFF6366f1)),
+          _buildSummaryCell('$upcomingCount', 'قادمة', const Color(0xFF059669)),
         ],
       ),
     );
@@ -209,6 +211,36 @@ class _VolunteerBookingsViewState extends ConsumerState<VolunteerBookingsView> {
       ),
       child: Row(
         children: [
+          const Text('⭐', style: TextStyle(fontSize: 20)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('قيّم جلسة الأمس — الحاج محمود',
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0f172a))),
+                Text('${booking.title} · ${booking.day} ${booking.month}',
+                    textAlign: TextAlign.right,
+                    style: const TextStyle(
+                        fontSize: 10, color: Color(0xFF64748b))),
+                const SizedBox(height: 6),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: List.generate(
+                      5,
+                      (index) => Text(index < 4 ? '★' : '☆',
+                          style: TextStyle(
+                              color:
+                                  index < 4 ? Colors.amber : Colors.grey[300],
+                              fontSize: 16))),
+                ),
+              ],
+            ),
+          ),
           GestureDetector(
             onTap: () {
               ref.read(appRiverpod).submitBookingRating(booking.id);
@@ -234,36 +266,6 @@ class _VolunteerBookingsViewState extends ConsumerState<VolunteerBookingsView> {
                       fontWeight: FontWeight.bold)),
             ),
           ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                const Text('قيّم جلسة الأمس — الحاج محمود',
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF0f172a))),
-                Text('${booking.title} · ${booking.day} ${booking.month}',
-                    textAlign: TextAlign.right,
-                    style: const TextStyle(
-                        fontSize: 10, color: Color(0xFF64748b))),
-                const SizedBox(height: 6),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: List.generate(
-                      5,
-                      (index) => Text(index < 4 ? '★' : '☆',
-                          style: TextStyle(
-                              color:
-                                  index < 4 ? Colors.amber : Colors.grey[300],
-                              fontSize: 16))),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          const Text('⭐', style: TextStyle(fontSize: 20)),
         ],
       ),
     );
@@ -273,16 +275,16 @@ class _VolunteerBookingsViewState extends ConsumerState<VolunteerBookingsView> {
     return FadeTransition(
       opacity: widget.fadeAnimations[min(index, 11)],
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          Text(label,
-              style: TextStyle(
-                  color: color, fontSize: 13, fontWeight: FontWeight.bold)),
-          const SizedBox(width: 8),
           Container(
               width: 8,
               height: 8,
               decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+          const SizedBox(width: 8),
+          Text(label,
+              style: TextStyle(
+                  color: color, fontSize: 13, fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -317,9 +319,19 @@ class _VolunteerBookingsViewState extends ConsumerState<VolunteerBookingsView> {
             children: [
               Row(
                 children: [
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(14)),
+                    child: const Center(
+                        child: Text('🧠', style: TextStyle(fontSize: 24))),
+                  ),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text('غداً — الخميس ١٠ أبريل',
                             style: TextStyle(
@@ -338,16 +350,6 @@ class _VolunteerBookingsViewState extends ConsumerState<VolunteerBookingsView> {
                                 fontSize: 11)),
                       ],
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(14)),
-                    child: const Center(
-                        child: Text('🧠', style: TextStyle(fontSize: 24))),
                   ),
                 ],
               ),
@@ -403,14 +405,14 @@ class _VolunteerBookingsViewState extends ConsumerState<VolunteerBookingsView> {
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text('تأكيد الحضور',
+                          const Icon(Icons.check_circle_outline,
+                              color: Color(0xFF059669), size: 14),
+                          const SizedBox(width: 6),
+                          const Text('تأكيد الحضور',
                               style: TextStyle(
                                   color: Color(0xFF059669),
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold)),
-                          SizedBox(width: 6),
-                          Icon(Icons.check_circle_outline,
-                              color: Color(0xFF059669), size: 14),
                         ],
                       ),
                     ),
@@ -448,52 +450,6 @@ class _VolunteerBookingsViewState extends ConsumerState<VolunteerBookingsView> {
               child: Row(
                 children: [
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                        color: const Color(0xFFd1fae5),
-                        borderRadius: BorderRadius.circular(10)),
-                    child: const Text('✓ مؤكد',
-                        style: TextStyle(
-                            color: Color(0xFF065f46),
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold)),
-                  ),
-                  const Spacer(),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(booking.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF0f172a))),
-                        Text(booking.timeInfo,
-                            style: const TextStyle(
-                                color: Color(0xFF64748b), fontSize: 10)),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Flexible(
-                              child: Text(booking.location,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                      color: Color(0xFF94a3b8), fontSize: 10)),
-                            ),
-                            const SizedBox(width: 4),
-                            const Icon(Icons.location_on_outlined,
-                                color: Color(0xFF94a3b8), size: 12),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Container(
                     width: 46,
                     height: 50,
                     decoration: BoxDecoration(
@@ -515,6 +471,52 @@ class _VolunteerBookingsViewState extends ConsumerState<VolunteerBookingsView> {
                       ],
                     ),
                   ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(booking.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF0f172a))),
+                        Text(booking.timeInfo,
+                            style: const TextStyle(
+                                color: Color(0xFF64748b), fontSize: 10)),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.location_on_outlined,
+                                color: Color(0xFF94a3b8), size: 12),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(booking.location,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                      color: Color(0xFF94a3b8), fontSize: 10)),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                        color: const Color(0xFFd1fae5),
+                        borderRadius: BorderRadius.circular(10)),
+                    child: const Text('✓ مؤكد',
+                        style: TextStyle(
+                            color: Color(0xFF065f46),
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold)),
+                  ),
                 ],
               ),
             ),
@@ -528,6 +530,11 @@ class _VolunteerBookingsViewState extends ConsumerState<VolunteerBookingsView> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
+                    const Text('📍 تسجيل الحضور عند الوصول',
+                        style: TextStyle(
+                            color: Color(0xFF065f46),
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold)),
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 6),
@@ -536,22 +543,17 @@ class _VolunteerBookingsViewState extends ConsumerState<VolunteerBookingsView> {
                           borderRadius: BorderRadius.circular(10)),
                       child: const Row(
                         children: [
+                          Icon(Icons.location_searching,
+                              color: Colors.white, size: 12),
+                          SizedBox(width: 6),
                           Text('check-in',
                               style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold)),
-                          SizedBox(width: 6),
-                          Icon(Icons.location_searching,
-                              color: Colors.white, size: 12),
                         ],
                       ),
                     ),
-                    const Text('📍 تسجيل الحضور عند الوصول',
-                        style: TextStyle(
-                            color: Color(0xFF065f46),
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold)),
                   ],
                 ),
               ),
@@ -681,44 +683,6 @@ class _VolunteerBookingsViewState extends ConsumerState<VolunteerBookingsView> {
               padding: const EdgeInsets.all(12),
               child: Row(
                 children: [
-                  const Text('مكتملة',
-                      style: TextStyle(
-                          color: Color(0xFF3730a3),
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          backgroundColor: Color(0xFFe0e7ff))),
-                  const Spacer(),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(booking.title,
-                            textAlign: TextAlign.right,
-                            style: const TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.bold)),
-                        Text(booking.timeInfo,
-                            textAlign: TextAlign.right,
-                            style: const TextStyle(
-                                color: Color(0xFF64748b), fontSize: 10)),
-                        const Wrap(
-                          alignment: WrapAlignment.end,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            Text('تم توثيق ٢ ساعة بنجاح ✓',
-                                textAlign: TextAlign.right,
-                                style: TextStyle(
-                                    color: Color(0xFF10b981),
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold)),
-                            SizedBox(width: 4),
-                            Icon(Icons.check_circle_outline,
-                                color: Color(0xFF10b981), size: 12),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
                   Container(
                     width: 44,
                     height: 48,
@@ -741,6 +705,44 @@ class _VolunteerBookingsViewState extends ConsumerState<VolunteerBookingsView> {
                       ],
                     ),
                   ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(booking.title,
+                            textAlign: TextAlign.right,
+                            style: const TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.bold)),
+                        Text(booking.timeInfo,
+                            textAlign: TextAlign.right,
+                            style: const TextStyle(
+                                color: Color(0xFF64748b), fontSize: 10)),
+                        const Wrap(
+                          alignment: WrapAlignment.start,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            Icon(Icons.check_circle_outline,
+                                color: Color(0xFF10b981), size: 12),
+                            SizedBox(width: 4),
+                            Text('تم توثيق ٢ ساعة بنجاح ✓',
+                                textAlign: TextAlign.right,
+                                style: TextStyle(
+                                    color: Color(0xFF10b981),
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Spacer(),
+                  const Text('مكتملة',
+                      style: TextStyle(
+                          color: Color(0xFF3730a3),
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          backgroundColor: Color(0xFFe0e7ff))),
                 ],
               ),
             ),
@@ -750,11 +752,8 @@ class _VolunteerBookingsViewState extends ConsumerState<VolunteerBookingsView> {
                   border: Border(top: BorderSide(color: Color(0xFFf0fdf4)))),
               child: Row(
                 children: [
-                  const Text('٣٨/٥٠',
-                      style: TextStyle(
-                          color: Color(0xFF059669),
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold)),
+                  const Text('٢ ساعة',
+                      style: TextStyle(color: Color(0xFF64748b), fontSize: 10)),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Container(
@@ -773,8 +772,11 @@ class _VolunteerBookingsViewState extends ConsumerState<VolunteerBookingsView> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Text('٢ ساعة',
-                      style: TextStyle(color: Color(0xFF64748b), fontSize: 10)),
+                  const Text('٣٨/٥٠',
+                      style: TextStyle(
+                          color: Color(0xFF059669),
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold)),
                 ],
               ),
             ),
@@ -946,7 +948,7 @@ class _VolunteerBookingsViewState extends ConsumerState<VolunteerBookingsView> {
                     child: const Text('🧠', style: TextStyle(fontSize: 24)),
                   ),
                   Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text('تفاصيل الحجز',
                           style: TextStyle(
@@ -968,7 +970,7 @@ class _VolunteerBookingsViewState extends ConsumerState<VolunteerBookingsView> {
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(booking.title,
                         textAlign: TextAlign.right,
@@ -1071,6 +1073,11 @@ class _VolunteerBookingsViewState extends ConsumerState<VolunteerBookingsView> {
       padding: const EdgeInsets.only(bottom: 20),
       child: Row(
         children: [
+          Icon(icon, size: 18, color: const Color(0xFF059669)),
+          const SizedBox(width: 12),
+          Text(label,
+              style: const TextStyle(fontSize: 12, color: Color(0xFF64748b))),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(value,
                 textAlign: TextAlign.left,
@@ -1079,11 +1086,6 @@ class _VolunteerBookingsViewState extends ConsumerState<VolunteerBookingsView> {
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF334155))),
           ),
-          const SizedBox(width: 12),
-          Text(label,
-              style: const TextStyle(fontSize: 12, color: Color(0xFF64748b))),
-          const SizedBox(width: 12),
-          Icon(icon, size: 18, color: const Color(0xFF059669)),
         ],
       ),
     );

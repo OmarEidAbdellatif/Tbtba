@@ -18,7 +18,8 @@ class VolunteerDashboardScreen extends ConsumerStatefulWidget {
       _VolunteerDashboardScreenState();
 }
 
-class _VolunteerDashboardScreenState extends ConsumerState<VolunteerDashboardScreen>
+class _VolunteerDashboardScreenState
+    extends ConsumerState<VolunteerDashboardScreen>
     with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late List<Animation<double>> _fadeAnimations;
@@ -26,6 +27,7 @@ class _VolunteerDashboardScreenState extends ConsumerState<VolunteerDashboardScr
   late AnimationController _shimmerController;
   late AnimationController _floatController;
   late AnimationController _popController;
+  AnimationController? _rotationController;
 
   int _selectedTab = 0;
 
@@ -47,10 +49,15 @@ class _VolunteerDashboardScreenState extends ConsumerState<VolunteerDashboardScr
 
     _ringController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 1500));
-    _shimmerController = AnimationController(
-        vsync: this, duration: const Duration(seconds: 2))..repeat();
-    _floatController = AnimationController(
-        vsync: this, duration: const Duration(seconds: 3))..repeat(reverse: true);
+    _shimmerController =
+        AnimationController(vsync: this, duration: const Duration(seconds: 2))
+          ..repeat();
+    _rotationController =
+        AnimationController(vsync: this, duration: const Duration(seconds: 12))
+          ..repeat();
+    _floatController =
+        AnimationController(vsync: this, duration: const Duration(seconds: 4))
+          ..repeat(reverse: true);
     _popController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 500));
 
@@ -65,6 +72,7 @@ class _VolunteerDashboardScreenState extends ConsumerState<VolunteerDashboardScr
     _ringController.dispose();
     _shimmerController.dispose();
     _floatController.dispose();
+    _rotationController?.dispose();
     _popController.dispose();
     super.dispose();
   }
@@ -77,11 +85,19 @@ class _VolunteerDashboardScreenState extends ConsumerState<VolunteerDashboardScr
       title: 'طبطبـة',
       titleColor: const Color(0xFF059669),
       overrideRole: 'متطوع',
+      transparentAppBar: true,
+      extendBodyBehindAppBar: true,
       body: Column(
         children: [
-          _buildHero(provider),
           Expanded(
-            child: _buildCurrentView(provider),
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  _buildHero(provider),
+                  _buildCurrentView(provider),
+                ],
+              ),
+            ),
           ),
           _buildBottomNav(),
         ],
@@ -99,24 +115,24 @@ class _VolunteerDashboardScreenState extends ConsumerState<VolunteerDashboardScr
         );
       case 2:
         return VolunteerBookingsView(
-           fadeAnimations: _fadeAnimations,
-           floatController: _floatController,
-           shimmerController: _shimmerController,
-           popController: _popController,
+          fadeAnimations: _fadeAnimations,
+          floatController: _floatController,
+          shimmerController: _shimmerController,
+          popController: _popController,
         );
       case 3:
         return VolunteerCertificatesView(
-           fadeAnimations: _fadeAnimations,
-           floatController: _floatController,
-           shimmerController: _shimmerController,
-           popController: _popController,
+          fadeAnimations: _fadeAnimations,
+          floatController: _floatController,
+          shimmerController: _shimmerController,
+          popController: _popController,
         );
       case 4:
         return VolunteerRatingsView(
-           fadeAnimations: _fadeAnimations,
-           floatController: _floatController,
-           shimmerController: _shimmerController,
-           popController: _popController,
+          fadeAnimations: _fadeAnimations,
+          floatController: _floatController,
+          shimmerController: _shimmerController,
+          popController: _popController,
         );
       case 0:
       default:
@@ -125,6 +141,7 @@ class _VolunteerDashboardScreenState extends ConsumerState<VolunteerDashboardScr
           floatController: _floatController,
           shimmerController: _shimmerController,
           popController: _popController,
+          onSeeAllOpportunities: () => setState(() => _selectedTab = 1),
         );
     }
   }
@@ -138,191 +155,233 @@ class _VolunteerDashboardScreenState extends ConsumerState<VolunteerDashboardScr
     const ratingSummary = '⭐ ٤.٩';
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(24, 40, 24, 30),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: isRatingTab
-              ? [const Color(0xFF312e81), const Color(0xFF4338ca), const Color(0xFF6366f1)]
+              ? [
+                  const Color(0xFF064e3b),
+                  const Color(0xFF059669),
+                  const Color(0xFF10b981)
+                ]
               : (isCertTab
-                  ? [const Color(0xFF78350f), const Color(0xFF92400e), const Color(0xFFb45309)]
-                  : [const Color(0xFF064e3b), const Color(0xFF059669), const Color(0xFF10b981)]),
+                  ? [
+                      const Color(0xFF065f46),
+                      const Color(0xFF059669),
+                      const Color(0xFF10b981)
+                    ]
+                  : [
+                      const Color(0xFF064e3b),
+                      const Color(0xFF059669),
+                      const Color(0xFF10b981)
+                    ]),
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
+      child: Stack(
+        clipBehavior: Clip.none,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              if (isCertTab || isRatingTab)
-                GestureDetector(
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(isCertTab
-                          ? 'مشاركة سجل الشهادات والإنجازات... 🏆'
-                          : 'مشاركة ملخص تقييماتك وأدائك... ⭐'),
-                      backgroundColor: const Color(0xFF059669),
-                    ));
-                  },
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.share_outlined, color: Colors.white),
-                  ),
-                )
-              else
-                const Spacer(),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                        _selectedTab == 1
-                            ? '🎯 فرص التطوع'
-                            : (_selectedTab == 2
-                                ? '📅 حجوزاتي'
-                                : (isCertTab
-                                    ? '🏅 شهاداتي'
-                                    : (isRatingTab
-                                        ? '⭐ تقييمي'
-                                        : 'أهلاً بك يا'))),
-                        textAlign: TextAlign.right,
-                        style: TextStyle(
-                            color: Colors.white.withOpacity(0.8),
-                            fontSize: 14)),
-                    Text(
-                        _selectedTab == 1
-                            ? '$opportunitiesCount فرص متاحة دلوقتي'
-                            : (_selectedTab == 2
-                                ? bookingsSummary
-                                : (isCertTab
-                                    ? '$certsCount شهادات مكتسبة'
-                                    : (isRatingTab
-                                        ? ratingSummary
-                                        : '${provider.currentUser.name} 🌿'))),
-                        textAlign: TextAlign.right,
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          if (_selectedTab == 0) ...[
-            const SizedBox(height: 24),
-            Row(
+          Positioned.fill(child: _buildAnimatedBackground()),
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+                24, isRatingTab ? 45 : 60, 24, isRatingTab ? 45 : 30),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Expanded(
-                  child: Column(
-                    children: [
-                      _buildHeroChip('${provider.volunteerGoal} ساعة', 'الهدف الشهري'),
-                      const SizedBox(height: 8),
-                      _buildHeroChip('⭐ ${provider.volunteerBookings.where((b) => b.status == 'done').length} جلسة', 'جلسات مكتملة'),
-                      const SizedBox(height: 8),
-                      _buildHeroChip('⭐⭐⭐⭐⭐', 'تقييم المقيمين'),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 24),
-                AnimatedBuilder(
-                  animation: _ringController,
-                  builder: (context, child) {
-                    return SizedBox(
-                      width: 100,
-                      height: 100,
-                      child: Stack(
-                        alignment: Alignment.center,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          CustomPaint(
-                            size: const Size(100, 100),
-                            painter: RingPainter(
-                              progress: _ringController.value * (provider.volunteerHours / provider.volunteerGoal),
-                              backgroundColor: Colors.white.withOpacity(0.2),
-                              progressColor: Colors.white,
-                            ),
-                          ),
-                          Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text('${provider.volunteerHours}',
-                                  style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                              Text('ساعة',
-                                  style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 10)),
-                            ],
-                          ),
+                          Text(
+                              _selectedTab == 1
+                                  ? '🎯 فرص التطوع'
+                                  : (_selectedTab == 2
+                                      ? '📅 حجوزاتي'
+                                      : (isCertTab
+                                          ? '🏅 شهاداتي'
+                                          : (isRatingTab
+                                              ? '⭐ تقييمي'
+                                              : 'أهلاً بك يا'))),
+                              textAlign: TextAlign.right,
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18)),
+                          Text(
+                              _selectedTab == 1
+                                  ? '$opportunitiesCount فرص متاحة دلوقتي'
+                                  : (_selectedTab == 2
+                                      ? bookingsSummary
+                                      : (isCertTab
+                                          ? '$certsCount شهادات مكتسبة'
+                                          : (isRatingTab
+                                              ? ratingSummary
+                                              : '${provider.currentUser.name} 🌿'))),
+                              textAlign: TextAlign.right,
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.bold)),
                         ],
                       ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ] else if (_selectedTab == 1) ...[
-            const SizedBox(height: 16),
-            Wrap(
-              alignment: WrapAlignment.end,
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _buildTopChip(
-                    'مناسب لمهاراتك ${provider.volunteerOpportunities.where((o) => o.tags.any((t) => provider.volunteerProfile.skills.contains(t))).length}',
-                    const Color(0xFF4ade80)),
-                _buildTopChip('هذا الأسبوع ٣', const Color(0xFFfbbf24)),
-                _buildTopChip('محجوزة ٢', const Color(0xFF60a5fa)),
-              ],
-            ),
-            const SizedBox(height: 12),
-            GestureDetector(
-              onTap: () => _showMatchingOpportunitiesDetails(context, provider),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.18),
-                    borderRadius: BorderRadius.circular(14)),
-                child: Row(
-                  children: [
-                    Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8)),
-                      child: Text(
-                          '${provider.volunteerOpportunities.where((o) => o.tags.any((t) => provider.volunteerProfile.skills.contains(t))).length} فرص',
-                          style: const TextStyle(
-                              color: Color(0xFF059669),
-                              fontWeight: FontWeight.bold,
-                              fontSize: 11)),
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                          'مطابق لمهاراتك: ${provider.volunteerProfile.skills.take(3).join('، ')}',
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold),
-                          textAlign: TextAlign.right),
-                    ),
-                    const SizedBox(width: 8),
-                    const Text('🎯', style: TextStyle(fontSize: 18)),
+                    const SizedBox(width: 12),
+                    if (isCertTab || isRatingTab)
+                      GestureDetector(
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text(isCertTab
+                                ? 'مشاركة سجل الشهادات والإنجازات... 🏆'
+                                : 'مشاركة ملخص تقييماتك وأدائك... ⭐'),
+                            backgroundColor: const Color(0xFF059669),
+                          ));
+                        },
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.share_outlined,
+                              color: Colors.white),
+                        ),
+                      )
+                    else
+                      const SizedBox(width: 40),
                   ],
                 ),
-              ),
+                if (_selectedTab == 0) ...[
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildHeroChip('${provider.volunteerGoal} ساعة',
+                                'الهدف الشهري'),
+                            const SizedBox(height: 8),
+                            _buildHeroChip(
+                                '⭐ ${provider.volunteerBookings.where((b) => b.status == 'done').length} جلسة',
+                                'جلسات مكتملة'),
+                            const SizedBox(height: 8),
+                            _buildHeroChip('⭐⭐⭐⭐⭐', 'تقييم المقيمين'),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 24),
+                      AnimatedBuilder(
+                        animation: _ringController,
+                        builder: (context, child) {
+                          return SizedBox(
+                            width: 100,
+                            height: 100,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                CustomPaint(
+                                  size: const Size(100, 100),
+                                  painter: RingPainter(
+                                    progress: _ringController.value *
+                                        (provider.volunteerHours /
+                                            provider.volunteerGoal),
+                                    backgroundColor:
+                                        Colors.white.withOpacity(0.2),
+                                    progressColor: Colors.white,
+                                  ),
+                                ),
+                                Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text('${provider.volunteerHours}',
+                                        style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold)),
+                                    Text('ساعة',
+                                        style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w500,
+                                            fontSize: 10)),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ] else if (_selectedTab == 1) ...[
+                  const SizedBox(height: 16),
+                  Wrap(
+                    alignment: WrapAlignment.end,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _buildTopChip(
+                          'مناسب لمهاراتك ${provider.volunteerOpportunities.where((o) => o.tags.any((t) => provider.volunteerProfile.skills.contains(t))).length}',
+                          const Color(0xFF4ade80)),
+                      _buildTopChip('هذا الأسبوع ٣', const Color(0xFFfbbf24)),
+                      _buildTopChip('محجوزة ٢', const Color(0xFF60a5fa)),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  GestureDetector(
+                    onTap: () =>
+                        _showMatchingOpportunitiesDetails(context, provider),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
+                      decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.08),
+                          border:
+                              Border.all(color: Colors.white.withOpacity(0.12)),
+                          borderRadius: BorderRadius.circular(16)),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(8)),
+                            child: Text(
+                                '${provider.volunteerOpportunities.where((o) => o.tags.any((t) => provider.volunteerProfile.skills.contains(t))).length} فرص',
+                                style: const TextStyle(
+                                    color: Color(0xFF059669),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 11)),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                                'مطابق لمهاراتك: ${provider.volunteerProfile.skills.take(3).join('، ')}',
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold),
+                                textAlign: TextAlign.right),
+                          ),
+                          const SizedBox(width: 8),
+                          const Text('🎯', style: TextStyle(fontSize: 18)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ] else if (_selectedTab == 2) ...[
+                  const SizedBox(height: 16),
+                  _buildCalendarStrip(),
+                ],
+              ],
             ),
-          ] else if (_selectedTab == 2) ...[
-            const SizedBox(height: 16),
-            _buildCalendarStrip(),
-          ],
+          ),
         ],
       ),
     );
@@ -340,36 +399,50 @@ class _VolunteerDashboardScreenState extends ConsumerState<VolunteerDashboardScr
 
     return SizedBox(
       height: 60,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: days.length,
-        itemBuilder: (context, index) {
-          final day = days[index];
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: days.map((day) {
           final isActive = day['active'] == true;
-          return Container(
-            width: 45,
-            margin: const EdgeInsets.only(left: 8),
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            decoration: BoxDecoration(
-              color: isActive ? Colors.white : Colors.white.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(day['name'] as String, style: TextStyle(color: isActive ? const Color(0xFF064e3b) : Colors.white.withOpacity(0.75), fontSize: 8, fontWeight: FontWeight.bold)),
-                Text(day['num'] as String, style: TextStyle(color: isActive ? const Color(0xFF064e3b) : Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                if (day['hasDot'] == true)
-                  Container(
-                    margin: const EdgeInsets.only(top: 4),
-                    width: 5,
-                    height: 5,
-                    decoration: BoxDecoration(color: isActive ? const Color(0xFF059669) : const Color(0xFFfbbf24), shape: BoxShape.circle),
-                  ),
-              ],
+          return Expanded(
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                color: isActive ? Colors.white : Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(day['name'] as String,
+                      style: TextStyle(
+                          color: isActive
+                              ? const Color(0xFF064e3b)
+                              : Colors.white.withOpacity(0.75),
+                          fontSize: 8,
+                          fontWeight: FontWeight.bold)),
+                  Text(day['num'] as String,
+                      style: TextStyle(
+                          color:
+                              isActive ? const Color(0xFF064e3b) : Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold)),
+                  if (day['hasDot'] == true)
+                    Container(
+                      margin: const EdgeInsets.only(top: 4),
+                      width: 5,
+                      height: 5,
+                      decoration: BoxDecoration(
+                          color: isActive
+                              ? const Color(0xFF059669)
+                              : const Color(0xFFfbbf24),
+                          shape: BoxShape.circle),
+                    ),
+                ],
+              ),
             ),
           );
-        },
+        }).toList(),
       ),
     );
   }
@@ -377,13 +450,20 @@ class _VolunteerDashboardScreenState extends ConsumerState<VolunteerDashboardScr
   Widget _buildTopChip(String label, Color dotColor) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(color: Colors.white.withOpacity(0.18), borderRadius: BorderRadius.circular(12)),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(label, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+          Text(label,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold)),
           const SizedBox(width: 5),
-          Container(width: 7, height: 7, decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle)),
+          Container(
+              width: 7,
+              height: 7,
+              decoration:
+                  BoxDecoration(color: dotColor, shape: BoxShape.circle)),
         ],
       ),
     );
@@ -392,28 +472,22 @@ class _VolunteerDashboardScreenState extends ConsumerState<VolunteerDashboardScr
   Widget _buildHeroChip(String val, String label) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(12),
-      ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Flexible(
-            child: Text(val,
-                textAlign: TextAlign.left,
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14)),
-          ),
+          Text(label,
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 11)),
           const SizedBox(width: 12),
-          Flexible(
-            child: Text(label,
-                textAlign: TextAlign.right,
-                style: TextStyle(
-                    color: Colors.white.withOpacity(0.7), fontSize: 11)),
-          ),
+          Text(val,
+              textAlign: TextAlign.left,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15)),
         ],
       ),
     );
@@ -460,7 +534,9 @@ class _VolunteerDashboardScreenState extends ConsumerState<VolunteerDashboardScr
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
-                  color: isSelected ? const Color(0xFF059669) : const Color(0xFF94a3b8),
+                  color: isSelected
+                      ? const Color(0xFF059669)
+                      : const Color(0xFF94a3b8),
                 )),
           ],
         ),
@@ -495,17 +571,35 @@ class _VolunteerDashboardScreenState extends ConsumerState<VolunteerDashboardScr
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: active ? const Color(0xFF059669) : Colors.grey[400], size: 24),
-          Text(label, style: TextStyle(color: active ? const Color(0xFF059669) : Colors.grey[400], fontSize: 9, fontWeight: active ? FontWeight.bold : FontWeight.normal)),
-          if (active) Container(margin: const EdgeInsets.only(top: 2), width: 4, height: 4, decoration: const BoxDecoration(color: Color(0xFF10b981), shape: BoxShape.circle)),
+          Icon(icon,
+              color: active ? const Color(0xFF059669) : const Color(0xFF94a3b8),
+              size: 24),
+          Text(label,
+              style: TextStyle(
+                  color: active
+                      ? const Color(0xFF059669)
+                      : const Color(0xFF64748b),
+                  fontSize: 10,
+                  fontWeight: active ? FontWeight.bold : FontWeight.w500)),
+          if (active)
+            Container(
+                margin: const EdgeInsets.only(top: 2),
+                width: 4,
+                height: 4,
+                decoration: const BoxDecoration(
+                    color: Color(0xFF10b981), shape: BoxShape.circle)),
         ],
       ),
     );
   }
 
-  void _showMatchingOpportunitiesDetails(BuildContext context, AppRiverpod provider) {
-    final matchingOpps = provider.volunteerOpportunities.where((o) => o.tags.any((t) => provider.volunteerProfile.skills.contains(t))).toList();
-    
+  void _showMatchingOpportunitiesDetails(
+      BuildContext context, AppRiverpod provider) {
+    final matchingOpps = provider.volunteerOpportunities
+        .where((o) =>
+            o.tags.any((t) => provider.volunteerProfile.skills.contains(t)))
+        .toList();
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -522,7 +616,9 @@ class _VolunteerDashboardScreenState extends ConsumerState<VolunteerDashboardScr
             Container(
               width: 40,
               height: 4,
-              decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+              decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2)),
             ),
             Padding(
               padding: const EdgeInsets.all(24),
@@ -530,15 +626,24 @@ class _VolunteerDashboardScreenState extends ConsumerState<VolunteerDashboardScr
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(color: const Color(0xFFdcfce7), borderRadius: BorderRadius.circular(12)),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                        color: const Color(0xFFdcfce7),
+                        borderRadius: BorderRadius.circular(12)),
                     child: const Text('🎯', style: TextStyle(fontSize: 20)),
                   ),
                   const Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('فرص تطوعية لمهاراتك', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF064e3b))),
-                      Text('بناءً على اهتماماتك وخبراتك السابقة', style: TextStyle(fontSize: 11, color: Color(0xFF64748b))),
+                      Text('فرص تطوعية لمهاراتك',
+                          style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF064e3b))),
+                      Text('بناءً على اهتماماتك وخبراتك السابقة',
+                          style: TextStyle(
+                              fontSize: 11, color: Color(0xFF64748b))),
                     ],
                   ),
                 ],
@@ -556,34 +661,61 @@ class _VolunteerDashboardScreenState extends ConsumerState<VolunteerDashboardScr
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
-                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+                      boxShadow: [
+                        BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4))
+                      ],
                     ),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
+                            Text(opp.icon,
+                                style: const TextStyle(fontSize: 24)),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(color: const Color(0xFFf0fdf4), borderRadius: BorderRadius.circular(8)),
-                              child: Text('${opp.points} نقطة', style: const TextStyle(color: Color(0xFF059669), fontWeight: FontWeight.bold, fontSize: 11)),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                  color: const Color(0xFFf0fdf4),
+                                  borderRadius: BorderRadius.circular(8)),
+                              child: Text('${opp.points} نقطة',
+                                  style: const TextStyle(
+                                      color: Color(0xFF059669),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 11)),
                             ),
-                            Text(opp.icon, style: const TextStyle(fontSize: 24)),
                           ],
                         ),
                         const SizedBox(height: 12),
-                        Text(opp.title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF1e293b))),
-                        Text(opp.org, style: const TextStyle(fontSize: 12, color: Color(0xFF64748b))),
+                        Text(opp.title,
+                            style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1e293b))),
+                        Text(opp.org,
+                            style: const TextStyle(
+                                fontSize: 12, color: Color(0xFF64748b))),
                         const SizedBox(height: 16),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: opp.tags.map((t) => Container(
-                            margin: const EdgeInsets.only(left: 6),
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(color: const Color(0xFFf1f5f9), borderRadius: BorderRadius.circular(6)),
-                            child: Text(t, style: const TextStyle(fontSize: 10, color: Color(0xFF475569))),
-                          )).toList(),
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: opp.tags
+                              .map((t) => Container(
+                                    margin: const EdgeInsets.only(left: 6),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                        color: const Color(0xFFf1f5f9),
+                                        borderRadius: BorderRadius.circular(6)),
+                                    child: Text(t,
+                                        style: const TextStyle(
+                                            fontSize: 10,
+                                            color: Color(0xFF475569))),
+                                  ))
+                              .toList(),
                         ),
                         const SizedBox(height: 20),
                         ElevatedButton(
@@ -598,10 +730,12 @@ class _VolunteerDashboardScreenState extends ConsumerState<VolunteerDashboardScr
                             backgroundColor: const Color(0xFF059669),
                             foregroundColor: Colors.white,
                             minimumSize: const Size(double.infinity, 44),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
                             elevation: 0,
                           ),
-                          child: const Text('احجز الآن', style: TextStyle(fontWeight: FontWeight.bold)),
+                          child: const Text('احجز الآن',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
                         ),
                       ],
                     ),
@@ -615,10 +749,134 @@ class _VolunteerDashboardScreenState extends ConsumerState<VolunteerDashboardScr
                 onPressed: () => Navigator.pop(context),
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 50),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
                   side: const BorderSide(color: Color(0xFFe2e8f0)),
                 ),
-                child: const Text('إغلاق', style: TextStyle(color: Color(0xFF64748b), fontWeight: FontWeight.bold)),
+                child: const Text('إغلاق',
+                    style: TextStyle(
+                        color: Color(0xFF64748b), fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnimatedBackground() {
+    if (_rotationController == null) return const SizedBox.shrink();
+    return AnimatedBuilder(
+      animation: Listenable.merge([_floatController, _rotationController!]),
+      builder: (context, child) {
+        return Stack(
+          children: [
+            // Major Orb - Top Right
+            Positioned(
+              top: -40 + (30 * _floatController.value),
+              right: -50 + (20 * _floatController.value),
+              child: _buildRealisticOrb(180, [
+                const Color(0xFFC7D2FE).withOpacity(0.1),
+                const Color(0xFF818CF8).withOpacity(0.05),
+                const Color(0xFF10b981).withOpacity(0.02),
+              ]),
+            ),
+            // Middle Orb - Bottom Left
+            Positioned(
+              bottom: -20 + (40 * (1 - _floatController.value)),
+              left: -30 + (15 * _floatController.value),
+              child: _buildRealisticOrb(140, [
+                const Color(0xFF6EE7B7).withOpacity(0.08),
+                const Color(0xFF10B981).withOpacity(0.04),
+                const Color(0xFF064E3B).withOpacity(0.01),
+              ]),
+            ),
+            // Small Floating Orb - Center Left
+            Positioned(
+              top: 100 + (30 * sin(_floatController.value * pi)),
+              left: 40 + (40 * cos(_floatController.value * pi)),
+              child: _buildRealisticOrb(90, [
+                const Color(0xFFFDE68A).withOpacity(0.05),
+                const Color(0xFFF59E0B).withOpacity(0.02),
+                const Color(0xFF78350F).withOpacity(0.01),
+              ]),
+            ),
+            // Extra Orb - Center Right
+            Positioned(
+              top: 40 + (20 * _floatController.value),
+              right: 80 - (10 * _floatController.value),
+              child: _buildRealisticOrb(70, [
+                const Color(0xFF10b981).withOpacity(0.04),
+                Colors.white.withOpacity(0.02),
+                Colors.transparent,
+              ]),
+            ),
+            // Extra Orb - Bottom Right
+            Positioned(
+              bottom: 10,
+              right: 40 + (20 * _floatController.value),
+              child: _buildRealisticOrb(110, [
+                const Color(0xFF10B981).withOpacity(0.03),
+                const Color(0xFF064E3B).withOpacity(0.01),
+                Colors.transparent,
+              ]),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildRealisticOrb(double size, List<Color> baseColors) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: const BoxDecoration(shape: BoxShape.circle),
+      child: ClipOval(
+        child: Stack(
+          children: [
+            // Base Marble Gradient
+            Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: baseColors,
+                  stops: const [0.0, 0.5, 1.0],
+                  radius: 1.0,
+                ),
+              ),
+            ),
+            // Rotating Swirls
+            if (_rotationController != null)
+              RotationTransition(
+                turns: _rotationController!,
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: SweepGradient(
+                      colors: [
+                        Colors.transparent,
+                        Colors.white.withOpacity(0.15),
+                        Colors.transparent,
+                        Colors.white.withOpacity(0.1),
+                        Colors.transparent,
+                      ],
+                      stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+                    ),
+                  ),
+                ),
+              ),
+            // Glassy Reflection Top Left
+            Positioned(
+              top: size * 0.1,
+              left: size * 0.15,
+              child: Container(
+                width: size * 0.4,
+                height: size * 0.2,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.1),
+                ),
               ),
             ),
           ],
@@ -633,7 +891,10 @@ class RingPainter extends CustomPainter {
   final Color backgroundColor;
   final Color progressColor;
 
-  RingPainter({required this.progress, required this.backgroundColor, required this.progressColor});
+  RingPainter(
+      {required this.progress,
+      required this.backgroundColor,
+      required this.progressColor});
 
   @override
   void paint(Canvas canvas, Size size) {

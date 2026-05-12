@@ -11,26 +11,31 @@ class AdminReportsView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final provider = ref.watch(appRiverpod);
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          _buildHeader(),
-          const SizedBox(height: 24),
-          _buildFinancialReportCard(provider),
-          const SizedBox(height: 20),
-          _buildSafetyReportCard(provider),
-          const SizedBox(height: 20),
-          _buildExportSection(context, provider),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(),
+              const SizedBox(height: 24),
+              _buildFinancialReportCard(provider),
+              const SizedBox(height: 20),
+              _buildSafetyReportCard(provider),
+              const SizedBox(height: 20),
+              _buildExportSection(context, provider),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildHeader() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text('تقارير الأداء المركزية', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF0f172a))),
         const SizedBox(height: 4),
@@ -45,13 +50,17 @@ class AdminReportsView extends ConsumerWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), border: Border.all(color: const Color(0xFFf1f5f9))),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-               Icon(Icons.more_horiz, color: Color(0xFF94a3b8)),
-               Text('الأداء التشغيلي والمالي', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF1e293b))),
+              Text('الأداء التشغيلي والمالي',
+                  style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1e293b))),
+              Icon(Icons.more_horiz, color: Color(0xFF94a3b8)),
             ],
           ),
           const SizedBox(height: 24),
@@ -75,13 +84,18 @@ class AdminReportsView extends ConsumerWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(color: const Color(0xFFfef2f2), borderRadius: BorderRadius.circular(24), border: Border.all(color: const Color(0xFFfee2e2))),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-               Icon(Icons.warning_amber_rounded, color: Color(0xFFef4444), size: 18),
-               Text('تقرير جودة الرعاية', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF991b1b))),
+              Text('تقرير جودة الرعاية',
+                  style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF991b1b))),
+              Icon(Icons.warning_amber_rounded,
+                  color: Color(0xFFef4444), size: 18),
             ],
           ),
           const SizedBox(height: 16),
@@ -97,13 +111,19 @@ class AdminReportsView extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          Text(val, style: TextStyle(color: c, fontWeight: FontWeight.bold, fontSize: 16)),
-          const Spacer(),
-          Text(label, style: const TextStyle(fontSize: 12, color: Color(0xFF7f1d1d))),
+          Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(color: c, shape: BoxShape.circle)),
           const SizedBox(width: 8),
-          Container(width: 6, height: 6, decoration: BoxDecoration(color: c, shape: BoxShape.circle)),
+          Text(label,
+              style: const TextStyle(fontSize: 12, color: Color(0xFF7f1d1d))),
+          const Spacer(),
+          Text(val,
+              style: TextStyle(
+                  color: c, fontWeight: FontWeight.bold, fontSize: 16)),
         ],
       ),
     );
@@ -135,7 +155,7 @@ class AdminReportsView extends ConsumerWidget {
 
   Widget _buildExportSection(BuildContext context, AppRiverpod provider) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text('تصدير البيانات والتحاليل', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF1e293b))),
         const SizedBox(height: 12),
@@ -160,9 +180,11 @@ class AdminReportsView extends ConsumerWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(label, style: TextStyle(color: c, fontSize: 12, fontWeight: FontWeight.bold)),
-            const SizedBox(width: 8),
             Icon(icon, color: c, size: 18),
+            const SizedBox(width: 8),
+            Text(label,
+                style: TextStyle(
+                    color: c, fontSize: 12, fontWeight: FontWeight.bold)),
           ],
         ),
       ),

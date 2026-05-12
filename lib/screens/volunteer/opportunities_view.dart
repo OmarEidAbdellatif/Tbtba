@@ -75,53 +75,50 @@ class _VolunteerOpportunitiesViewState
         _buildSearchFilter(),
         _buildSkillFilters(),
         _buildSortRow(),
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-            physics: const BouncingScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (featured != null) ...[
-                  _buildSectionLabel(
-                      'مثالي لمهاراتك ✨', const Color(0xFF10b981), 0),
-                  const SizedBox(height: 12),
-                  _buildFeaturedOpportunity(featured),
-                  const SizedBox(height: 24),
-                ],
-                if (others.isNotEmpty) ...[
-                  _buildSectionLabel(
-                      'فرص مناسبة لك', const Color(0xFF6366f1), 1),
-                  const SizedBox(height: 12),
-                  ...others
-                      .map((o) => _buildOpportunityCard(o, provider))
-                      .toList(),
-                  const SizedBox(height: 24),
-                ],
-                if (filteredOpp.isEmpty)
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 40),
-                      child: Column(
-                        children: [
-                          const Text('🔍', style: TextStyle(fontSize: 40)),
-                          const SizedBox(height: 12),
-                          Text('لم يتم العثور على فرص تطابق بحثك',
-                              style: TextStyle(
-                                  color: Colors.grey.shade500,
-                                  fontFamily: 'Cairo')),
-                        ],
-                      ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (featured != null) ...[
+                _buildSectionLabel(
+                    'مثالي لمهاراتك ✨', const Color(0xFF10b981), 0),
+                const SizedBox(height: 12),
+                _buildFeaturedOpportunity(featured),
+                const SizedBox(height: 24),
+              ],
+              if (others.isNotEmpty) ...[
+                _buildSectionLabel(
+                    'فرص مناسبة لك', const Color(0xFF6366f1), 1),
+                const SizedBox(height: 12),
+                ...others
+                    .map((o) => _buildOpportunityCard(o, provider))
+                    .toList(),
+                const SizedBox(height: 24),
+              ],
+              if (filteredOpp.isEmpty)
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 40),
+                    child: Column(
+                      children: [
+                        const Text('🔍', style: TextStyle(fontSize: 40)),
+                        const SizedBox(height: 12),
+                        Text('لم يتم العثور على فرص تطابق بحثك',
+                            style: TextStyle(
+                                color: Colors.grey.shade500,
+                                fontFamily: 'Cairo')),
+                      ],
                     ),
                   ),
-                _buildSectionLabel('فرص أخرى', const Color(0xFF94a3b8), 2),
-                const SizedBox(height: 12),
-                _buildOtherOpportunity(provider),
-                const SizedBox(height: 24),
-                _buildImpactTracker(provider.volunteerImpact),
-                const SizedBox(height: 40),
-              ],
-            ),
+                ),
+              _buildSectionLabel('فرص أخرى', const Color(0xFF94a3b8), 2),
+              const SizedBox(height: 12),
+              _buildOtherOpportunity(provider),
+              const SizedBox(height: 24),
+              _buildImpactTracker(provider.volunteerImpact),
+              const SizedBox(height: 40),
+            ],
           ),
         ),
       ],
@@ -137,16 +134,6 @@ class _VolunteerOpportunitiesViewState
       ),
       child: Row(
         children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-                color: const Color(0xFFd1fae5),
-                borderRadius: BorderRadius.circular(10)),
-            child: const Icon(Icons.filter_list,
-                color: Color(0xFF059669), size: 20),
-          ),
-          const SizedBox(width: 12),
           Expanded(
             child: Container(
               height: 42,
@@ -158,12 +145,20 @@ class _VolunteerOpportunitiesViewState
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.search, color: Color(0xFF94a3b8), size: 18),
-                  const SizedBox(width: 8),
+                  if (_searchQuery.isNotEmpty)
+                    GestureDetector(
+                      onTap: () {
+                        _searchController.clear();
+                        setState(() => _searchQuery = '');
+                      },
+                      child: const Icon(Icons.clear,
+                          color: Color(0xFF94a3b8), size: 16),
+                    ),
                   Expanded(
                     child: TextField(
                       controller: _searchController,
                       onChanged: (val) => setState(() => _searchQuery = val),
+                      textAlign: TextAlign.right,
                       style: const TextStyle(
                           fontSize: 13, color: Color(0xFF065f46)),
                       decoration: const InputDecoration(
@@ -176,18 +171,21 @@ class _VolunteerOpportunitiesViewState
                       ),
                     ),
                   ),
-                  if (_searchQuery.isNotEmpty)
-                    GestureDetector(
-                      onTap: () {
-                        _searchController.clear();
-                        setState(() => _searchQuery = '');
-                      },
-                      child: const Icon(Icons.clear,
-                          color: Color(0xFF94a3b8), size: 16),
-                    ),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.search, color: Color(0xFF94a3b8), size: 18),
                 ],
               ),
             ),
+          ),
+          const SizedBox(width: 12),
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+                color: const Color(0xFFd1fae5),
+                borderRadius: BorderRadius.circular(10)),
+            child: const Icon(Icons.filter_list,
+                color: Color(0xFF059669), size: 20),
           ),
         ],
       ),
@@ -255,11 +253,16 @@ class _VolunteerOpportunitiesViewState
         border: Border(bottom: BorderSide(color: Color(0xFFd1fae5))),
       ),
       child: Wrap(
-        alignment: WrapAlignment.end,
+        alignment: WrapAlignment.start,
         crossAxisAlignment: WrapCrossAlignment.center,
         spacing: 8,
         runSpacing: 8,
         children: [
+          const Text(':ترتيب',
+              style: TextStyle(
+                  color: Color(0xFF065f46),
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold)),
           ...sorts.map((s) {
             final isSelected = _selectedSort == s;
             return GestureDetector(
@@ -282,11 +285,6 @@ class _VolunteerOpportunitiesViewState
               ),
             );
           }).toList(),
-          const Text(':ترتيب',
-              style: TextStyle(
-                  color: Color(0xFF065f46),
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -296,16 +294,16 @@ class _VolunteerOpportunitiesViewState
     return FadeTransition(
       opacity: widget.fadeAnimations[min(index, 11)],
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          Text(label,
-              style: TextStyle(
-                  color: color, fontSize: 13, fontWeight: FontWeight.bold)),
-          const SizedBox(width: 8),
           Container(
               width: 8,
               height: 8,
               decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+          const SizedBox(width: 8),
+          Text(label,
+              style: TextStyle(
+                  color: color, fontSize: 13, fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -339,11 +337,12 @@ class _VolunteerOpportunitiesViewState
             ],
           ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  _buildGlowButton('احجز الآن'),
                   Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -356,7 +355,6 @@ class _VolunteerOpportunitiesViewState
                             fontSize: 10,
                             fontWeight: FontWeight.bold)),
                   ),
-                  _buildGlowButton('احجز الآن'),
                 ],
               ),
               const SizedBox(height: 16),
@@ -377,11 +375,13 @@ class _VolunteerOpportunitiesViewState
                 children: [
                   Flexible(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
+                          mainAxisAlignment: MainAxisAlignment.start,
                           children: [
+                            _buildAvatarsStack(),
+                            const SizedBox(width: 8),
                             const Flexible(
                               child: Text('مكان واحد متبقي!',
                                   textAlign: TextAlign.right,
@@ -390,8 +390,6 @@ class _VolunteerOpportunitiesViewState
                                       fontSize: 10,
                                       fontWeight: FontWeight.bold)),
                             ),
-                            const SizedBox(width: 8),
-                            _buildAvatarsStack(),
                           ],
                         ),
                         const SizedBox(height: 4),
@@ -502,13 +500,13 @@ class _VolunteerOpportunitiesViewState
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        Icon(Icons.circle, color: Color(0xFF10b981), size: 6),
+                        SizedBox(width: 4),
                         Text('مطابق',
                             style: TextStyle(
                                 color: Color(0xFF065f46),
                                 fontSize: 8,
                                 fontWeight: FontWeight.bold)),
-                        SizedBox(width: 4),
-                        Icon(Icons.circle, color: Color(0xFF10b981), size: 6),
                       ],
                     ),
                   ),
@@ -518,9 +516,20 @@ class _VolunteerOpportunitiesViewState
             ],
             Row(
               children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                      color: const Color(0xFFf0fdf4),
+                      borderRadius: BorderRadius.circular(14)),
+                  child: Center(
+                      child:
+                          Text(opp.icon, style: const TextStyle(fontSize: 22))),
+                ),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(opp.title,
                           style: const TextStyle(
@@ -541,17 +550,6 @@ class _VolunteerOpportunitiesViewState
                           textAlign: TextAlign.right),
                     ],
                   ),
-                ),
-                const SizedBox(width: 12),
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                      color: const Color(0xFFf0fdf4),
-                      borderRadius: BorderRadius.circular(14)),
-                  child: Center(
-                      child:
-                          Text(opp.icon, style: const TextStyle(fontSize: 22))),
                 ),
               ],
             ),
@@ -599,11 +597,11 @@ class _VolunteerOpportunitiesViewState
                 ),
                 Row(
                   children: [
-                    Text('+${opp.points} نقطة',
+                    Text('⏱ ${opp.hours} س',
                         style: const TextStyle(
                             color: Color(0xFF64748b), fontSize: 10)),
                     const SizedBox(width: 10),
-                    Text('⏱ ${opp.hours} س',
+                    Text('+${opp.points} نقطة',
                         style: const TextStyle(
                             color: Color(0xFF64748b), fontSize: 10)),
                   ],
@@ -664,6 +662,37 @@ class _VolunteerOpportunitiesViewState
       ),
       child: Row(
         children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+                color: const Color(0xFFffe4e6),
+                borderRadius: BorderRadius.circular(12)),
+            child:
+                const Center(child: Text('💊', style: TextStyle(fontSize: 20))),
+          ),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('مساعدة تمريض أساسية',
+                    style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0f172a))),
+                Text('دار الرعاية النيل · الجمعة ٨:٠٠ ص',
+                    style: TextStyle(color: Color(0xFF64748b), fontSize: 10)),
+                SizedBox(height: 4),
+                Text('⚠️ لا تتطابق مهاراتك',
+                    style: TextStyle(
+                        color: Color(0xFFef4444),
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ),
+          const Spacer(),
           GestureDetector(
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -686,37 +715,6 @@ class _VolunteerOpportunitiesViewState
                       fontSize: 10,
                       fontWeight: FontWeight.bold)),
             ),
-          ),
-          const Spacer(),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text('مساعدة تمريض أساسية',
-                    style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF0f172a))),
-                Text('دار الرعاية النيل · الجمعة ٨:٠٠ ص',
-                    style: TextStyle(color: Color(0xFF64748b), fontSize: 10)),
-                SizedBox(height: 4),
-                Text('⚠️ لا تتطابق مهاراتك',
-                    style: TextStyle(
-                        color: Color(0xFFef4444),
-                        fontSize: 9,
-                        fontWeight: FontWeight.bold)),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-                color: const Color(0xFFffe4e6),
-                borderRadius: BorderRadius.circular(12)),
-            child:
-                const Center(child: Text('💊', style: TextStyle(fontSize: 20))),
           ),
         ],
       ),
@@ -754,18 +752,12 @@ class _VolunteerOpportunitiesViewState
           border: Border(bottom: BorderSide(color: Color(0xFFf0fdf4)))),
       child: Row(
         children: [
-          Flexible(
-            child: Text(val,
-                style: const TextStyle(
-                    color: Color(0xFF059669),
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold)),
-          ),
-          const Spacer(),
+          Text(icon, style: const TextStyle(fontSize: 16)),
+          const SizedBox(width: 12),
           Expanded(
             flex: 3,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title,
                     textAlign: TextAlign.right,
@@ -780,8 +772,14 @@ class _VolunteerOpportunitiesViewState
               ],
             ),
           ),
-          const SizedBox(width: 12),
-          Text(icon, style: const TextStyle(fontSize: 16)),
+          const Spacer(),
+          Flexible(
+            child: Text(val,
+                style: const TextStyle(
+                    color: Color(0xFF059669),
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold)),
+          ),
         ],
       ),
     );
@@ -812,21 +810,12 @@ class _VolunteerOpportunitiesViewState
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                              color: const Color(0xFFf0fdf4),
-                              borderRadius: BorderRadius.circular(12)),
-                          child: Text(opp.icon,
-                              style: const TextStyle(fontSize: 24)),
-                        ),
-                        if (opp.isNew)
+                        if (opp.isNew) ...[
                           Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 4),
@@ -839,6 +828,17 @@ class _VolunteerOpportunitiesViewState
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold)),
                           ),
+                          const SizedBox(width: 12),
+                        ],
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                              color: const Color(0xFFf0fdf4),
+                              borderRadius: BorderRadius.circular(12)),
+                          child: Text(opp.icon,
+                              style: const TextStyle(fontSize: 24)),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 20),
@@ -856,7 +856,7 @@ class _VolunteerOpportunitiesViewState
                             fontWeight: FontWeight.w500)),
                     const SizedBox(height: 24),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         _buildDetailChip(
                             '${opp.hours} ساعة', Icons.timer_outlined),
@@ -867,7 +867,7 @@ class _VolunteerOpportunitiesViewState
                     ),
                     const SizedBox(height: 16),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         _buildDetailChip(opp.dateInfo, Icons.calendar_today),
                         const SizedBox(width: 12),
@@ -928,22 +928,6 @@ class _VolunteerOpportunitiesViewState
               child: Row(
                 children: [
                   Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16)),
-                        side: const BorderSide(color: Color(0xFFe2e8f0)),
-                      ),
-                      child: const Text('إغلاق',
-                          style: TextStyle(
-                              color: Color(0xFF475569),
-                              fontWeight: FontWeight.bold)),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
                     child: ElevatedButton(
                       onPressed: () {
                         Navigator.pop(context);
@@ -963,6 +947,22 @@ class _VolunteerOpportunitiesViewState
                       ),
                       child: const Text('تأكيد التطوع',
                           style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
+                        side: const BorderSide(color: Color(0xFFe2e8f0)),
+                      ),
+                      child: const Text('إغلاق',
+                          style: TextStyle(
+                              color: Color(0xFF475569),
+                              fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],

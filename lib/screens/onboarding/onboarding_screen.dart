@@ -217,21 +217,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> with Ticker
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: List.generate(_pages.length, (index) {
-              final isCurrent = _currentPage == index;
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                margin: const EdgeInsets.only(right: 8),
-                width: isCurrent ? 24 : 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  color: isCurrent ? _pages[_currentPage].color : const Color(0xFFcbd5e1),
-                  borderRadius: BorderRadius.circular(5),
-                ),
-              );
-            }),
-          ),
           GestureDetector(
             onTap: _nextPage,
             child: Container(
@@ -249,9 +234,29 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> with Ticker
               ),
               child: Text(
                 _currentPage == _pages.length - 1 ? 'ابدأ الآن' : 'التالي',
-                style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold),
               ),
             ),
+          ),
+          Row(
+            children: List.generate(_pages.length, (index) {
+              final isCurrent = _currentPage == index;
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                margin: const EdgeInsets.only(left: 8),
+                width: isCurrent ? 24 : 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: isCurrent
+                      ? _pages[_currentPage].color
+                      : const Color(0xFFcbd5e1),
+                  borderRadius: BorderRadius.circular(5),
+                ),
+              );
+            }),
           ),
         ],
       ),
