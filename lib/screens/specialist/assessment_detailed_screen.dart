@@ -136,7 +136,7 @@ class _AssessmentDetailedScreenState extends ConsumerState<AssessmentDetailedScr
                 onTap: () => Navigator.pop(context),
                 child: Container(
                   width: 32, height: 32,
-                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
+                  decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), shape: BoxShape.circle),
                   child: const Center(child: Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 14)),
                 ),
               ),
@@ -157,12 +157,12 @@ class _AssessmentDetailedScreenState extends ConsumerState<AssessmentDetailedScr
             opacity: _fadeAnimations[1],
             child: Container(
               padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(color: Colors.white.withOpacity(0.18), borderRadius: BorderRadius.circular(14)),
+              decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.18), borderRadius: BorderRadius.circular(14)),
               child: Row(
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(8)),
+                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
                     child: const Text('يحتاج تجديد', style: TextStyle(color: Colors.white, fontSize: 9)),
                   ),
                   const Spacer(),
@@ -178,7 +178,7 @@ class _AssessmentDetailedScreenState extends ConsumerState<AssessmentDetailedScr
                   const SizedBox(width: 10),
                   Container(
                     width: 38, height: 38,
-                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.28), shape: BoxShape.circle),
+                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.28), shape: BoxShape.circle),
                     child: Center(child: Text(widget.resident.initials, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold))),
                   ),
                 ],
@@ -259,12 +259,12 @@ class _AssessmentDetailedScreenState extends ConsumerState<AssessmentDetailedScr
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  SizedBox(width: 72, height: 72, child: CircularProgressIndicator(value: 0.53, strokeWidth: 6, backgroundColor: const Color(0xFFfef3c7), color: const Color(0xFFf59e0b))),
+                  const SizedBox(width: 72, height: 72, child: CircularProgressIndicator(value: 0.53, strokeWidth: 6, backgroundColor: Color(0xFFfef3c7), color: Color(0xFFf59e0b))),
                   Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Text('٨', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF92400e))),
-                      Text('من ١٥', style: TextStyle(fontSize: 8, color: const Color(0xFFb45309).withOpacity(0.8))),
+                      Text('من ١٥', style: TextStyle(fontSize: 8, color: const Color(0xFFb45309).withValues(alpha: 0.8))),
                     ],
                   ),
                 ],
@@ -325,8 +325,8 @@ class _AssessmentDetailedScreenState extends ConsumerState<AssessmentDetailedScr
               animation: _shimmerController,
               builder: (context, child) {
                 return Container(
-                  height: 3, width: double.infinity, color: Colors.white.withOpacity(0.25),
-                  child: FractionallySizedBox(alignment: Alignment.centerRight, widthFactor: (_questionIndex + 1) / _questions.length, child: Container(color: Colors.white.withOpacity(0.8 + 0.2 * sin(_shimmerController.value * 2 * pi)))),
+                  height: 3, width: double.infinity, color: Colors.white.withValues(alpha: 0.25),
+                  child: FractionallySizedBox(alignment: Alignment.centerRight, widthFactor: (_questionIndex + 1) / _questions.length, child: Container(color: Colors.white.withValues(alpha: 0.8 + 0.2 * sin(_shimmerController.value * 2 * pi)))),
                 );
               },
             ),
@@ -510,7 +510,11 @@ class _AssessmentDetailedScreenState extends ConsumerState<AssessmentDetailedScr
               child: TextField(controller: _notesController, maxLines: 3, textAlign: TextAlign.right, style: const TextStyle(fontSize: 11, color: Color(0xFF0f172a), height: 1.6), decoration: const InputDecoration(border: InputBorder.none, hintText: 'اكتب ملاحظاتك هنا...', hintStyle: TextStyle(color: Color(0xFF94a3b8)))),
             ),
             const SizedBox(height: 8),
-            Wrap(spacing: 6, runSpacing: 4, alignment: WrapAlignment.end, children: tags.map((t) => GestureDetector(onTap: () => setState(() { if (_activeNotes.contains(t)) _activeNotes.remove(t); else _activeNotes.add(t); }), child: _NoteChip('+ $t', isSelected: _activeNotes.contains(t)))).toList()),
+            Wrap(spacing: 6, runSpacing: 4, alignment: WrapAlignment.end, children: tags.map((t) => GestureDetector(onTap: () => setState(() { if (_activeNotes.contains(t)) {
+              _activeNotes.remove(t);
+            } else {
+              _activeNotes.add(t);
+            } }), child: _NoteChip('+ $t', isSelected: _activeNotes.contains(t)))).toList()),
           ],
         ),
       ),
@@ -531,7 +535,7 @@ class _AssessmentDetailedScreenState extends ConsumerState<AssessmentDetailedScr
           Switch(
             value: _isInterventionRequired,
             onChanged: (v) => setState(() => _isInterventionRequired = v),
-            activeColor: const Color(0xFFef4444),
+            activeThumbColor: const Color(0xFFef4444),
           ),
           const Spacer(),
           const Column(

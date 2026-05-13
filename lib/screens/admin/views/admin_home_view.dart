@@ -137,7 +137,7 @@ class _AdminHomeViewState extends ConsumerState<AdminHomeView> {
           boxShadow: isSel
               ? [
                   BoxShadow(
-                      color: Colors.black.withOpacity(0.05), blurRadius: 4)
+                      color: Colors.black.withValues(alpha: 0.05), blurRadius: 4)
                 ]
               : null,
         ),
@@ -181,7 +181,7 @@ class _AdminHomeViewState extends ConsumerState<AdminHomeView> {
           boxShadow: isSel
               ? [
                   BoxShadow(
-                      color: Colors.black.withOpacity(0.05), blurRadius: 4)
+                      color: Colors.black.withValues(alpha: 0.05), blurRadius: 4)
                 ]
               : null,
         ),
@@ -250,7 +250,7 @@ class _AdminHomeViewState extends ConsumerState<AdminHomeView> {
                 border: Border.all(color: const Color(0xFFf1f5f9)),
                 boxShadow: [
                   BoxShadow(
-                      color: Colors.black.withOpacity(0.02),
+                      color: Colors.black.withValues(alpha: 0.02),
                       blurRadius: 15,
                       offset: const Offset(0, 10))
                 ],
@@ -410,7 +410,7 @@ class _AdminHomeViewState extends ConsumerState<AdminHomeView> {
                       color: (positive
                               ? const Color(0xFF10b981)
                               : const Color(0xFFef4444))
-                          .withOpacity(0.4),
+                          .withValues(alpha: 0.4),
                       borderRadius: BorderRadius.circular(2)),
                 ))
             .toList(),
@@ -430,7 +430,7 @@ class _AdminHomeViewState extends ConsumerState<AdminHomeView> {
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-              color: const Color(0xFF0ea5e9).withOpacity(0.3),
+              color: const Color(0xFF0ea5e9).withValues(alpha: 0.3),
               blurRadius: 20,
               offset: const Offset(0, 10))
         ],
@@ -481,7 +481,7 @@ class _AdminHomeViewState extends ConsumerState<AdminHomeView> {
         width: 8,
         height: height,
         decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.3),
+            color: Colors.white.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(4)));
   }
 
@@ -505,7 +505,7 @@ class _AdminHomeViewState extends ConsumerState<AdminHomeView> {
         padding: const EdgeInsets.symmetric(horizontal: 24),
         alignment: Alignment.centerRight,
         decoration: BoxDecoration(
-            color: Colors.red.withOpacity(0.05),
+            color: Colors.red.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(20)),
         child: const Icon(Icons.delete_sweep_outlined, color: Colors.red),
       ),
@@ -530,7 +530,7 @@ class _AdminHomeViewState extends ConsumerState<AdminHomeView> {
           decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: color.withOpacity(0.1))),
+              border: Border.all(color: color.withValues(alpha: 0.1))),
           child: Row(
             children: [
               Container(

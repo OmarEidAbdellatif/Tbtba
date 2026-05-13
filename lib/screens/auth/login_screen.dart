@@ -92,7 +92,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                         shape: BoxShape.circle, // شكل دائري
                         gradient: RadialGradient( // تدرج لوني دائري
                           colors: [
-                            const Color(0xFF818cf8).withOpacity(0.4), // لون الدائرة مع شفافية
+                            const Color(0xFF818cf8).withValues(alpha: 0.4), // لون الدائرة مع شفافية
                             Colors.transparent, // تلاشي إلى الشفافية
                           ],
                         ),
@@ -109,7 +109,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                         shape: BoxShape.circle, // شكل دائري
                         gradient: RadialGradient( // تدرج لوني دائري
                           colors: [
-                            const Color(0xFFc084fc).withOpacity(0.4), // لون بنفسجي مع شفافية
+                            const Color(0xFFc084fc).withValues(alpha: 0.4), // لون بنفسجي مع شفافية
                             Colors.transparent, // تلاشي إلى الشفافية
                           ],
                         ),
@@ -125,7 +125,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           Positioned.fill( // تغطية كامل الشاشة
             child: BackdropFilter( // فلتر لخلفية العناصر
               filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30), // شدة الضبابية 30
-              child: Container(color: Colors.white.withOpacity(0.1)), // لون أبيض خفيف جداً
+              child: Container(color: Colors.white.withValues(alpha: 0.1)), // لون أبيض خفيف جداً
             ),
           ),
 
@@ -149,7 +149,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                               shape: BoxShape.circle, // شكل دائري
                               boxShadow: [ // ظل خفيف للأيقونة
                                 BoxShadow(
-                                  color: const Color(0xFF6C63FF).withOpacity(0.2), // لون الظل
+                                  color: const Color(0xFF6C63FF).withValues(alpha: 0.2), // لون الظل
                                   blurRadius: 24, // مدى الظل
                                   offset: const Offset(0, 8), // موقع الظل
                                 ),
@@ -192,12 +192,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       opacity: _fadeAnimations[1], // ثاني حركة ظهور
                       child: Container( // وعاء محتوى تسجيل الدخول
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.7), // أبيض شفاف (تأثير الزجاج)
+                          color: Colors.white.withValues(alpha: 0.7), // أبيض شفاف (تأثير الزجاج)
                           borderRadius: BorderRadius.circular(32), // حواف دائرية كبيرة
                           border: Border.all(color: Colors.white, width: 2), // إطار أبيض ناصع
                           boxShadow: [ // ظل عميق للكارت
                             BoxShadow(
-                              color: const Color(0xFF312e81).withOpacity(0.08), // لون ظل نيلي خفيف
+                              color: const Color(0xFF312e81).withValues(alpha: 0.08), // لون ظل نيلي خفيف
                               blurRadius: 32, // مدى تلاشي الظل
                               offset: const Offset(0, 16), // إزاحة الظل للأسفل
                             ),
@@ -275,7 +275,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                     borderRadius: BorderRadius.circular(20), // حواف دائرية للزر
                                     boxShadow: [ // توهج أسفل الزر
                                       BoxShadow(
-                                        color: const Color(0xFF6C63FF).withOpacity(0.4), // لون التوهج
+                                        color: const Color(0xFF6C63FF).withValues(alpha: 0.4), // لون التوهج
                                         blurRadius: 16, // مدى التوهج
                                         offset: const Offset(0, 8), // إزاحة التوهج
                                       ),
@@ -297,26 +297,43 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                             const SizedBox(height: 16),
                             FadeTransition(
                               opacity: _fadeAnimations[5],
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
+                              child: Column(
                                 children: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        _showRegisterSheet(context),
-                                    child: const Text(
-                                      'أنشئ حساباً الآن',
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      TextButton(
+                                        onPressed: () =>
+                                            _showRegisterSheet(context),
+                                        child: const Text(
+                                          'أنشئ حساباً الآن',
+                                          style: TextStyle(
+                                            color: Color(0xFF6C63FF),
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                      ),
+                                      const Text(
+                                        'ليس لديك حساب؟',
+                                        style: TextStyle(
+                                          color: Color(0xFF64748b),
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  TextButton.icon(
+                                    onPressed: () => _showGuestInquirySheet(context),
+                                    icon: const Icon(Icons.info_outline_rounded, color: Color(0xFF10b981), size: 18),
+                                    label: const Text(
+                                      'استعلام عن مكان شاغر بالدار',
                                       style: TextStyle(
-                                        color: Color(0xFF6C63FF),
+                                        color: Color(0xFF10b981),
                                         fontWeight: FontWeight.bold,
                                         fontSize: 15,
                                       ),
-                                    ),
-                                  ),
-                                  const Text(
-                                    'ليس لديك حساب؟',
-                                    style: TextStyle(
-                                      color: Color(0xFF64748b),
-                                      fontSize: 14,
                                     ),
                                   ),
                                 ],
@@ -344,7 +361,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }) {
     return Container( // وعاء الحقل مع التصميم الزجاجي
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.8), // خلفية بيضاء شبه شفافة
+        color: Colors.white.withValues(alpha: 0.8), // خلفية بيضاء شبه شفافة
         borderRadius: BorderRadius.circular(16), // حواف دائرية متناسقة
         border: Border.all(color: const Color(0xFFe2e8f0), width: 1.5), // إطار رمادي فاتح
       ),
@@ -471,6 +488,96 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                         borderRadius: BorderRadius.circular(16)),
                   ),
                   child: const Text('إنشاء الحساب',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showGuestInquirySheet(BuildContext context) {
+    final nameController = TextEditingController();
+    final phoneController = TextEditingController();
+    
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          ),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+            left: 24,
+            right: 24,
+            top: 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Center(
+                  child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(10)))),
+              const SizedBox(height: 20),
+              const Text('الاستعلام عن مكان شاغر 🛏️',
+                  style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1e1b4b))),
+              const Text('دار الأمل لرعاية كبار السن ترحب بكم. نسبة الإشغال الحالية تتيح استقبال حالات جديدة.',
+                  textAlign: TextAlign.right,
+                  style: TextStyle(fontSize: 14, color: Color(0xFF10b981), fontWeight: FontWeight.bold)),
+              const SizedBox(height: 24),
+              _buildInput(
+                  controller: nameController,
+                  label: 'الاسم الكامل',
+                  icon: Icons.person_outline),
+              const SizedBox(height: 16),
+              _buildInput(
+                  controller: phoneController,
+                  label: 'رقم الهاتف للتواصل',
+                  icon: Icons.phone_outlined),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                height: 55,
+                child: ElevatedButton(
+                  onPressed: () {
+                    ref.read(appRiverpod).triggerNotification(
+                      title: 'طلب التحاق جديد 📄',
+                      body: 'طلب استعلام من ${nameController.text} (${phoneController.text}). يرجى التواصل معه.',
+                      type: 'admin',
+                      targetRole: 'إدارة',
+                    );
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content:
+                            Text('تم إرسال طلبك للإدارة بنجاح! سنتواصل معك قريباً.'),
+                        backgroundColor: Color(0xFF10b981),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF10b981),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: const Text('إرسال الطلب',
                       style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,

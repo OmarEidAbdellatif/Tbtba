@@ -86,7 +86,7 @@ class _CustomInputState extends State<CustomInput> {
                   ),
                   decoration: InputDecoration(
                     hintText: widget.hint,
-                    hintStyle: TextStyle(
+                    hintStyle: const TextStyle(
                       fontSize: 14,
                       color: AppColors.textHint,
                     ),

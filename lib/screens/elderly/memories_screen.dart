@@ -161,7 +161,7 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
                           const SizedBox(height: 4),
                           Text('من الأسرة بكل الحب 💜',
                               style: TextStyle(
-                                  color: Colors.white.withOpacity(0.85),
+                                  color: Colors.white.withValues(alpha: 0.85),
                                   fontSize: 18)),
                         ],
                       ),
@@ -205,7 +205,7 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
               width: size,
               height: size,
               decoration: BoxDecoration(
-                  shape: BoxShape.circle, color: color.withOpacity(0.4))),
+                  shape: BoxShape.circle, color: color.withValues(alpha: 0.4))),
         );
       },
     );
@@ -222,9 +222,9 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.13),
+              color: Colors.white.withValues(alpha: 0.13),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.white.withOpacity(0.1))),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1))),
           child: Column(children: [
             FittedBox(
               fit: BoxFit.scaleDown,
@@ -239,7 +239,7 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
               fit: BoxFit.scaleDown,
               child: Text(label,
                   style: TextStyle(
-                      color: Colors.white.withOpacity(0.9), fontSize: 16)),
+                      color: Colors.white.withValues(alpha: 0.9), fontSize: 16)),
             ),
           ]),
         ),
@@ -313,11 +313,11 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
               boxShadow: [
                 BoxShadow(
                     color:
-                        const Color(0xFF6C63FF).withOpacity(hc ? 0.25 : 0.15),
+                        const Color(0xFF6C63FF).withValues(alpha: hc ? 0.25 : 0.15),
                     blurRadius: 24,
                     offset: const Offset(0, 6)),
                 BoxShadow(
-                    color: const Color(0xFFa78bfa).withOpacity(
+                    color: const Color(0xFFa78bfa).withValues(alpha: 
                         hc ? 0.2 : (0.35 + (_glowController.value * 0.45))),
                     blurRadius: 12 + (_glowController.value * 12),
                     spreadRadius: _glowController.value * 6),
@@ -346,7 +346,7 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
                                 horizontal: 10, vertical: 3),
                             decoration: BoxDecoration(
                                 color:
-                                    const Color(0xFF6C63FF).withOpacity(0.85),
+                                    const Color(0xFF6C63FF).withValues(alpha: 0.85),
                                 borderRadius: BorderRadius.circular(10)),
                             child: const Text('🌟 ذكرى اليوم',
                                 style: TextStyle(
@@ -360,7 +360,7 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
                             width: 50,
                             height: 50,
                             decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.9),
+                                color: Colors.white.withValues(alpha: 0.9),
                                 shape: BoxShape.circle,
                                 boxShadow: const [
                                   BoxShadow(
@@ -451,7 +451,7 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
           borderRadius: BorderRadius.circular(22),
           boxShadow: [
             BoxShadow(
-                color: const Color(0xFF6C63FF).withOpacity(0.3),
+                color: const Color(0xFF6C63FF).withValues(alpha: 0.3),
                 blurRadius: 24,
                 offset: const Offset(0, 6))
           ],
@@ -468,7 +468,7 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
                       height: 80,
                       decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.1)))),
+                          color: Colors.white.withValues(alpha: 0.1)))),
               Padding(
                 padding: const EdgeInsets.all(14),
                 child: Column(
@@ -495,7 +495,7 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
                                       : 'استمع لرسائل أحبائك',
                                   textAlign: TextAlign.right,
                                   style: TextStyle(
-                                      color: Colors.white.withOpacity(0.85),
+                                      color: Colors.white.withValues(alpha: 0.85),
                                       fontSize: 14)),
                             ],
                           ),
@@ -505,7 +505,7 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
                           width: 44,
                           height: 44,
                           decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               shape: BoxShape.circle),
                           child: const Icon(Icons.play_arrow_rounded,
                               color: Colors.white, size: 28),
@@ -549,7 +549,7 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
               width: 3,
               height: height,
               decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.65),
+                  color: Colors.white.withValues(alpha: 0.65),
                   borderRadius: BorderRadius.circular(2))),
         );
       },
@@ -633,7 +633,7 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
                 child: _buildGridCell(provider, index, type, url, label, asset,
                     assetPath: assetPath),
               );
-            }).toList(),
+            }),
             if (items.isNotEmpty)
               SizedBox(
                 width: (MediaQuery.of(context).size.width - 44) / 3,
@@ -694,7 +694,7 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
             Container(
                 decoration: BoxDecoration(
                     color: Colors.black
-                        .withOpacity(url != null || asset != null ? 0.2 : 0.08),
+                        .withValues(alpha: url != null || asset != null ? 0.2 : 0.08),
                     borderRadius: BorderRadius.circular(14))),
             Center(
               child: type == 'video'
@@ -702,14 +702,14 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
                       width: 28,
                       height: 28,
                       decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                           shape: BoxShape.circle),
                       child: const Icon(Icons.play_arrow,
                           color: Color(0xFFec4899), size: 14),
                     )
                   : (url == null && asset == null
                       ? Icon(Icons.image,
-                          color: Colors.white.withOpacity(0.6), size: 20)
+                          color: Colors.white.withValues(alpha: 0.6), size: 20)
                       : const SizedBox.shrink()),
             ),
             if (label != null && (url != null || asset != null))

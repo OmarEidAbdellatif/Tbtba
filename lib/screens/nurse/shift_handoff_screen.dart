@@ -43,10 +43,10 @@ class _ShiftHandoffScreenState extends ConsumerState<ShiftHandoffScreen> {
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // قسم ملخص القراءات الحيوية المسجلة خلال الوردية
-                  _buildSectionHeader('ملخص القراءات الحيوية', Icons.monitor_heart_rounded),
+                  _buildSectionHeader('ملخص القراءات الحيوية'),
                   _buildSummaryCard([
                     _summaryRow('قراءات ضغط الدم', '١٨ قراءة تم تسجيلها'),
                     _summaryRow('قراءات السكر', '١٢ قراءة تم تسجيلها'),
@@ -55,7 +55,7 @@ class _ShiftHandoffScreenState extends ConsumerState<ShiftHandoffScreen> {
                   const SizedBox(height: 24),
 
                   // قسم ملخص الأدوية التي تم إعطاؤها أو تأجيلها
-                  _buildSectionHeader('سجل الأدوية', Icons.medication_liquid_rounded),
+                  _buildSectionHeader('سجل الأدوية'),
                   _buildSummaryCard([
                     _summaryRow('أدوية تم إعطاؤها', '٦٤ جرعة'),
                     _summaryRow('أدوية مؤجلة/مرفوضة', '٠ جرعة'),
@@ -64,7 +64,7 @@ class _ShiftHandoffScreenState extends ConsumerState<ShiftHandoffScreen> {
                   const SizedBox(height: 24),
 
                   // قسم الملاحظات التمريضية الجديدة المضافة للمقيمين
-                  _buildSectionHeader('الملاحظات التمريضية', Icons.note_alt_rounded),
+                  _buildSectionHeader('الملاحظات التمريضية'),
                   _buildSummaryCard([
                     _summaryRow('إجمالي الملاحظات', '${provider.nursingNotes.length} ملاحظة جديدة'),
                     _summaryRow('تحديثات الملف الطبي', '٤ تحديثات'),
@@ -99,7 +99,7 @@ class _ShiftHandoffScreenState extends ConsumerState<ShiftHandoffScreen> {
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(color: Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
             child: const Text('الأحد، ٢٦ أبريل ٢٠٢٤', style: TextStyle(color: Colors.white, fontSize: 11)),
           ),
         ],
@@ -107,15 +107,13 @@ class _ShiftHandoffScreenState extends ConsumerState<ShiftHandoffScreen> {
     );
   }
 
-  Widget _buildSectionHeader(String title, IconData icon) {
+  Widget _buildSectionHeader(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12, right: 4),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
           Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
-          const SizedBox(width: 10),
-          Icon(icon, color: const Color(0xFF0EA5E9), size: 20),
         ],
       ),
     );
@@ -128,7 +126,7 @@ class _ShiftHandoffScreenState extends ConsumerState<ShiftHandoffScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [BoxShadow(color: const Color(0xFF0369A1).withOpacity(0.03), blurRadius: 15, offset: const Offset(0, 5))],
+        boxShadow: [BoxShadow(color: const Color(0xFF0369A1).withValues(alpha: 0.03), blurRadius: 15, offset: const Offset(0, 5))],
       ),
       child: Column(children: children),
     );
@@ -140,8 +138,8 @@ class _ShiftHandoffScreenState extends ConsumerState<ShiftHandoffScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
           Text(value, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isCritical ? const Color(0xFFEF4444) : const Color(0xFF0369A1))),
-          Text(label, style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
         ],
       ),
     );
@@ -151,12 +149,12 @@ class _ShiftHandoffScreenState extends ConsumerState<ShiftHandoffScreen> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [const Color(0xFFF1F5F9), Colors.white]),
+        gradient: const LinearGradient(colors: [Color(0xFFF1F5F9), Colors.white]),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFF0EA5E9).withOpacity(0.2)),
+        border: Border.all(color: const Color(0xFF0EA5E9).withValues(alpha: 0.2)),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text('بيانات التسليم للممرض البديل', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
           const SizedBox(height: 16),
@@ -168,22 +166,21 @@ class _ShiftHandoffScreenState extends ConsumerState<ShiftHandoffScreen> {
               hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
               filled: true,
               fillColor: Colors.white,
-              prefixIcon: const Icon(Icons.person_outline_rounded, color: Color(0xFF0EA5E9)),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: const Color(0xFFE2E8F0))),
-              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: const Color(0xFFE2E8F0))),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
             ),
           ),
           const SizedBox(height: 16),
           Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              const Text('أقر بأنني قمت بتسليم كافة المهام والحالات', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
               Checkbox(
                 value: _isConfirmed,
                 onChanged: (v) => setState(() => _isConfirmed = v!),
                 activeColor: const Color(0xFF0EA5E9),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
               ),
+              const Expanded(child: Text('أقر بأنني قمت بتسليم كافة المهام والحالات', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)))),
             ],
           ),
         ],
@@ -196,7 +193,7 @@ class _ShiftHandoffScreenState extends ConsumerState<ShiftHandoffScreen> {
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, -5))],
       ),
       child: SizedBox(
         width: double.infinity,
@@ -227,7 +224,6 @@ class _ShiftHandoffScreenState extends ConsumerState<ShiftHandoffScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 64),
               const SizedBox(height: 24),
               const Text('تم التسليم بنجاح ✅', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, fontFamily: 'Cairo', decoration: TextDecoration.none, color: Color(0xFF0F172A))),
               const SizedBox(height: 12),

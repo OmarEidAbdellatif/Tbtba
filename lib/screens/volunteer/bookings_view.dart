@@ -97,7 +97,7 @@ class _VolunteerBookingsViewState extends ConsumerState<VolunteerBookingsView> {
                       .where((b) => b.status == 'confirmed')
                       .skip(1)
                       .map((b) => _buildBookingCard(b))
-                      .toList(),
+                      ,
                   const SizedBox(height: 24),
                   _buildSectionLabel(
                       'آخر جلسة مكتملة', const Color(0xFF6366f1), 2),
@@ -309,7 +309,7 @@ class _VolunteerBookingsViewState extends ConsumerState<VolunteerBookingsView> {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                  color: const Color(0xFF10b981).withOpacity(0.35),
+                  color: const Color(0xFF10b981).withValues(alpha: 0.35),
                   blurRadius: 15,
                   spreadRadius: 2),
             ],
@@ -323,7 +323,7 @@ class _VolunteerBookingsViewState extends ConsumerState<VolunteerBookingsView> {
                     width: 50,
                     height: 50,
                     decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(14)),
                     child: const Center(
                         child: Text('🧠', style: TextStyle(fontSize: 24))),
@@ -346,7 +346,7 @@ class _VolunteerBookingsViewState extends ConsumerState<VolunteerBookingsView> {
                                 fontWeight: FontWeight.bold)),
                         Text(booking.timeInfo,
                             style: TextStyle(
-                                color: Colors.white.withOpacity(0.85),
+                                color: Colors.white.withValues(alpha: 0.85),
                                 fontSize: 11)),
                       ],
                     ),
@@ -358,7 +358,7 @@ class _VolunteerBookingsViewState extends ConsumerState<VolunteerBookingsView> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10)),
                 child: Wrap(
                   alignment: WrapAlignment.center,
@@ -405,10 +405,10 @@ class _VolunteerBookingsViewState extends ConsumerState<VolunteerBookingsView> {
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.check_circle_outline,
+                          Icon(Icons.check_circle_outline,
                               color: Color(0xFF059669), size: 14),
-                          const SizedBox(width: 6),
-                          const Text('تأكيد الحضور',
+                          SizedBox(width: 6),
+                          Text('تأكيد الحضور',
                               style: TextStyle(
                                   color: Color(0xFF059669),
                                   fontSize: 11,
@@ -419,7 +419,7 @@ class _VolunteerBookingsViewState extends ConsumerState<VolunteerBookingsView> {
                   ),
                   Text('+${booking.points} نقطة عند الإتمام',
                       style: TextStyle(
-                          color: Colors.white.withOpacity(0.9), fontSize: 11)),
+                          color: Colors.white.withValues(alpha: 0.9), fontSize: 11)),
                 ],
               ),
             ],
@@ -687,7 +687,7 @@ class _VolunteerBookingsViewState extends ConsumerState<VolunteerBookingsView> {
                     width: 44,
                     height: 48,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
+                      gradient: const LinearGradient(
                           colors: [Color(0xFF6366f1), Color(0xFF818cf8)]),
                       borderRadius: BorderRadius.circular(11),
                     ),

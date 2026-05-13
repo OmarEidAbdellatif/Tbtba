@@ -35,7 +35,7 @@ class _VideoCallOverlayState extends ConsumerState<VideoCallOverlay> with Ticker
     return BackdropFilter(
       filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
       child: Container(
-        color: Colors.black.withOpacity(0.7),
+        color: Colors.black.withValues(alpha: 0.7),
         child: Column(
           children: [
             const Spacer(),
@@ -60,7 +60,7 @@ class _VideoCallOverlayState extends ConsumerState<VideoCallOverlay> with Ticker
                               height: 150 + (index * 40 * _pulseController.value),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white.withOpacity(0.3 * (1 - _pulseController.value)), width: 2),
+                                border: Border.all(color: Colors.white.withValues(alpha: 0.3 * (1 - _pulseController.value)), width: 2),
                               ),
                             );
                           },
@@ -73,7 +73,7 @@ class _VideoCallOverlayState extends ConsumerState<VideoCallOverlay> with Ticker
                             shape: BoxShape.circle,
                             gradient: const LinearGradient(colors: [Color(0xFF6C63FF), Color(0xFFc084fc)]),
                             boxShadow: [
-                              BoxShadow(color: const Color(0xFF6C63FF).withOpacity(0.5), blurRadius: 30, spreadRadius: 5),
+                              BoxShadow(color: const Color(0xFF6C63FF).withValues(alpha: 0.5), blurRadius: 30, spreadRadius: 5),
                             ],
                           ),
                           child: Center(
@@ -122,13 +122,13 @@ class _VideoCallOverlayState extends ConsumerState<VideoCallOverlay> with Ticker
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _circleButton(Icons.mic_off_rounded, Colors.white.withOpacity(0.2), Colors.white),
+                    _circleButton(Icons.mic_off_rounded, Colors.white.withValues(alpha: 0.2), Colors.white),
                     const SizedBox(width: 20),
                     _circleButton(Icons.call_end_rounded, Colors.redAccent, Colors.white, size: 85, iconSize: 42, onTap: () {
                       provider.endVideoCall();
                     }),
                     const SizedBox(width: 20),
-                    _circleButton(Icons.videocam_off_rounded, Colors.white.withOpacity(0.2), Colors.white),
+                    _circleButton(Icons.videocam_off_rounded, Colors.white.withValues(alpha: 0.2), Colors.white),
                   ],
                 ),
               ),

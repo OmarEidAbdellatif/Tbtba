@@ -120,16 +120,16 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.only(left: 16.0, top: 16.0),
+                    const Padding(
+                      padding: EdgeInsets.only(left: 16.0, top: 16.0),
                     ),
-                    Padding(
+                    const Padding(
                       padding:
-                          const EdgeInsets.only(right: 28, top: 8, bottom: 12),
+                          EdgeInsets.only(right: 28, top: 8, bottom: 12),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          const FittedBox(
+                          FittedBox(
                             fit: BoxFit.scaleDown,
                             child: Text('جدول الأدوية',
                                 style: TextStyle(
@@ -137,7 +137,7 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
                                     fontSize: 28,
                                     fontWeight: FontWeight.bold)),
                           ),
-                          const SizedBox(height: 4),
+                          SizedBox(height: 4),
                         ],
                       ),
                     ),
@@ -187,7 +187,7 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
               width: size,
               height: size,
               decoration: BoxDecoration(
-                  shape: BoxShape.circle, color: color.withOpacity(0.4))),
+                  shape: BoxShape.circle, color: color.withValues(alpha: 0.4))),
         );
       },
     );
@@ -204,10 +204,10 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 4),
           decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.13),
+              color: Colors.white.withValues(alpha: 0.13),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                  color: Colors.white.withOpacity(0.12), width: 0.8)),
+                  color: Colors.white.withValues(alpha: 0.12), width: 0.8)),
           child: Column(children: [
             FittedBox(
               fit: BoxFit.scaleDown,
@@ -222,7 +222,7 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
               fit: BoxFit.scaleDown,
               child: Text(label,
                   style: TextStyle(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       fontSize: 12,
                       fontWeight: FontWeight.w500)),
             ),
@@ -422,7 +422,7 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
                 color: hc ? const Color(0xFF333333) : borderColor, width: 1.5),
             boxShadow: [
               BoxShadow(
-                  color: const Color(0xFF6C63FF).withOpacity(hc ? 0.2 : 0.06),
+                  color: const Color(0xFF6C63FF).withValues(alpha: hc ? 0.2 : 0.06),
                   blurRadius: 12,
                   offset: const Offset(0, 2))
             ]),
@@ -533,7 +533,7 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
             boxShadow: [
               BoxShadow(
                   color: const Color(0xFF6C63FF)
-                      .withOpacity(0.35 + (_glowController.value * 0.25)),
+                      .withValues(alpha: 0.35 + (_glowController.value * 0.25)),
                   blurRadius: 24,
                   offset: const Offset(0, 6))
             ],
@@ -566,7 +566,7 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                                 fontSize: 16,
-                                color: Colors.white.withOpacity(0.85))),
+                                color: Colors.white.withValues(alpha: 0.85))),
                       ),
                       const SizedBox(height: 6),
                       Row(
@@ -623,7 +623,7 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
                                 decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                        color: Colors.white.withOpacity(0.55 -
+                                        color: Colors.white.withValues(alpha: 0.55 -
                                             (_ringController.value * 0.55)),
                                         width: 2))),
                           ),
@@ -640,7 +640,7 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
                                   color: Colors.white,
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.15),
+                                      color: Colors.black.withValues(alpha: 0.15),
                                       blurRadius: 8,
                                       offset: const Offset(0, 3),
                                     )
@@ -684,7 +684,7 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
             boxShadow: [
               BoxShadow(
                   color: const Color(0xFF6C63FF)
-                      .withOpacity(0.4 + (_glowController.value * 0.2)),
+                      .withValues(alpha: 0.4 + (_glowController.value * 0.2)),
                   blurRadius: 24,
                   offset: const Offset(0, 6))
             ],
@@ -714,7 +714,7 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
                       height: 20,
                       decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.25)),
+                          color: Colors.white.withValues(alpha: 0.25)),
                       child: const Icon(Icons.check,
                           color: Colors.white, size: 14),
                     ),
@@ -770,7 +770,7 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
                     s.type == 'doctor',
                     0,
                   ))
-              .toList(),
+              ,
       ],
     );
   }
@@ -792,7 +792,7 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
             border: Border.all(color: const Color(0xFFede9fe), width: 1.5),
             boxShadow: [
               BoxShadow(
-                  color: const Color(0xFF6C63FF).withOpacity(0.06),
+                  color: const Color(0xFF6C63FF).withValues(alpha: 0.06),
                   blurRadius: 12,
                   offset: const Offset(0, 2))
             ]),
@@ -839,7 +839,7 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
                     color: (isPurple
                             ? const Color(0xFF6C63FF)
                             : const Color(0xFF4F46E5))
-                        .withOpacity(0.3),
+                        .withValues(alpha: 0.3),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   )

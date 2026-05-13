@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 
 class CareReportDetailScreen extends StatefulWidget {
@@ -123,8 +122,8 @@ class _CareReportDetailScreenState extends State<CareReportDetailScreen>
               top: -50 + (30 * _floatController.value),
               right: -40 + (20 * _floatController.value),
               child: _buildRealisticOrb(180, [
-                const Color(0xFFfb923c).withOpacity(0.35),
-                const Color(0xFFea580c).withOpacity(0.15),
+                const Color(0xFFfb923c).withValues(alpha: 0.35),
+                const Color(0xFFea580c).withValues(alpha: 0.15),
                 Colors.transparent,
               ]),
             ),
@@ -132,8 +131,8 @@ class _CareReportDetailScreenState extends State<CareReportDetailScreen>
               bottom: -30 + (40 * (1 - _floatController.value)),
               left: -40 + (25 * _floatController.value),
               child: _buildRealisticOrb(160, [
-                const Color(0xFFfdba74).withOpacity(0.3),
-                const Color(0xFFf97316).withOpacity(0.1),
+                const Color(0xFFfdba74).withValues(alpha: 0.3),
+                const Color(0xFFf97316).withValues(alpha: 0.1),
                 Colors.transparent,
               ]),
             ),
@@ -141,7 +140,7 @@ class _CareReportDetailScreenState extends State<CareReportDetailScreen>
               top: 40,
               left: 100,
               child: _buildRealisticOrb(70, [
-                const Color(0xFFfb923c).withOpacity(0.1),
+                const Color(0xFFfb923c).withValues(alpha: 0.1),
                 Colors.transparent,
               ]),
             ),
@@ -176,9 +175,9 @@ class _CareReportDetailScreenState extends State<CareReportDetailScreen>
                   gradient: SweepGradient(
                     colors: [
                       Colors.transparent,
-                      Colors.white.withOpacity(0.15),
+                      Colors.white.withValues(alpha: 0.15),
                       Colors.transparent,
-                      Colors.white.withOpacity(0.08),
+                      Colors.white.withValues(alpha: 0.08),
                       Colors.transparent,
                     ],
                     stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
@@ -194,7 +193,7 @@ class _CareReportDetailScreenState extends State<CareReportDetailScreen>
                 height: size * 0.2,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                 ),
               ),
             ),
@@ -213,7 +212,7 @@ class _CareReportDetailScreenState extends State<CareReportDetailScreen>
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 20,
               offset: const Offset(0, 10))
         ],
@@ -309,7 +308,7 @@ class _CareReportDetailScreenState extends State<CareReportDetailScreen>
         border: Border.all(color: Colors.white),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: Colors.black.withValues(alpha: 0.02),
               blurRadius: 15,
               offset: const Offset(0, 5))
         ],
@@ -372,7 +371,7 @@ class _CareReportDetailScreenState extends State<CareReportDetailScreen>
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-                color: const Color(0xFF1e293b).withOpacity(0.3),
+                color: const Color(0xFF1e293b).withValues(alpha: 0.3),
                 blurRadius: 15,
                 offset: const Offset(0, 8))
           ],

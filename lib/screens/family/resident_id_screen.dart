@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 
 class ResidentIdScreen extends StatefulWidget {
@@ -72,7 +71,7 @@ class _ResidentIdScreenState extends State<ResidentIdScreen>
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.5),
+              color: Colors.black.withValues(alpha: 0.5),
               blurRadius: 40,
               offset: const Offset(0, 20))
         ],
@@ -169,8 +168,8 @@ class _ResidentIdScreenState extends State<ResidentIdScreen>
               top: -20 + (10 * _floatController.value),
               right: -10 + (10 * _floatController.value),
               child: _buildRealisticOrb(80, [
-                const Color(0xFFfb923c).withOpacity(0.3),
-                const Color(0xFFea580c).withOpacity(0.1),
+                const Color(0xFFfb923c).withValues(alpha: 0.3),
+                const Color(0xFFea580c).withValues(alpha: 0.1),
                 Colors.transparent,
               ]),
             ),
@@ -178,7 +177,7 @@ class _ResidentIdScreenState extends State<ResidentIdScreen>
               bottom: -10,
               left: 20 + (20 * _floatController.value),
               child: _buildRealisticOrb(60, [
-                const Color(0xFFfdba74).withOpacity(0.2),
+                const Color(0xFFfdba74).withValues(alpha: 0.2),
                 Colors.transparent,
               ]),
             ),
@@ -213,9 +212,9 @@ class _ResidentIdScreenState extends State<ResidentIdScreen>
                   gradient: SweepGradient(
                     colors: [
                       Colors.transparent,
-                      Colors.white.withOpacity(0.15),
+                      Colors.white.withValues(alpha: 0.15),
                       Colors.transparent,
-                      Colors.white.withOpacity(0.08),
+                      Colors.white.withValues(alpha: 0.08),
                       Colors.transparent,
                     ],
                     stops: const [0.0, 0.25, 0.5, 0.75, 1.0],

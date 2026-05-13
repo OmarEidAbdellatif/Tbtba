@@ -54,7 +54,7 @@ class _AICompanionChatState extends ConsumerState<AICompanionChat> {
                     width: 200,
                     height: 200,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF6366F1).withOpacity(0.05),
+                      color: const Color(0xFF6366F1).withValues(alpha: 0.05),
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -90,7 +90,7 @@ class _AICompanionChatState extends ConsumerState<AICompanionChat> {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -112,7 +112,7 @@ class _AICompanionChatState extends ConsumerState<AICompanionChat> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF6366F1).withOpacity(0.3),
+                      color: const Color(0xFF6366F1).withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 3),
                     ),
@@ -155,7 +155,7 @@ class _AICompanionChatState extends ConsumerState<AICompanionChat> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
-              color: const Color(0xFFFEF3C7).withOpacity(0.5),
+              color: const Color(0xFFFEF3C7).withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: const Color(0xFFFDE68A), width: 1),
             ),
@@ -211,7 +211,7 @@ class _AICompanionChatState extends ConsumerState<AICompanionChat> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
+                    color: Colors.black.withValues(alpha: 0.04),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -281,7 +281,7 @@ class _AICompanionChatState extends ConsumerState<AICompanionChat> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 20,
             offset: const Offset(0, -4),
           ),
@@ -356,8 +356,8 @@ class _AICompanionChatState extends ConsumerState<AICompanionChat> {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF1F5F9),
+        decoration: const BoxDecoration(
+          color: Color(0xFFF1F5F9),
           shape: BoxShape.circle,
         ),
         child: Icon(icon, color: const Color(0xFF64748B), size: 26),

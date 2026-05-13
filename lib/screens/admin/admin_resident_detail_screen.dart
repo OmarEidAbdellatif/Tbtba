@@ -53,7 +53,7 @@ class AdminResidentDetailScreen extends ConsumerWidget {
               // عرض الحروف الأولى من اسم المقيم (Avatar)
               CircleAvatar(
                 radius: 50,
-                backgroundColor: Colors.white.withOpacity(0.1),
+                backgroundColor: Colors.white.withValues(alpha: 0.1),
                 child: Text(resident.initials,
                     style: const TextStyle(
                         fontSize: 32,
@@ -69,12 +69,12 @@ class AdminResidentDetailScreen extends ConsumerWidget {
               Text(resident.nameEn,
                   style: TextStyle(
                       fontSize: 15,
-                      color: Colors.white.withOpacity(0.6),
+                      color: Colors.white.withValues(alpha: 0.6),
                       fontStyle: FontStyle.italic)),
               const SizedBox(height: 6),
               Text('غرفة ${resident.room} — ${resident.age ?? "??"} عاماً',
                   style: TextStyle(
-                      fontSize: 16, color: Colors.white.withOpacity(0.9))),
+                      fontSize: 16, color: Colors.white.withValues(alpha: 0.9))),
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -104,7 +104,7 @@ class AdminResidentDetailScreen extends ConsumerWidget {
   Widget _headerAction(IconData icon, String label) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(15)),
+      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(15)),
       child: Row(
         children: [
           Text(label, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
@@ -133,7 +133,7 @@ class AdminResidentDetailScreen extends ConsumerWidget {
               color: Colors.white,
               borderRadius: BorderRadius.circular(24),
               border: Border.all(color: const Color(0xFFf1f5f9)),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)],
             ),
             child: Row(
               children: [
@@ -151,7 +151,7 @@ class AdminResidentDetailScreen extends ConsumerWidget {
                     // وسام (Badge) يظهر حالة المقيم الحالية
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                      decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
                       child: Text(statusText, style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.bold)),
                     ),
                     const Text('الحالة الحالية', style: TextStyle(fontSize: 10, color: Color(0xFF94a3b8))),
@@ -172,15 +172,15 @@ class AdminResidentDetailScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('الأقارب والاتصال',
+              Text('الأقارب والاتصال',
                   style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF1e293b))),
-              const Text('تعديل',
+              Text('تعديل',
                   style: TextStyle(
                       color: Color(0xFF0ea5e9),
                       fontSize: 12,

@@ -444,6 +444,11 @@ class AppRiverpod extends ChangeNotifier {
     }
   }
 
+  void deleteNotification(String id) {
+    notifications.removeWhere((n) => n.id == id);
+    notifyListeners();
+  }
+
   void markAllFilteredNotificationsAsRead() {
     for (var n in notifications) {
       if (n.targetRole == currentRole || n.targetRole == 'all') {
@@ -1612,6 +1617,16 @@ class AppRiverpod extends ChangeNotifier {
       medications[idx].isTaken = true;
       medications[idx].isSkipped = false;
       addPoints(10); // Reward points for taking medication
+
+      // إشعار الأسرة باكتمال أهداف المسن الصحية
+      triggerNotification(
+        title: 'إنجاز صحي جديد! 🏆',
+        body:
+            'والدك أتم أخذ دوائه (${medications[idx].name}) في الموعد وكسب 10 نقاط!',
+        type: 'medical',
+        targetRole: 'أسرة',
+      );
+
       notifyListeners();
     }
   }
@@ -1690,6 +1705,28 @@ class AppRiverpod extends ChangeNotifier {
 
   void triggerSOS() {
     isEmergencyActive = true;
+
+    // إرسال إشعارات طوارئ للأطراف المعنية
+    triggerNotification(
+      title: '🚨 نداء طوارئ!',
+      body: 'تم تفعيل الطوارئ في الغرفة. يرجى التوجه فوراً!',
+      type: 'medical',
+      targetRole: 'ممرض',
+    );
+    triggerNotification(
+      title: 'طوارئ طبية (تتبع)',
+      body: 'تم تفعيل إنذار طوارئ للمقيم، الفريق الطبي في الطريق.',
+      type: 'admin',
+      targetRole: 'إدارة',
+    );
+    triggerNotification(
+      title: 'طمأنة بشأن والدك 🚨',
+      body:
+          'حدث استدعاء طوارئ، فريقنا الطبي متواجد مع والدك الآن وسنوافيكم بالتقارير.',
+      type: 'medical',
+      targetRole: 'عائلة',
+    );
+
     notifyListeners();
   }
 
@@ -2071,6 +2108,16 @@ class AppRiverpod extends ChangeNotifier {
 
   void addMedication(String residentName, Medication med) {
     medications.insert(0, med);
+
+    // إرسال إشعار للأسرة عند إضافة دواء جديد
+    triggerNotification(
+      title: 'تمت إضافة جرعة دواء جديدة 💊',
+      body:
+          'قام فريق التمريض بإضافة دواء (${med.name}) لخطة $residentName العلاجية.',
+      type: 'medical',
+      targetRole: 'عائلة',
+    );
+
     notifyListeners();
   }
 
@@ -2081,6 +2128,16 @@ class AppRiverpod extends ChangeNotifier {
 
   void addPrescription(MedicalPrescription p) {
     medicalPrescriptions.insert(0, p);
+
+    // إرسال إشعار للأسرة عند إضافة روشتة طبية جديدة
+    triggerNotification(
+      title: 'روشتة طبية جديدة 📄',
+      body:
+          'تمت إضافة روشتة طبية جديدة لـ ${p.residentName} بواسطة ${p.doctorName}.',
+      type: 'medical',
+      targetRole: 'عائلة',
+    );
+
     notifyListeners();
   }
 
@@ -2841,7 +2898,7 @@ class AppRiverpod extends ChangeNotifier {
     required String residentId,
     required Map<String, double> newScores,
     required bool needsIntervention,
-    required String notes,
+    String? notes,
   }) {
     final idx = filteredResidentScores.indexWhere((r) => r.id == residentId);
     if (idx != -1) {
@@ -2962,5 +3019,111 @@ class AppRiverpod extends ChangeNotifier {
       // التعامل مع حالة رفض الإذن
       debugPrint('Permission denied for photos');
     }
+  }
+
+  // --- INTEGRATION & CROSS-ROLE REQUESTS ---
+
+  void submitComplaint(String message, String type, String fromRole) {
+    // محاكاة إرسال شكوى/طلب إلى الأخصائي الاجتماعي أو الإدارة
+    // في الواقع سيتم رفعها للـ Backend وإنشاء Object من نوع Complaint
+    final complaint = SocialSpecialistComplaint(
+      id: 'comp_${DateTime.now().millisecondsSinceEpoch}',
+      residentName: fromRole == 'مسن' ? currentUser.name : 'أحد أفراد الأسرة',
+      room: '١١٢', // محاكاة لغرفة المسن
+      date: 'اليوم',
+      title: type,
+      category: 'عام',
+      icon: '🚨',
+      status: 'open',
+      priority: 'high',
+      timeline: [ComplaintStep(text: message, time: 'الآن', status: 'pending')],
+    );
+    socialComplaints.insert(0, complaint);
+
+    // إرسال إشعار تأكيد للمرسل
+    triggerNotification(
+      title: 'تم إرسال طلبك بنجاح ✅',
+      body: 'قام فريقنا باستلام طلبك بخصوص "$type" وسيتم التعامل معه فوراً.',
+      type: 'system',
+      targetRole: fromRole,
+    );
+    notifyListeners();
+  }
+
+  void requestConsultation(String type) {
+    // محاكاة طلب استشارة من الأسرة للطبيب أو الأخصائي
+    triggerNotification(
+      title: 'طلب استشارة مرسل 💬',
+      body:
+          'تم تحويل طلب الاستشارة الـ $type إلى الفريق المختص، سيتم التواصل معك قريباً.',
+      type: 'medical',
+      targetRole: 'أسرة',
+    );
+    notifyListeners();
+  }
+
+  void addVolunteerOpportunity(VolunteerOpportunity opp) {
+    // إضافة الفرصة إلى قائمة الفرص التطوعية لتظهر فوراً للمتطوعين
+    volunteerOpportunities.insert(0, opp);
+
+    // إشعار الإدارة بنجاح الإنشاء
+    triggerNotification(
+      title: 'تم نشر الفرصة بنجاح 🌟',
+      body: 'أصبحت فرصة "${opp.title}" متاحة الآن للمتطوعين.',
+      type: 'system',
+      targetRole: 'إدارة',
+    );
+
+    notifyListeners();
+  }
+
+  void rateVolunteerSession(String volunteerId, int ratingScore) {
+    // تقييم المتطوع من قِبل المسن (ratingScore: 1 لغير سعيد، 2 لعادي، 3 لسعيد)
+    int pointsEarned = 0;
+    if (ratingScore == 3) {
+      pointsEarned = 15;
+    } else if (ratingScore == 2) pointsEarned = 5;
+
+    // إشعار للمسن بشكره على التقييم
+    triggerNotification(
+      title: 'شكراً لتقييمك! 💖',
+      body: 'رأيك يهمنا جداً في تحسين جودة الرعاية المقدمة لك.',
+      type: 'system',
+      targetRole: 'مسن',
+    );
+
+    // تحديث نقاط المتطوع إذا أردنا (للمحاكاة فقط نعرض إشعار للمتطوع لو كان مسجلاً)
+    notifyListeners();
+  }
+
+  void sendEncouragementMessage(String messageType) {
+    // إرسال رسالة تشجيعية من الأسرة إلى المسن (صوتية أو هدية افتراضية)
+    String title =
+        messageType == 'voice' ? 'رسالة صوتية جديدة 🎤' : 'هدية جديدة 🎁';
+    String body = messageType == 'voice'
+        ? 'عائلتك أرسلت لك رسالة صوتية تشجيعية لسماعها!'
+        : 'عائلتك أرسلت لك باقة ورد افتراضية تقديراً لالتزامك 🌸';
+
+    triggerNotification(
+      title: title,
+      body: body,
+      type: 'family',
+      targetRole: 'مسن',
+    );
+    notifyListeners();
+  }
+
+  // --- Specialist Recommendations ---
+  List<SpecialistRecommendation> specialistRecommendations = [];
+
+  void addSpecialistRecommendation(SpecialistRecommendation rec) {
+    specialistRecommendations.insert(0, rec);
+    triggerNotification(
+      title: 'توصية نفسية جديدة 🧠',
+      body: 'توصية للمقيم ${rec.residentName}: ${rec.content}',
+      type: 'medical',
+      targetRole: 'ممرض',
+    );
+    notifyListeners();
   }
 }

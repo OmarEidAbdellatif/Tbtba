@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/app_riverpod.dart';
@@ -258,8 +257,8 @@ class _FamilyBridgeScreenState extends ConsumerState<FamilyBridgeScreen>
               top: -50 + (30 * _floatController.value),
               right: -40 + (20 * _floatController.value),
               child: _buildRealisticOrb(180, [
-                const Color(0xFFfb923c).withOpacity(0.35),
-                const Color(0xFFea580c).withOpacity(0.15),
+                const Color(0xFFfb923c).withValues(alpha: 0.35),
+                const Color(0xFFea580c).withValues(alpha: 0.15),
                 Colors.transparent,
               ]),
             ),
@@ -268,8 +267,8 @@ class _FamilyBridgeScreenState extends ConsumerState<FamilyBridgeScreen>
               bottom: -30 + (40 * (1 - _floatController.value)),
               left: -40 + (25 * _floatController.value),
               child: _buildRealisticOrb(160, [
-                const Color(0xFFfdba74).withOpacity(0.3),
-                const Color(0xFFf97316).withOpacity(0.1),
+                const Color(0xFFfdba74).withValues(alpha: 0.3),
+                const Color(0xFFf97316).withValues(alpha: 0.1),
                 Colors.transparent,
               ]),
             ),
@@ -278,7 +277,7 @@ class _FamilyBridgeScreenState extends ConsumerState<FamilyBridgeScreen>
               top: 40,
               left: 100,
               child: _buildRealisticOrb(70, [
-                const Color(0xFFfb923c).withOpacity(0.1),
+                const Color(0xFFfb923c).withValues(alpha: 0.1),
                 Colors.transparent,
               ]),
             ),
@@ -313,9 +312,9 @@ class _FamilyBridgeScreenState extends ConsumerState<FamilyBridgeScreen>
                   gradient: SweepGradient(
                     colors: [
                       Colors.transparent,
-                      Colors.white.withOpacity(0.15),
+                      Colors.white.withValues(alpha: 0.15),
                       Colors.transparent,
-                      Colors.white.withOpacity(0.08),
+                      Colors.white.withValues(alpha: 0.08),
                       Colors.transparent,
                     ],
                     stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
@@ -331,7 +330,7 @@ class _FamilyBridgeScreenState extends ConsumerState<FamilyBridgeScreen>
                 height: size * 0.2,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                 ),
               ),
             ),
@@ -365,9 +364,9 @@ class _FamilyBridgeScreenState extends ConsumerState<FamilyBridgeScreen>
   Widget _buildUploadActions() {
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
-        border: Border(bottom: BorderSide(color: const Color(0xFFf1f5f9))),
+        border: Border(bottom: BorderSide(color: Color(0xFFf1f5f9))),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -423,11 +422,11 @@ class _FamilyBridgeScreenState extends ConsumerState<FamilyBridgeScreen>
           padding: const EdgeInsets.symmetric(vertical: 20),
           decoration: BoxDecoration(
             color: isRecording
-                ? Colors.red.withOpacity(0.1)
-                : color.withOpacity(0.1),
+                ? Colors.red.withValues(alpha: 0.1)
+                : color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-                color: isRecording ? Colors.red : color.withOpacity(0.3),
+                color: isRecording ? Colors.red : color.withValues(alpha: 0.3),
                 width: 1.5),
           ),
           child: Column(
@@ -466,7 +465,7 @@ class _FamilyBridgeScreenState extends ConsumerState<FamilyBridgeScreen>
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
+                  color: Colors.black.withValues(alpha: 0.04),
                   blurRadius: 10,
                   offset: const Offset(0, 4))
             ],
@@ -508,7 +507,7 @@ class _FamilyBridgeScreenState extends ConsumerState<FamilyBridgeScreen>
   // واجهة التغطية (Overlay) التي تظهر أثناء عملية الرفع
   Widget _buildUploadOverlay() {
     return Container(
-      color: Colors.black.withOpacity(0.7),
+      color: Colors.black.withValues(alpha: 0.7),
       width: double.infinity,
       height: double.infinity,
       child: Center(

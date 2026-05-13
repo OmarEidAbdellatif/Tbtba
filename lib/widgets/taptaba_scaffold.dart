@@ -19,6 +19,7 @@ class TaptabaScaffold extends ConsumerStatefulWidget {
   final bool transparentAppBar; // جعل شريط العنوان شفافاً
   final bool hideAppBar; // إخفاء شريط العنوان بالكامل
   final bool useNestedScrollView; // استخدام التمرير المتداخل (للهيدر المتحرك)
+  final bool hideAppBarOnScroll; // إخفاء شريط العنوان عند التمرير لأسفل
   final double? appBarHeight; // ارتفاع مخصص لشريط العنوان
   final Widget? sliverHeader; // محتوى إضافي يتحرك مع شريط العنوان (كالـ Hero)
 
@@ -38,6 +39,7 @@ class TaptabaScaffold extends ConsumerStatefulWidget {
     this.transparentAppBar = false,
     this.hideAppBar = false,
     this.useNestedScrollView = true,
+    this.hideAppBarOnScroll = true,
     this.appBarHeight,
     this.sliverHeader,
   });
@@ -74,9 +76,10 @@ class _TaptabaScaffoldState extends ConsumerState<TaptabaScaffold>
 
   Widget _buildSliverAppBar(bool innerBoxIsScrolled) {
     return SliverAppBar(
-      floating: false,
-      snap: false,
-      pinned: true,
+      // إذا hideAppBarOnScroll: يختفي عند النزول ويظهر عند الصعود
+      floating: widget.hideAppBarOnScroll,
+      snap: widget.hideAppBarOnScroll,
+      pinned: !widget.hideAppBarOnScroll,
       backgroundColor:
           widget.transparentAppBar ? Colors.transparent : Colors.white,
       elevation: 0,

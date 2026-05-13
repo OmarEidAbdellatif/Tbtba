@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'widgets/healing_particles.dart';
 
 class NurseReportsScreen extends StatefulWidget {
   const NurseReportsScreen({super.key});
@@ -9,12 +10,11 @@ class NurseReportsScreen extends StatefulWidget {
 
 class _NurseReportsScreenState extends State<NurseReportsScreen>
     with TickerProviderStateMixin {
-  late AnimationController _spinController;
   late AnimationController _blinkController;
   late AnimationController _pulseController;
   late AnimationController _floatController;
   String _selectedType = 'تقرير يومي';
-  Map<String, bool> _activeRecipients = {
+  final Map<String, bool> _activeRecipients = {
     'د. أحمد': true,
     'الإدارة': true,
     'الأخصائي': true,
@@ -36,9 +36,6 @@ class _NurseReportsScreenState extends State<NurseReportsScreen>
   @override
   void initState() {
     super.initState();
-    _spinController =
-        AnimationController(vsync: this, duration: const Duration(seconds: 10))
-          ..repeat();
 
     _blinkController =
         AnimationController(vsync: this, duration: const Duration(seconds: 1))
@@ -55,7 +52,6 @@ class _NurseReportsScreenState extends State<NurseReportsScreen>
 
   @override
   void dispose() {
-    _spinController.dispose();
     _blinkController.dispose();
     _pulseController.dispose();
     _floatController.dispose();
@@ -114,7 +110,7 @@ class _NurseReportsScreenState extends State<NurseReportsScreen>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     if (type == 'تقرير أسبوعي') {
       content = Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           _previewRow('الأسبوع الحالي', '١٩ - ٢٦ أبريل'),
@@ -135,7 +131,7 @@ class _NurseReportsScreenState extends State<NurseReportsScreen>
       );
     } else if (type == 'تنبيه حرج') {
       content = Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           const Text('⚠️ سيتم إرسال تنبيه فوري للطبيب المشرف والإدارة',
@@ -151,7 +147,7 @@ class _NurseReportsScreenState extends State<NurseReportsScreen>
       );
     } else if (type == 'تقرير أدوية') {
       content = Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           _previewRow('إجمالي الجرعات اليوم', '٧٢ جرعة'),
@@ -173,7 +169,7 @@ class _NurseReportsScreenState extends State<NurseReportsScreen>
     } else {
       // Daily
       content = Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           _previewRow('تاريخ التقرير', '٢٦ أبريل ٢٠٢٤'),
@@ -300,33 +296,7 @@ class _NurseReportsScreenState extends State<NurseReportsScreen>
       ),
       child: Stack(
         children: [
-          Positioned(
-            right: -35,
-            top: -45,
-            child: Container(
-              width: 130,
-              height: 130,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.08),
-              ),
-            ),
-          ),
-          Positioned(
-            left: 14,
-            top: 10,
-            child: RotationTransition(
-              turns: _spinController,
-              child: Container(
-                width: 30,
-                height: 30,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.06),
-                ),
-              ),
-            ),
-          ),
+          const HealingParticles(), // الأنيميشن الموحد
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
             child: Row(
@@ -347,14 +317,14 @@ class _NurseReportsScreenState extends State<NurseReportsScreen>
                     Text(
                       'أ. منى — ${_getShiftName()}',
                       style: TextStyle(
-                          color: Colors.white.withOpacity(0.8), fontSize: 11),
+                          color: Colors.white.withValues(alpha: 0.8), fontSize: 11),
                     ),
                     const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 11, vertical: 4),
                       decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.18),
+                          color: Colors.white.withValues(alpha: 0.18),
                           borderRadius: BorderRadius.circular(20)),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -387,7 +357,7 @@ class _NurseReportsScreenState extends State<NurseReportsScreen>
                     width: 34,
                     height: 34,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.18),
+                      color: Colors.white.withValues(alpha: 0.18),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.arrow_forward_ios_rounded,
@@ -427,7 +397,7 @@ class _NurseReportsScreenState extends State<NurseReportsScreen>
                       width: 100,
                       height: 100,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -442,7 +412,7 @@ class _NurseReportsScreenState extends State<NurseReportsScreen>
                               style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.white.withOpacity(0.8))),
+                                  color: Colors.white.withValues(alpha: 0.8))),
                           AnimatedBuilder(
                             animation: _pulseController,
                             builder: (context, child) {
@@ -450,12 +420,12 @@ class _NurseReportsScreenState extends State<NurseReportsScreen>
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 9, vertical: 3),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
+                                  color: Colors.white.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(20),
                                   boxShadow: [
                                     BoxShadow(
                                       color: const Color(0xFF10B981)
-                                          .withOpacity(
+                                          .withValues(alpha: 
                                               0.4 * _pulseController.value),
                                       blurRadius: 7 * _pulseController.value,
                                       spreadRadius: 2 * _pulseController.value,
@@ -490,7 +460,7 @@ class _NurseReportsScreenState extends State<NurseReportsScreen>
                       Text('٢٤ مقيم · ٢ حالة حرجة · ٩٢٪ التزام بالأدوية',
                           style: TextStyle(
                               fontSize: 11,
-                              color: Colors.white.withOpacity(0.75))),
+                              color: Colors.white.withValues(alpha: 0.75))),
                       const SizedBox(height: 11),
                       Row(
                         children: [
@@ -504,9 +474,9 @@ class _NurseReportsScreenState extends State<NurseReportsScreen>
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: Row(
+                                child: const Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
-                                  children: const [
+                                  children: [
                                     Icon(Icons.remove_red_eye_outlined,
                                         color: Color(0xFF0369A1), size: 14),
                                     SizedBox(width: 5),
@@ -529,12 +499,12 @@ class _NurseReportsScreenState extends State<NurseReportsScreen>
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 8),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
+                                  color: Colors.white.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: Row(
+                                child: const Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
-                                  children: const [
+                                  children: [
                                     Icon(Icons.send_rounded,
                                         color: Colors.white, size: 13),
                                     SizedBox(width: 5),
@@ -591,7 +561,7 @@ class _NurseReportsScreenState extends State<NurseReportsScreen>
                   const SizedBox(height: 1),
                   Text('ضغط ١٦٠/١٠٠ · تجاوز الحد منذ ٢٣ د',
                       style: TextStyle(
-                          fontSize: 10, color: Colors.white.withOpacity(0.8))),
+                          fontSize: 10, color: Colors.white.withValues(alpha: 0.8))),
                 ],
               ),
             ),
@@ -601,7 +571,7 @@ class _NurseReportsScreenState extends State<NurseReportsScreen>
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.25),
+                  color: Colors.white.withValues(alpha: 0.25),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Text('إرسال',
@@ -696,7 +666,7 @@ class _NurseReportsScreenState extends State<NurseReportsScreen>
         decoration: BoxDecoration(
           color: active
               ? (isDark
-                  ? const Color(0xFF0EA5E9).withOpacity(0.2)
+                  ? const Color(0xFF0EA5E9).withValues(alpha: 0.2)
                   : const Color(0xFFF0F9FF))
               : (isDark ? const Color(0xFF1E293B) : Colors.white),
           borderRadius: BorderRadius.circular(14),
@@ -804,12 +774,12 @@ class _NurseReportsScreenState extends State<NurseReportsScreen>
       children: [
         CircleAvatar(
           radius: 17,
-          backgroundColor: isDark ? bg.withOpacity(0.2) : bg,
+          backgroundColor: isDark ? bg.withValues(alpha: 0.2) : bg,
           child: Text(av,
               style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: isDark ? fg.withOpacity(0.8) : fg)),
+                  color: isDark ? fg.withValues(alpha: 0.8) : fg)),
         ),
         const SizedBox(width: 10),
         Expanded(
@@ -993,7 +963,7 @@ class _NurseReportsScreenState extends State<NurseReportsScreen>
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
                 color: isDark
-                    ? Colors.white.withOpacity(0.05)
+                    ? Colors.white.withValues(alpha: 0.05)
                     : const Color(0xFFF0F9FF),
                 borderRadius: BorderRadius.circular(8)),
             child: Text(val,
@@ -1129,7 +1099,7 @@ class _NurseReportsScreenState extends State<NurseReportsScreen>
           height: 7,
           decoration: BoxDecoration(
               color: isDark
-                  ? Colors.white.withOpacity(0.05)
+                  ? Colors.white.withValues(alpha: 0.05)
                   : const Color(0xFFF1F5F9),
               borderRadius: BorderRadius.circular(6)),
           child: Align(
@@ -1176,13 +1146,13 @@ class _NurseReportsScreenState extends State<NurseReportsScreen>
                 _histRow(
                     '📋',
                     isDark
-                        ? const Color(0xFF065F46).withOpacity(0.2)
+                        ? const Color(0xFF065F46).withValues(alpha: 0.2)
                         : const Color(0xFFD1FAE5),
                     'تقرير يومي — السبت ٥ أبريل',
                     'أُرسل تلقائياً لـ ٣ جهات · ٨:٠٢ ص',
                     '✓ أُرسل',
                     isDark
-                        ? const Color(0xFF065F46).withOpacity(0.2)
+                        ? const Color(0xFF065F46).withValues(alpha: 0.2)
                         : const Color(0xFFD1FAE5),
                     const Color(0xFF10B981)),
                 Divider(
@@ -1191,13 +1161,13 @@ class _NurseReportsScreenState extends State<NurseReportsScreen>
                 _histRow(
                     '🚨',
                     isDark
-                        ? const Color(0xFF7F1D1D).withOpacity(0.2)
+                        ? const Color(0xFF7F1D1D).withValues(alpha: 0.2)
                         : const Color(0xFFFEE2E2),
                     'تنبيه حرج — الحاج محمود',
                     'أُرسل يدوياً للطبيب · أمس ٤:١٥ م',
                     '✓ أُرسل',
                     isDark
-                        ? const Color(0xFF065F46).withOpacity(0.2)
+                        ? const Color(0xFF065F46).withValues(alpha: 0.2)
                         : const Color(0xFFD1FAE5),
                     const Color(0xFF10B981)),
                 Divider(
@@ -1206,13 +1176,13 @@ class _NurseReportsScreenState extends State<NurseReportsScreen>
                 _histRow(
                     '📊',
                     isDark
-                        ? const Color(0xFF1E3A8A).withOpacity(0.2)
+                        ? const Color(0xFF1E3A8A).withValues(alpha: 0.2)
                         : const Color(0xFFDBEAFE),
                     'تقرير أسبوعي — أبريل',
                     'مجدول للجمعة القادمة',
                     '⏰ مجدول',
                     isDark
-                        ? const Color(0xFF78350F).withOpacity(0.2)
+                        ? const Color(0xFF78350F).withValues(alpha: 0.2)
                         : const Color(0xFFFEF3C7),
                     const Color(0xFFF59E0B)),
               ],

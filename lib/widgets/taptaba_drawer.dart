@@ -31,18 +31,18 @@ class TaptabaDrawer extends ConsumerWidget { // فئة القائمة الجان
               child: Container(
                 decoration: BoxDecoration(
                   color: (isDark ? const Color(0xFF0F172A) : themeColor)
-                      .withOpacity(0.05)
+                      .withValues(alpha: 0.05)
                       .withAlpha(240), // تلوين خفيف
                   borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(35),
                       bottomLeft: Radius.circular(35)), // حواف دائرية
                   border: Border( // إطار جمالي
                     left: BorderSide(
-                        color: themeColor.withOpacity(0.3), width: 1.5),
+                        color: themeColor.withValues(alpha: 0.3), width: 1.5),
                     top: BorderSide(
-                        color: Colors.white.withOpacity(isDark ? 0.05 : 0.2), width: 1.5),
+                        color: Colors.white.withValues(alpha: isDark ? 0.05 : 0.2), width: 1.5),
                     bottom: BorderSide(
-                        color: Colors.white.withOpacity(isDark ? 0.05 : 0.2), width: 1.5),
+                        color: Colors.white.withValues(alpha: isDark ? 0.05 : 0.2), width: 1.5),
                   ),
                 ),
               ),
@@ -198,7 +198,7 @@ class TaptabaDrawer extends ConsumerWidget { // فئة القائمة الجان
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [themeColor, themeColor.withOpacity(0.8)],
+          colors: [themeColor, themeColor.withValues(alpha: 0.8)],
         ),
         borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(45)),
       ),
@@ -206,12 +206,12 @@ class TaptabaDrawer extends ConsumerWidget { // فئة القائمة الجان
         children: [
           Row(
             children: [
-              CircleAvatar(
+              const CircleAvatar(
                 radius: 38,
                 backgroundColor: Colors.white,
                 child: CircleAvatar(
                   radius: 35,
-                  backgroundImage: const NetworkImage('https://i.pravatar.cc/150?u=elderly'),
+                  backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=elderly'),
                 ),
               ),
               const SizedBox(width: 18),
@@ -223,7 +223,7 @@ class TaptabaDrawer extends ConsumerWidget { // فئة القائمة الجان
                     const SizedBox(height: 6),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(color: Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(15)),
+                      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(15)),
                       child: Text(_getRoleNameDisplay(role), style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
                     ),
                   ],
@@ -255,7 +255,7 @@ class TaptabaDrawer extends ConsumerWidget { // فئة القائمة الجان
 
     return Container(
       padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20)),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

@@ -45,13 +45,13 @@ class VolunteerProfileView extends ConsumerWidget {
         const SizedBox(height: 12),
         ...provider.volunteerOpportunities
             .map((o) => _buildOpportunityCard(context, o))
-            .toList(),
+            ,
         const SizedBox(height: 24),
         _buildSectionLabel('حجوزاتي القادمة', const Color(0xFF059669), 2),
         const SizedBox(height: 12),
         ...provider.volunteerBookings
             .map((b) => _buildBookingCard(context, b))
-            .toList(),
+            ,
         const SizedBox(height: 24),
         _buildSectionLabel('سجل الساعات', const Color(0xFF059669), 3),
         const SizedBox(height: 12),
@@ -224,13 +224,13 @@ class VolunteerProfileView extends ConsumerWidget {
                 decoration: BoxDecoration(
                     color: const Color(0xFFF0FDF4),
                     borderRadius: BorderRadius.circular(10)),
-                child: Row(
+                child: const Row(
                   children: [
                     Text('تم إرفاق الملفات المهنية بنجاح',
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 9, color: Color(0xFF065f46))),
-                    const SizedBox(width: 8),
-                    const Icon(Icons.check_circle,
+                    SizedBox(width: 8),
+                    Icon(Icons.check_circle,
                         color: Color(0xFF10b981), size: 14),
                   ],
                 ),
@@ -339,7 +339,7 @@ class VolunteerProfileView extends ConsumerWidget {
             boxShadow: opp.isNew
                 ? [
                     BoxShadow(
-                        color: const Color(0xFF10b981).withOpacity(0.1),
+                        color: const Color(0xFF10b981).withValues(alpha: 0.1),
                         blurRadius: 10,
                         spreadRadius: 2)
                   ]
@@ -438,7 +438,7 @@ class VolunteerProfileView extends ConsumerWidget {
             borderRadius: BorderRadius.circular(10),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF10b981).withOpacity(0.35),
+                color: const Color(0xFF10b981).withValues(alpha: 0.35),
                 blurRadius: 8,
                 spreadRadius: 1,
               ),
@@ -547,7 +547,7 @@ class VolunteerProfileView extends ConsumerWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-                color: const Color(0xFF065f46).withOpacity(0.2),
+                color: const Color(0xFF065f46).withValues(alpha: 0.2),
                 blurRadius: 12,
                 offset: const Offset(0, 6))
           ],
@@ -569,7 +569,7 @@ class VolunteerProfileView extends ConsumerWidget {
                       Text('ساعة تطوعية هذا الشهر',
                           textAlign: TextAlign.right,
                           style: TextStyle(
-                              color: Colors.white.withOpacity(0.8),
+                              color: Colors.white.withValues(alpha: 0.8),
                               fontSize: 11)),
                     ],
                   ),
@@ -586,7 +586,7 @@ class VolunteerProfileView extends ConsumerWidget {
                               fontWeight: FontWeight.bold)),
                       Text('الهدف',
                           style: TextStyle(
-                              color: Colors.white.withOpacity(0.7),
+                              color: Colors.white.withValues(alpha: 0.7),
                               fontSize: 9)),
                     ],
                   ),
@@ -599,7 +599,7 @@ class VolunteerProfileView extends ConsumerWidget {
             Text(
                 '${(progress * 100).toInt()}% من هدفك — باقي ${provider.volunteerGoal - provider.volunteerHours} ساعة للشهادة الذهبية 🏆',
                 style: TextStyle(
-                    color: Colors.white.withOpacity(0.9), fontSize: 10)),
+                    color: Colors.white.withValues(alpha: 0.9), fontSize: 10)),
             const SizedBox(height: 12),
             Wrap(
               spacing: 6,
@@ -624,7 +624,7 @@ class VolunteerProfileView extends ConsumerWidget {
           height: 10,
           width: double.infinity,
           decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(10)),
           child: LayoutBuilder(builder: (context, constraints) {
             return Container(
@@ -656,7 +656,7 @@ class VolunteerProfileView extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
+          color: Colors.white.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(10)),
       child: Text(label,
           style: const TextStyle(
@@ -1282,7 +1282,7 @@ class VolunteerProfileView extends ConsumerWidget {
                           fontWeight: FontWeight.bold)),
                   Text('الهدف الشهري',
                       style: TextStyle(
-                          color: Colors.white.withOpacity(0.6), fontSize: 10)),
+                          color: Colors.white.withValues(alpha: 0.6), fontSize: 10)),
                 ],
               ),
               Column(
@@ -1295,7 +1295,7 @@ class VolunteerProfileView extends ConsumerWidget {
                           fontWeight: FontWeight.bold)),
                   Text('تم إنجازها',
                       style: TextStyle(
-                          color: Colors.white.withOpacity(0.8), fontSize: 12)),
+                          color: Colors.white.withValues(alpha: 0.8), fontSize: 12)),
                 ],
               ),
             ],
@@ -1307,7 +1307,7 @@ class VolunteerProfileView extends ConsumerWidget {
               'باقي لك ${provider.volunteerGoal - provider.volunteerHours} ساعة للحصول على شهادة التقدير لهذا الشهر 🌟',
               textAlign: TextAlign.center,
               style: TextStyle(
-                  color: Colors.white.withOpacity(0.9), fontSize: 11)),
+                  color: Colors.white.withValues(alpha: 0.9), fontSize: 11)),
         ],
       ),
     );
@@ -1334,7 +1334,7 @@ class VolunteerProfileView extends ConsumerWidget {
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: hours / 20,
-              backgroundColor: color.withOpacity(0.1),
+              backgroundColor: color.withValues(alpha: 0.1),
               valueColor: AlwaysStoppedAnimation<Color>(color),
               minHeight: 6,
             ),

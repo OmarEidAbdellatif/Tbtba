@@ -7,7 +7,6 @@ import 'bookings_view.dart';
 import 'certificates_view.dart';
 import 'ratings_view.dart';
 import 'profile_view.dart';
-import '../../widgets/taptaba_drawer.dart';
 import '../../widgets/taptaba_scaffold.dart';
 
 class VolunteerDashboardScreen extends ConsumerStatefulWidget {
@@ -87,6 +86,7 @@ class _VolunteerDashboardScreenState
       overrideRole: 'متطوع',
       transparentAppBar: true,
       extendBodyBehindAppBar: true,
+      hideAppBarOnScroll: true,
       body: Column(
         children: [
           Expanded(
@@ -245,7 +245,7 @@ class _VolunteerDashboardScreenState
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(Icons.share_outlined,
@@ -292,7 +292,7 @@ class _VolunteerDashboardScreenState
                                         (provider.volunteerHours /
                                             provider.volunteerGoal),
                                     backgroundColor:
-                                        Colors.white.withOpacity(0.2),
+                                        Colors.white.withValues(alpha: 0.2),
                                     progressColor: Colors.white,
                                   ),
                                 ),
@@ -304,8 +304,8 @@ class _VolunteerDashboardScreenState
                                             color: Colors.white,
                                             fontSize: 20,
                                             fontWeight: FontWeight.bold)),
-                                    Text('ساعة',
-                                        style: const TextStyle(
+                                    const Text('ساعة',
+                                        style: TextStyle(
                                             color: Colors.white,
                                             fontWeight: FontWeight.w500,
                                             fontSize: 10)),
@@ -340,9 +340,9 @@ class _VolunteerDashboardScreenState
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 10),
                       decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.08),
+                          color: Colors.white.withValues(alpha: 0.08),
                           border:
-                              Border.all(color: Colors.white.withOpacity(0.12)),
+                              Border.all(color: Colors.white.withValues(alpha: 0.12)),
                           borderRadius: BorderRadius.circular(16)),
                       child: Row(
                         children: [
@@ -408,7 +408,7 @@ class _VolunteerDashboardScreenState
               margin: const EdgeInsets.symmetric(horizontal: 4),
               padding: const EdgeInsets.symmetric(vertical: 8),
               decoration: BoxDecoration(
-                color: isActive ? Colors.white : Colors.white.withOpacity(0.15),
+                color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -418,7 +418,7 @@ class _VolunteerDashboardScreenState
                       style: TextStyle(
                           color: isActive
                               ? const Color(0xFF064e3b)
-                              : Colors.white.withOpacity(0.75),
+                              : Colors.white.withValues(alpha: 0.75),
                           fontSize: 8,
                           fontWeight: FontWeight.bold)),
                   Text(day['num'] as String,
@@ -663,7 +663,7 @@ class _VolunteerDashboardScreenState
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 10,
                             offset: const Offset(0, 4))
                       ],
@@ -776,9 +776,9 @@ class _VolunteerDashboardScreenState
               top: -40 + (30 * _floatController.value),
               right: -50 + (20 * _floatController.value),
               child: _buildRealisticOrb(180, [
-                const Color(0xFFC7D2FE).withOpacity(0.1),
-                const Color(0xFF818CF8).withOpacity(0.05),
-                const Color(0xFF10b981).withOpacity(0.02),
+                const Color(0xFFC7D2FE).withValues(alpha: 0.1),
+                const Color(0xFF818CF8).withValues(alpha: 0.05),
+                const Color(0xFF10b981).withValues(alpha: 0.02),
               ]),
             ),
             // Middle Orb - Bottom Left
@@ -786,9 +786,9 @@ class _VolunteerDashboardScreenState
               bottom: -20 + (40 * (1 - _floatController.value)),
               left: -30 + (15 * _floatController.value),
               child: _buildRealisticOrb(140, [
-                const Color(0xFF6EE7B7).withOpacity(0.08),
-                const Color(0xFF10B981).withOpacity(0.04),
-                const Color(0xFF064E3B).withOpacity(0.01),
+                const Color(0xFF6EE7B7).withValues(alpha: 0.08),
+                const Color(0xFF10B981).withValues(alpha: 0.04),
+                const Color(0xFF064E3B).withValues(alpha: 0.01),
               ]),
             ),
             // Small Floating Orb - Center Left
@@ -796,9 +796,9 @@ class _VolunteerDashboardScreenState
               top: 100 + (30 * sin(_floatController.value * pi)),
               left: 40 + (40 * cos(_floatController.value * pi)),
               child: _buildRealisticOrb(90, [
-                const Color(0xFFFDE68A).withOpacity(0.05),
-                const Color(0xFFF59E0B).withOpacity(0.02),
-                const Color(0xFF78350F).withOpacity(0.01),
+                const Color(0xFFFDE68A).withValues(alpha: 0.05),
+                const Color(0xFFF59E0B).withValues(alpha: 0.02),
+                const Color(0xFF78350F).withValues(alpha: 0.01),
               ]),
             ),
             // Extra Orb - Center Right
@@ -806,8 +806,8 @@ class _VolunteerDashboardScreenState
               top: 40 + (20 * _floatController.value),
               right: 80 - (10 * _floatController.value),
               child: _buildRealisticOrb(70, [
-                const Color(0xFF10b981).withOpacity(0.04),
-                Colors.white.withOpacity(0.02),
+                const Color(0xFF10b981).withValues(alpha: 0.04),
+                Colors.white.withValues(alpha: 0.02),
                 Colors.transparent,
               ]),
             ),
@@ -816,8 +816,8 @@ class _VolunteerDashboardScreenState
               bottom: 10,
               right: 40 + (20 * _floatController.value),
               child: _buildRealisticOrb(110, [
-                const Color(0xFF10B981).withOpacity(0.03),
-                const Color(0xFF064E3B).withOpacity(0.01),
+                const Color(0xFF10B981).withValues(alpha: 0.03),
+                const Color(0xFF064E3B).withValues(alpha: 0.01),
                 Colors.transparent,
               ]),
             ),
@@ -856,9 +856,9 @@ class _VolunteerDashboardScreenState
                     gradient: SweepGradient(
                       colors: [
                         Colors.transparent,
-                        Colors.white.withOpacity(0.15),
+                        Colors.white.withValues(alpha: 0.15),
                         Colors.transparent,
-                        Colors.white.withOpacity(0.1),
+                        Colors.white.withValues(alpha: 0.1),
                         Colors.transparent,
                       ],
                       stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
@@ -875,7 +875,7 @@ class _VolunteerDashboardScreenState
                 height: size * 0.2,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                 ),
               ),
             ),
@@ -900,7 +900,7 @@ class RingPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = min(size.width / 2, size.height / 2) - 4;
-    final strokeWidth = 8.0;
+    const strokeWidth = 8.0;
 
     final backgroundPaint = Paint()
       ..color = backgroundColor

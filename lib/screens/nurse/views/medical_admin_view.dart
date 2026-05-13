@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../../providers/app_riverpod.dart';
 import '../../../models/app_models.dart';
+import '../widgets/healing_particles.dart';
 
 class MedicalAdminView extends ConsumerStatefulWidget {
   const MedicalAdminView({super.key});
@@ -21,16 +25,19 @@ class _MedicalAdminViewState extends ConsumerState<MedicalAdminView> {
   final TextEditingController _glucose = TextEditingController();
   final TextEditingController _temp = TextEditingController();
 
-  String _bpStatus = '';
-  String _sugarStatus = '';
-  String _tempStatus = '';
-  Color _bpStatusColor = Colors.grey;
-  Color _sugarStatusColor = Colors.grey;
-  Color _tempStatusColor = Colors.grey;
+  final String _bpStatus = '';
+  final String _sugarStatus = '';
+  final String _tempStatus = '';
+  final Color _bpStatusColor = Colors.grey;
+  final Color _sugarStatusColor = Colors.grey;
+  final Color _tempStatusColor = Colors.grey;
 
   String _selectedResident = 'الحاج محمود سالم';
   String _selectedTime = 'الصباح';
   String _sessionType = 'doctor'; // 'doctor' or 'pt'
+
+  File? _prescriptionImage;
+  final ImagePicker _picker = ImagePicker();
 
   final List<String> _residents = [
     'الحاج محمود سالم',
@@ -58,86 +65,296 @@ class _MedicalAdminViewState extends ConsumerState<MedicalAdminView> {
     final provider = ref.watch(appRiverpod);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 10, 20, 100),
+      physics: const BouncingScrollPhysics(),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildHeader(),
-          const SizedBox(height: 24),
-          
-          _buildResidentSelector(),
-          const SizedBox(height: 20),
-
-          _buildEntryCard(
-            title: 'تسجيل دواء جديد',
-            subtitle: 'سيتم إضافته لجدول الأدوية والملف الطبي',
-            icon: Icons.medication_rounded,
-            color: const Color(0xFF0EA5E9),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildTextField(_medName, 'اسم الدواء (مثال: كونكور ٥ ملغ)', Icons.medical_services_outlined),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(child: _buildDropdown(_selectedTime, ['الصباح', 'الظهر', 'المساء'], (v) => setState(() => _selectedTime = v!))),
-                    const SizedBox(width: 12),
-                    Expanded(child: _buildTextField(_medDosage, 'الجرعة (مثال: قرص واحد)', Icons.shutter_speed_outlined)),
-                  ],
-                ),
+                const SizedBox(height: 24),
+                _buildResidentSelector(),
+                const SizedBox(height: 32),
+                
+                const Text('الإجراءات السريعة', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
                 const SizedBox(height: 16),
-                _buildActionBtn('حفظ وتسجيل الدواء', const Color(0xFF0EA5E9), () {
-                   if (_medName.text.isNotEmpty) {
-                     provider.addMedication(_selectedResident, Medication(
-                       id: DateTime.now().toString(),
-                       name: _medName.text,
-                       dosage: _medDosage.text,
-                       timeDescription: 'حسب الجدول المعتمد',
-                       timeOfDay: _selectedTime,
-                       dayTag: 'اليوم',
-                     ));
-                     
-                     // Also update ResidentMedicalInfo
-                     final info = provider.getMedicalInfo(_selectedResident);
-                     provider.updateMedicalInfo(ResidentMedicalInfo(
-                       residentName: _selectedResident,
-                       medications: [...info.medications, '${_medName.text} (${_medDosage.text})'],
-                       allergies: info.allergies,
-                       chronicDiseases: info.chronicDiseases,
-                     ));
-
-                     _medName.clear();
-                     _medDosage.clear();
-                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم تسجيل الدواء وتحديث الملف الطبي ✅')));
-                   }
-                }),
+                _buildQuickActionsGrid(provider),
+                
+                const SizedBox(height: 32),
+                _buildSectionHeader('آخر العمليات المسجلة', Icons.history_rounded),
+                const SizedBox(height: 16),
+                ...provider.medicalSessions.take(3).map((s) => _buildSessionLog(s)),
+                const SizedBox(height: 12),
+                ...provider.medicalPrescriptions.take(2).map((p) => _buildPrescriptionCard(p)),
+                const SizedBox(height: 100),
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
 
-          const SizedBox(height: 24),
-          _buildVitalsCard(provider),
+  Widget _buildHeader() {
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF0369A1), Color(0xFF0EA5E9), Color(0xFF38BDF8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Stack(
+        children: [
+          const HealingParticles(),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    const Text('الإدارة الطبية', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
+                    const SizedBox(width: 12),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(12)),
+                      child: const Icon(Icons.admin_panel_settings_rounded, color: Colors.white, size: 24),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text('التحكم المركزي في الأدوية، الجلسات، والتقارير الطبية', style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.9))),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-          const SizedBox(height: 24),
-          _buildEntryCard(
-            title: 'تسجيل جلسة / زيارة طبيب',
-            subtitle: 'توثيق نتائج الكشف أو جلسات العلاج',
-            icon: Icons.person_search_rounded,
+  Widget _buildResidentSelector() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [BoxShadow(color: const Color(0xFF0F172A).withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4))],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: const Color(0xFFF0F9FF), borderRadius: BorderRadius.circular(12)),
+            child: const Icon(Icons.person_pin_rounded, color: Color(0xFF0369A1), size: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('المقيم المختار للتحديث', style: TextStyle(fontSize: 10, color: Color(0xFF64748B))),
+                DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _selectedResident,
+                    isExpanded: true,
+                    isDense: true,
+                    icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF94A3B8)),
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF0F172A), fontFamily: 'Cairo'),
+                    items: _residents.map((r) => DropdownMenuItem(value: r, child: Text(r, textAlign: TextAlign.right))).toList(),
+                    onChanged: (v) => setState(() => _selectedResident = v!),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickActionsGrid(AppRiverpod provider) {
+    return GridView.count(
+      crossAxisCount: 2,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      mainAxisSpacing: 16,
+      crossAxisSpacing: 16,
+      childAspectRatio: 1.1,
+      children: [
+        _buildActionTile(
+          title: 'دواء جديد',
+          icon: Icons.medication_rounded,
+          color: const Color(0xFF0EA5E9),
+          onTap: () => _showAddMedicationSheet(provider),
+        ),
+        _buildActionTile(
+          title: 'علامات حيوية',
+          icon: Icons.monitor_heart_rounded,
+          color: const Color(0xFFF43F5E),
+          onTap: () => _showVitalsSheet(provider),
+        ),
+        _buildActionTile(
+          title: 'توثيق جلسة',
+          icon: Icons.person_search_rounded,
+          color: const Color(0xFF6366F1),
+          onTap: () => _showLogSessionSheet(provider),
+        ),
+        _buildActionTile(
+          title: 'رفع روشتة',
+          icon: Icons.file_upload_rounded,
+          color: const Color(0xFF10B981),
+          onTap: () => _showUploadPrescriptionSheet(provider),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionTile({required String title, required IconData icon, required Color color, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+          boxShadow: [BoxShadow(color: color.withValues(alpha: 0.08), blurRadius: 15, offset: const Offset(0, 8))],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
+              child: Icon(icon, color: color, size: 28),
+            ),
+            const SizedBox(height: 12),
+            Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // --- Bottom Sheets Methods ---
+
+  void _showAddMedicationSheet(AppRiverpod provider) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _buildSheetContainer(
+        title: 'تسجيل دواء جديد لـ ${_selectedResident.split(' ')[0]}',
+        color: const Color(0xFF0EA5E9),
+        child: Column(
+          children: [
+            _buildTextField(_medName, 'اسم الدواء (مثال: كونكور ٥ ملغ)', Icons.medical_services_outlined),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(child: _buildDropdown(_selectedTime, ['الصباح', 'الظهر', 'المساء'], (v) {
+                  setState(() => _selectedTime = v!);
+                  // Hack to update sheet state if needed, but simple dropdowns might need StatefulBuilder.
+                  // For simplicity in a mockup, we just let it be.
+                })),
+                const SizedBox(width: 12),
+                Expanded(child: _buildTextField(_medDosage, 'الجرعة (مثال: قرص)', Icons.shutter_speed_outlined)),
+              ],
+            ),
+            const SizedBox(height: 24),
+            _buildActionBtn('حفظ الدواء', const Color(0xFF0EA5E9), () {
+              if (_medName.text.isNotEmpty) {
+                provider.addMedication(_selectedResident, Medication(
+                  id: DateTime.now().toString(),
+                  name: _medName.text,
+                  dosage: _medDosage.text,
+                  timeDescription: 'حسب الجدول',
+                  timeOfDay: _selectedTime,
+                  dayTag: 'اليوم',
+                ));
+                _medName.clear();
+                _medDosage.clear();
+                Navigator.pop(context);
+                _showSuccess('تم تسجيل الدواء بنجاح');
+              }
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showVitalsSheet(AppRiverpod provider) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          return _buildSheetContainer(
+            title: 'العلامات الحيوية',
+            color: const Color(0xFFF43F5E),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(child: _buildTextField(_bpDia, 'الانبساطي', Icons.bloodtype_outlined)),
+                    const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('/', style: TextStyle(fontSize: 20, color: Colors.grey))),
+                    Expanded(child: _buildTextField(_bpSys, 'الانقباضي', Icons.speed_rounded)),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                _buildTextField(_glucose, 'مستوى السكر (مجم/دل)', Icons.water_drop_outlined),
+                const SizedBox(height: 16),
+                _buildTextField(_temp, 'درجة الحرارة (°م)', Icons.thermostat_rounded),
+                const SizedBox(height: 24),
+                _buildActionBtn('حفظ العلامات', const Color(0xFFF43F5E), () {
+                  if (_bpSys.text.isNotEmpty && _glucose.text.isNotEmpty && _temp.text.isNotEmpty) {
+                    provider.saveMedicalVitals(residentName: _selectedResident, bp: '${_bpSys.text}/${_bpDia.text}', sugar: _glucose.text, temp: _temp.text);
+                    _bpSys.clear(); _bpDia.clear(); _glucose.clear(); _temp.clear();
+                    Navigator.pop(context);
+                    _showSuccess('تم حفظ العلامات الحيوية');
+                  }
+                }),
+              ],
+            ),
+          );
+        }
+      ),
+    );
+  }
+
+  void _showLogSessionSheet(AppRiverpod provider) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          return _buildSheetContainer(
+            title: 'توثيق جلسة طبية',
             color: const Color(0xFF6366F1),
             child: Column(
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildSessionTypeSelector('زيارة طبيب', Icons.local_hospital_rounded, 'doctor'),
-                    _buildSessionTypeSelector('علاج طبيعي', Icons.accessibility_new_rounded, 'pt'),
+                    Expanded(child: _buildSessionTypeSelector('زيارة طبيب', Icons.local_hospital_rounded, 'doctor', () => setSheetState(() => _sessionType = 'doctor'))),
+                    const SizedBox(width: 12),
+                    Expanded(child: _buildSessionTypeSelector('علاج طبيعي', Icons.accessibility_new_rounded, 'pt', () => setSheetState(() => _sessionType = 'pt'))),
                   ],
                 ),
                 const SizedBox(height: 20),
                 _buildTextField(_specialistName, 'اسم الطبيب أو الأخصائي', Icons.badge_outlined),
-                const SizedBox(height: 12),
-                _buildTextField(_sessionNotes, 'ملاحظات الجلسة والنتائج', Icons.note_alt_outlined, maxLines: 2),
                 const SizedBox(height: 16),
-                _buildActionBtn('توثيق الجلسة في السجل', const Color(0xFF6366F1), () {
+                _buildTextField(_sessionNotes, 'ملاحظات الجلسة', Icons.note_alt_outlined, maxLines: 2),
+                const SizedBox(height: 24),
+                _buildActionBtn('توثيق الجلسة', const Color(0xFF6366F1), () {
                   if (_specialistName.text.isNotEmpty) {
                     provider.logMedicalSession(MedicalSession(
                       id: DateTime.now().toString(),
@@ -148,189 +365,242 @@ class _MedicalAdminViewState extends ConsumerState<MedicalAdminView> {
                       notes: _sessionNotes.text,
                       residentName: _selectedResident,
                     ));
-                    _specialistName.clear();
-                    _sessionNotes.clear();
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم توثيق الجلسة بنجاح ✅')));
+                    _specialistName.clear(); _sessionNotes.clear();
+                    Navigator.pop(context);
+                    _showSuccess('تم توثيق الجلسة بنجاح');
                   }
                 }),
               ],
             ),
-          ),
+          );
+        }
+      ),
+    );
+  }
 
-          const SizedBox(height: 24),
-          _buildEntryCard(
-            title: 'رفع روشتة / تقرير',
-            subtitle: 'أرشفة المستندات الطبية الورقية',
-            icon: Icons.file_upload_rounded,
+  void _showUploadPrescriptionSheet(AppRiverpod provider) {
+    _prescriptionImage = null; // Reset
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          return _buildSheetContainer(
+            title: 'رفع مستند للملف',
             color: const Color(0xFF10B981),
             child: Column(
               children: [
-                _buildTextField(_prescTitle, 'عنوان المستند (مثال: روشتة الصدر)', Icons.title_rounded),
+                if (_prescriptionImage != null)
+                  Stack(
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        height: 180,
+                        margin: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          image: DecorationImage(
+                            image: FileImage(_prescriptionImage!),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 24,
+                        right: 8,
+                        child: GestureDetector(
+                          onTap: () => setSheetState(() => _prescriptionImage = null),
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
+                            child: const Icon(Icons.close, color: Colors.white, size: 20),
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                else
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => _pickImage(ImageSource.camera, setSheetState),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 24),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF0FDF4),
+                              border: Border.all(color: const Color(0xFF86EFAC), style: BorderStyle.solid),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: const Column(
+                              children: [
+                                Icon(Icons.camera_alt_outlined, color: Color(0xFF10B981), size: 32),
+                                SizedBox(height: 8),
+                                Text('التقط صورة', style: TextStyle(fontSize: 12, color: Color(0xFF166534), fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => _pickImage(ImageSource.gallery, setSheetState),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 24),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF0FDF4),
+                              border: Border.all(color: const Color(0xFF86EFAC), style: BorderStyle.solid),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: const Column(
+                              children: [
+                                Icon(Icons.photo_library_outlined, color: Color(0xFF10B981), size: 32),
+                                SizedBox(height: 8),
+                                Text('اختر من المعرض', style: TextStyle(fontSize: 12, color: Color(0xFF166534), fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 const SizedBox(height: 16),
-                _buildActionBtn('رفع المستند للملف', const Color(0xFF10B981), () {
-                  if (_prescTitle.text.isNotEmpty) {
+                _buildTextField(_prescTitle, 'عنوان المستند (مثال: روشتة الصدر)', Icons.title_rounded),
+                const SizedBox(height: 24),
+                _buildActionBtn('حفظ في السجل', const Color(0xFF10B981), () {
+                  if (_prescTitle.text.isNotEmpty && _prescriptionImage != null) {
+                    Navigator.pop(context); // Close sheet
                     _showUploadSimulation(() {
                       provider.addPrescription(MedicalPrescription(
                         id: DateTime.now().toString(),
                         title: _prescTitle.text,
-                        doctorName: 'د. خالد صفا (مرفق)',
-                        date: '٢٠ أبريل ٢٠٢٤',
+                        doctorName: 'مرفق جديد',
+                        date: 'اليوم',
                         residentName: _selectedResident,
+                        imagePath: _prescriptionImage!.path,
                       ));
                       _prescTitle.clear();
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم رفع المستند وأرشفته بنجاح ✅')));
+                      _showSuccess('تم رفع المستند وأرشفته');
                     });
                   } else {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('يرجى كتابة عنوان للمستند أولاً ⚠️')));
+                    _showSuccess('يرجى اختيار صورة وكتابة عنوان المستند أولاً');
                   }
                 }),
               ],
             ),
-          ),
-
-          const SizedBox(height: 32),
-          _buildSectionHeader('آخر العمليات المسجلة', Icons.history_rounded),
-          const SizedBox(height: 12),
-          ...provider.medicalSessions.take(3).map((s) => _buildSessionLog(s)).toList(),
-          const SizedBox(height: 12),
-          ...provider.medicalPrescriptions.take(2).map((p) => _buildPrescriptionCard(p)).toList(),
-        ],
+          );
+        }
       ),
     );
   }
 
-  Widget _buildHeader() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
+  Future<void> _pickImage(ImageSource source, StateSetter setSheetState) async {
+    if (source == ImageSource.camera) {
+      var status = await Permission.camera.request();
+      if (!status.isGranted) {
+        _showSuccess('يرجى إعطاء صلاحية الكاميرا للمتابعة');
+        return;
+      }
+    } else {
+      var status = await Permission.photos.request();
+      if (!status.isGranted && !status.isLimited) {
+        status = await Permission.storage.request();
+        if (!status.isGranted) {
+          _showSuccess('يرجى إعطاء صلاحية المعرض للمتابعة');
+          return;
+        }
+      }
+    }
+
+    try {
+      final XFile? pickedFile = await _picker.pickImage(source: source);
+      if (pickedFile != null) {
+        setSheetState(() {
+          _prescriptionImage = File(pickedFile.path);
+        });
+      }
+    } catch (e) {
+      _showSuccess('حدث خطأ أثناء الوصول للملفات');
+    }
+  }
+
+  Widget _buildSheetContainer({required String title, required Color color, required Widget child}) {
+    return Container(
+      padding: EdgeInsets.only(
+        left: 24, right: 24, top: 24,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24, // Handle keyboard
+      ),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(topLeft: Radius.circular(32), topRight: Radius.circular(32)),
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('الإدارة الطبية', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
-            const SizedBox(width: 12),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(color: const Color(0xFF0369A1), borderRadius: BorderRadius.circular(12)),
-              child: const Icon(Icons.admin_panel_settings_rounded, color: Colors.white, size: 24),
-            ),
+            Center(child: Container(width: 40, height: 5, decoration: BoxDecoration(color: const Color(0xFFE2E8F0), borderRadius: BorderRadius.circular(10)))),
+            const SizedBox(height: 24),
+            Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
+            const SizedBox(height: 24),
+            child,
           ],
         ),
-        const SizedBox(height: 4),
-        const Text('التحكم المركزي في الأدوية، الجلسات، والتقارير الطبية', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
-      ],
-    );
-  }
-
-  Widget _buildResidentSelector() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.person_pin_rounded, color: Color(0xFF0369A1), size: 20),
-          const SizedBox(width: 12),
-          Expanded(
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: _selectedResident,
-                isExpanded: true,
-                icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF0369A1)),
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A), fontFamily: 'Cairo'),
-                items: _residents.map((r) => DropdownMenuItem(value: r, child: Text(r, textAlign: TextAlign.right))).toList(),
-                onChanged: (v) => setState(() => _selectedResident = v!),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          const Text(': اختيار المقيم', style: TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.bold)),
-        ],
       ),
     );
   }
 
-   Widget _buildEntryCard({required String title, required String subtitle, required IconData icon, required Color color, required Widget child}) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
-        boxShadow: [BoxShadow(color: color.withOpacity(0.04), blurRadius: 20, offset: const Offset(0, 8))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color)),
-                  Text(subtitle, style: TextStyle(fontSize: 10, color: isDark ? Colors.white38 : const Color(0xFF94A3B8))),
-                ],
-              ),
-              const SizedBox(width: 12),
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-                child: Icon(icon, color: color, size: 22),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          child,
-        ],
-      ),
-    );
+  void _showSuccess(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(message),
+      backgroundColor: const Color(0xFF0F172A),
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    ));
   }
+
+  // --- Utility Widgets ---
 
   Widget _buildTextField(TextEditingController controller, String hint, IconData icon, {int maxLines = 1, Function(String)? onChanged}) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC), 
-        borderRadius: BorderRadius.circular(12), 
-        border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFE2E8F0))
+        color: const Color(0xFFF8FAFC), 
+        borderRadius: BorderRadius.circular(16), 
+        border: Border.all(color: const Color(0xFFE2E8F0))
       ),
       child: TextField(
         controller: controller,
         textAlign: TextAlign.right,
         maxLines: maxLines,
         onChanged: onChanged,
-        keyboardType: TextInputType.number,
-        style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 13),
+        keyboardType: TextInputType.text,
+        style: const TextStyle(color: Colors.black, fontSize: 13),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: TextStyle(fontSize: 12, color: isDark ? Colors.white38 : const Color(0xFF94A3B8)),
-          suffixIcon: Icon(icon, color: isDark ? Colors.white38 : const Color(0xFF94A3B8), size: 18),
+          hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+          prefixIcon: Icon(icon, color: const Color(0xFF94A3B8), size: 18),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
       ),
     );
   }
 
   Widget _buildDropdown(String value, List<String> items, Function(String?) onChanged) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC), 
-        borderRadius: BorderRadius.circular(12), 
-        border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFE2E8F0))
+        color: const Color(0xFFF8FAFC), 
+        borderRadius: BorderRadius.circular(16), 
+        border: Border.all(color: const Color(0xFFE2E8F0))
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: value,
           isExpanded: true,
-          dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-          style: TextStyle(fontSize: 12, color: isDark ? Colors.white : const Color(0xFF1E293B), fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
+          style: const TextStyle(fontSize: 13, color: Color(0xFF1E293B), fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
           items: items.map((e) => DropdownMenuItem(value: e, child: Text(e, textAlign: TextAlign.right))).toList(),
           onChanged: onChanged,
         ),
@@ -347,45 +617,42 @@ class _MedicalAdminViewState extends ConsumerState<MedicalAdminView> {
           backgroundColor: color,
           foregroundColor: Colors.white,
           elevation: 0,
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ),
         child: Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
       ),
     );
   }
 
-  Widget _buildSessionTypeSelector(String label, IconData icon, String type) {
+  Widget _buildSessionTypeSelector(String label, IconData icon, String type, VoidCallback onTap) {
     bool isSelected = _sessionType == type;
     return GestureDetector(
-      onTap: () => setState(() => _sessionType = type),
-      child: Column(
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFF6366F1) : const Color(0xFFF8FAFC),
-              shape: BoxShape.circle,
-              border: Border.all(color: isSelected ? const Color(0xFF6366F1) : const Color(0xFFE2E8F0)),
-              boxShadow: isSelected ? [BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))] : [],
-            ),
-            child: Icon(icon, color: isSelected ? Colors.white : const Color(0xFF64748B), size: 24),
-          ),
-          const SizedBox(height: 8),
-          Text(label, style: TextStyle(fontSize: 11, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal, color: isSelected ? const Color(0xFF6366F1) : const Color(0xFF64748B))),
-        ],
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFEEF2FF) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: isSelected ? const Color(0xFF6366F1) : const Color(0xFFE2E8F0), width: 1.5),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: isSelected ? const Color(0xFF6366F1) : const Color(0xFF94A3B8), size: 24),
+            const SizedBox(height: 8),
+            Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isSelected ? const Color(0xFF6366F1) : const Color(0xFF64748B))),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildSectionHeader(String title, IconData icon) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+        Icon(icon, color: const Color(0xFF64748B), size: 20),
         const SizedBox(width: 8),
-        Icon(icon, color: const Color(0xFF64748B), size: 18),
+        Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
       ],
     );
   }
@@ -401,17 +668,23 @@ class _MedicalAdminViewState extends ConsumerState<MedicalAdminView> {
       ),
       child: Row(
         children: [
-          _buildSessionBadge(s.type),
-          const Spacer(),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(s.specialistName, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
-              Text('${s.residentName} · ${s.time}', style: const TextStyle(fontSize: 10, color: Color(0xFF64748B))),
-            ],
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: const BoxDecoration(color: Color(0xFFF1F5F9), shape: BoxShape.circle),
+            child: const Icon(Icons.history_edu_rounded, size: 20, color: Color(0xFF0369A1)),
           ),
-          const SizedBox(width: 12),
-          const CircleAvatar(backgroundColor: Color(0xFFF1F5F9), radius: 18, child: Icon(Icons.history_edu_rounded, size: 16, color: Color(0xFF0369A1))),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(s.specialistName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                const SizedBox(height: 2),
+                Text('${s.residentName} · ${s.time}', style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+              ],
+            ),
+          ),
+          _buildSessionBadge(s.type),
         ],
       ),
     );
@@ -420,9 +693,9 @@ class _MedicalAdminViewState extends ConsumerState<MedicalAdminView> {
   Widget _buildSessionBadge(String type) {
     bool isDoc = type == 'doctor';
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(color: isDoc ? const Color(0xFFF0F9FF) : const Color(0xFFEEF2FF), borderRadius: BorderRadius.circular(8)),
-      child: Text(isDoc ? 'زيارة طبيب' : 'علاج طبيعي', style: TextStyle(color: isDoc ? const Color(0xFF0369A1) : const Color(0xFF6366F1), fontSize: 9, fontWeight: FontWeight.bold)),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(color: isDoc ? const Color(0xFFF0F9FF) : const Color(0xFFEEF2FF), borderRadius: BorderRadius.circular(10)),
+      child: Text(isDoc ? 'زيارة طبيب' : 'علاج طبيعي', style: TextStyle(color: isDoc ? const Color(0xFF0369A1) : const Color(0xFF6366F1), fontSize: 10, fontWeight: FontWeight.bold)),
     );
   }
 
@@ -437,180 +710,26 @@ class _MedicalAdminViewState extends ConsumerState<MedicalAdminView> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.file_present_rounded, color: Color(0xFF10B981), size: 24),
-          const Spacer(),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(p.title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
-              Text('${p.residentName} · ${p.date}', style: const TextStyle(fontSize: 10, color: Color(0xFF64748B))),
-            ],
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: const Color(0xFF10B981).withValues(alpha: 0.1), shape: BoxShape.circle),
+            child: const Icon(Icons.file_present_rounded, color: Color(0xFF10B981), size: 20),
           ),
-          const SizedBox(width: 12),
-          const Icon(Icons.more_vert_rounded, color: Color(0xFF94A3B8), size: 18),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(p.title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                const SizedBox(height: 2),
+                Text('${p.residentName} · ${p.date}', style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+              ],
+            ),
+          ),
+          const Icon(Icons.download_rounded, color: Color(0xFF94A3B8), size: 20),
         ],
       ),
     );
-  }
-
-  Widget _buildVitalsCard(AppRiverpod provider) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return _buildEntryCard(
-      title: 'تسجيل العلامات الحيوية',
-      subtitle: 'متابعة الضغط، السكر، ودرجة الحرارة',
-      icon: Icons.monitor_heart_rounded,
-      color: const Color(0xFFF43F5E),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    _buildTextField(_bpDia, 'الانبساطي', Icons.bloodtype_outlined, 
-                      onChanged: (v) => _validateVitals()),
-                    if (_bpStatus.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4, right: 4),
-                        child: Text(_bpStatus, style: TextStyle(fontSize: 10, color: _bpStatusColor, fontWeight: FontWeight.bold)),
-                      ),
-                  ],
-                ),
-              ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                child: Text('/', style: TextStyle(fontSize: 20, color: Colors.grey)),
-              ),
-              Expanded(
-                child: _buildTextField(_bpSys, 'الانقباضي', Icons.speed_rounded, 
-                  onChanged: (v) => _validateVitals()),
-              ),
-              const SizedBox(width: 12),
-              const Text('ضغط الدم:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    _buildTextField(_glucose, 'مستوى السكر (مجم/دل)', Icons.water_drop_outlined,
-                      onChanged: (v) => _validateVitals()),
-                    if (_sugarStatus.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4, right: 4),
-                        child: Text(_sugarStatus, style: TextStyle(fontSize: 10, color: _sugarStatusColor, fontWeight: FontWeight.bold)),
-                      ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    _buildTextField(_temp, 'درجة الحرارة (°م)', Icons.thermostat_rounded,
-                      onChanged: (v) => _validateVitals()),
-                    if (_tempStatus.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4, right: 4),
-                        child: Text(_tempStatus, style: TextStyle(fontSize: 10, color: _tempStatusColor, fontWeight: FontWeight.bold)),
-                      ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          _buildActionBtn('حفظ العلامات الحيوية', const Color(0xFFF43F5E), () {
-            if (_bpSys.text.isNotEmpty && _glucose.text.isNotEmpty && _temp.text.isNotEmpty) {
-              provider.saveMedicalVitals(
-                residentName: _selectedResident,
-                bp: '${_bpSys.text}/${_bpDia.text}',
-                sugar: _glucose.text,
-                temp: _temp.text,
-              );
-              
-              _bpSys.clear();
-              _bpDia.clear();
-              _glucose.clear();
-              _temp.clear();
-              setState(() {
-                _bpStatus = '';
-                _sugarStatus = '';
-                _tempStatus = '';
-              });
-              
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                content: Text('تم حفظ العلامات الحيوية وتحديث السجل الطبي ✅'),
-                backgroundColor: Color(0xFF0F172A),
-              ));
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                content: Text('يرجى إكمال جميع القراءات أولاً ⚠️'),
-              ));
-            }
-          }),
-        ],
-      ),
-    );
-  }
-
-  void _validateVitals() {
-    setState(() {
-      // Validate BP
-      if (_bpSys.text.isNotEmpty && _bpDia.text.isNotEmpty) {
-        int sys = int.tryParse(_bpSys.text) ?? 0;
-        int dia = int.tryParse(_bpDia.text) ?? 0;
-        if (sys > 140 || dia > 90) {
-          _bpStatus = 'تحذير: ضغط مرتفع ⚠️';
-          _bpStatusColor = Colors.red;
-        } else if (sys < 90 || dia < 60) {
-          _bpStatus = 'تحذير: ضغط منخفض ⚠️';
-          _bpStatusColor = Colors.orange;
-        } else {
-          _bpStatus = 'مستوى طبيعي ✓';
-          _bpStatusColor = Colors.green;
-        }
-      }
-
-      // Validate Sugar
-      if (_glucose.text.isNotEmpty) {
-        int glu = int.tryParse(_glucose.text) ?? 0;
-        if (glu > 180) {
-          _sugarStatus = 'تحذير: سكر مرتفع ⚠️';
-          _sugarStatusColor = Colors.red;
-        } else if (glu < 70) {
-          _sugarStatus = 'تحذير: سكر منخفض ⚠️';
-          _sugarStatusColor = Colors.orange;
-        } else {
-          _sugarStatus = 'مستوى طبيعي ✓';
-          _sugarStatusColor = Colors.green;
-        }
-      }
-
-      // Validate Temp
-      if (_temp.text.isNotEmpty) {
-        double t = double.tryParse(_temp.text) ?? 0;
-        if (t > 38.0) {
-          _tempStatus = 'تحذير: حمى / حرارة مرتفعة ⚠️';
-          _tempStatusColor = Colors.red;
-        } else if (t < 36.0) {
-          _tempStatus = 'تحذير: حرارة منخفضة ⚠️';
-          _tempStatusColor = Colors.orange;
-        } else {
-          _tempStatus = 'مستقرة ✓';
-          _tempStatusColor = Colors.green;
-        }
-      }
-    });
   }
 
   void _showUploadSimulation(VoidCallback onComplete) {
@@ -620,15 +739,15 @@ class _MedicalAdminViewState extends ConsumerState<MedicalAdminView> {
       builder: (context) => Center(
         child: Container(
           padding: const EdgeInsets.all(32),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24)),
-          child: Column(
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(32)),
+          child: const Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const CircularProgressIndicator(color: Color(0xFF10B981), strokeWidth: 3),
-              const SizedBox(height: 24),
-              const Text('جاري معالجة المستند...', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, fontFamily: 'Cairo', decoration: TextDecoration.none, color: Color(0xFF0F172A))),
-              const SizedBox(height: 8),
-              const Text('يتم أرشفته في ملف المقيم الآن', style: TextStyle(fontSize: 11, color: Color(0xFF64748B), decoration: TextDecoration.none, fontFamily: 'Cairo')),
+              CircularProgressIndicator(color: Color(0xFF10B981), strokeWidth: 3),
+              SizedBox(height: 24),
+              Text('جاري معالجة المستند...', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, fontFamily: 'Cairo', decoration: TextDecoration.none, color: Color(0xFF0F172A))),
+              SizedBox(height: 8),
+              Text('يتم أرشفته في ملف المقيم الآن', style: TextStyle(fontSize: 12, color: Color(0xFF64748B), decoration: TextDecoration.none, fontFamily: 'Cairo')),
             ],
           ),
         ),

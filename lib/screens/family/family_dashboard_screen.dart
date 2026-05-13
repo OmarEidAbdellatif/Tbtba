@@ -7,7 +7,6 @@ import 'visit_booking_screen.dart';
 import 'care_report_detail_screen.dart';
 import 'resident_id_screen.dart';
 import 'family_bridge_screen.dart';
-import '../../widgets/taptaba_drawer.dart';
 import '../../widgets/taptaba_scaffold.dart';
 
 class FamilyDashboardScreen extends ConsumerStatefulWidget {
@@ -74,15 +73,13 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
       useNestedScrollView: true,
       sliverHeader: _buildHero(provider),
       bottomNavigationBar: _buildBottomNav(),
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: [
-          _buildHomeView(provider),
-          _buildCareView(provider),
-          _buildVisitsView(provider),
-          _buildBillingView(provider),
-        ],
-      ),
+      body: _selectedIndex == 0
+          ? _buildHomeView(provider)
+          : _selectedIndex == 1
+              ? _buildCareView(provider)
+              : _selectedIndex == 2
+                  ? _buildVisitsView(provider)
+                  : _buildBillingView(provider),
     );
   }
 
@@ -105,9 +102,9 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
               padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
               child: Column(
                 children: [
-                  Row(
+                  const Row(
                     children: [
-                      const Column(
+                      Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('مرحباً سارة 👋',
@@ -120,7 +117,7 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
                                   color: Colors.white70, fontSize: 11)),
                         ],
                       ),
-                      const Spacer(),
+                      Spacer(),
                     ],
                   ),
                   const SizedBox(height: 24),
@@ -145,8 +142,8 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
               top: -60 + (30 * _floatController.value),
               right: -50 + (20 * _floatController.value),
               child: _buildRealisticOrb(220, [
-                const Color(0xFFfb923c).withOpacity(0.35),
-                const Color(0xFFea580c).withOpacity(0.15),
+                const Color(0xFFfb923c).withValues(alpha: 0.35),
+                const Color(0xFFea580c).withValues(alpha: 0.15),
                 Colors.transparent,
               ]),
             ),
@@ -155,8 +152,8 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
               bottom: -40 + (40 * (1 - _floatController.value)),
               left: -50 + (25 * _floatController.value),
               child: _buildRealisticOrb(190, [
-                const Color(0xFFfdba74).withOpacity(0.3),
-                const Color(0xFFf97316).withOpacity(0.1),
+                const Color(0xFFfdba74).withValues(alpha: 0.3),
+                const Color(0xFFf97316).withValues(alpha: 0.1),
                 Colors.transparent,
               ]),
             ),
@@ -165,8 +162,8 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
               top: 50 + (40 * sin(_floatController.value * pi)),
               left: 20 + (50 * cos(_floatController.value * pi)),
               child: _buildRealisticOrb(110, [
-                const Color(0xFFfed7aa).withOpacity(0.25),
-                const Color(0xFFfb923c).withOpacity(0.08),
+                const Color(0xFFfed7aa).withValues(alpha: 0.25),
+                const Color(0xFFfb923c).withValues(alpha: 0.08),
                 Colors.transparent,
               ]),
             ),
@@ -175,8 +172,8 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
               bottom: 40 + (30 * _floatController.value),
               right: 80 + (20 * _floatController.value),
               child: _buildRealisticOrb(130, [
-                const Color(0xFFea580c).withOpacity(0.18),
-                Colors.white.withOpacity(0.08),
+                const Color(0xFFea580c).withValues(alpha: 0.18),
+                Colors.white.withValues(alpha: 0.08),
                 Colors.transparent,
               ]),
             ),
@@ -185,7 +182,7 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
               top: -30 + (20 * (1 - _floatController.value)),
               left: 100 + (40 * _floatController.value),
               child: _buildRealisticOrb(95, [
-                const Color(0xFFfb923c).withOpacity(0.15),
+                const Color(0xFFfb923c).withValues(alpha: 0.15),
                 Colors.transparent,
               ]),
             ),
@@ -194,7 +191,7 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
               top: 140 - (30 * _floatController.value),
               right: 40 + (60 * _floatController.value),
               child: _buildRealisticOrb(85, [
-                const Color(0xFFfdba74).withOpacity(0.12),
+                const Color(0xFFfdba74).withValues(alpha: 0.12),
                 Colors.transparent,
               ]),
             ),
@@ -218,7 +215,6 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: baseColors,
-                  stops: const [0.0, 0.6, 1.0],
                 ),
               ),
             ),
@@ -231,9 +227,9 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
                   gradient: SweepGradient(
                     colors: [
                       Colors.transparent,
-                      Colors.white.withOpacity(0.15),
+                      Colors.white.withValues(alpha: 0.15),
                       Colors.transparent,
-                      Colors.white.withOpacity(0.08),
+                      Colors.white.withValues(alpha: 0.08),
                       Colors.transparent,
                     ],
                     stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
@@ -250,7 +246,7 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
                 height: size * 0.2,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                 ),
               ),
             ),
@@ -266,9 +262,9 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.15),
+          color: Colors.white.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white.withOpacity(0.2)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
         ),
         child: Row(
           children: [
@@ -281,7 +277,7 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
                   child: CircularProgressIndicator(
                     value: ref.watch(appRiverpod).compliancePercentage / 100,
                     strokeWidth: 4,
-                    backgroundColor: Colors.white.withOpacity(0.2),
+                    backgroundColor: Colors.white.withValues(alpha: 0.2),
                     color: Colors.white,
                   ),
                 ),
@@ -342,7 +338,7 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
                                     color: (provider.currentMood == 'tired'
                                             ? const Color(0xFFfbbf24)
                                             : const Color(0xFF4ade80))
-                                        .withOpacity(0.6),
+                                        .withValues(alpha: 0.6),
                                     blurRadius: 4 + _pulseController.value * 8,
                                     spreadRadius: _pulseController.value * 4)
                               ],
@@ -374,7 +370,7 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-          color: bg.withOpacity(0.2), borderRadius: BorderRadius.circular(8)),
+          color: bg.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
       child: Text(text,
           style: const TextStyle(
               color: Colors.white, fontSize: 9, fontWeight: FontWeight.w500)),
@@ -448,6 +444,8 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
         children: [
           _buildHealthMetricsGrid(provider),
           const SizedBox(height: 24),
+          _buildGamificationCard(provider, context),
+          const SizedBox(height: 24),
           _buildVirtualVisitSection(),
           const SizedBox(height: 24),
           _buildMemoryWall(provider),
@@ -515,7 +513,7 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
                   border: Border.all(color: const Color(0xFFf1f5f9)),
                   boxShadow: [
                     BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
+                        color: Colors.black.withValues(alpha: 0.04),
                         blurRadius: 10,
                         offset: const Offset(0, 4))
                   ],
@@ -633,8 +631,8 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Colors.black.withOpacity(0.1),
-                        Colors.black.withOpacity(0.6)
+                        Colors.black.withValues(alpha: 0.1),
+                        Colors.black.withValues(alpha: 0.6)
                       ]),
                 ),
               ),
@@ -680,6 +678,186 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
     );
   }
 
+  Widget _buildGamificationCard(AppRiverpod provider, BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFEF3C7), Color(0xFFFEF08A)],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFFDE047)),
+        boxShadow: [
+          BoxShadow(
+              color: const Color(0xFFEAB308).withValues(alpha: 0.2),
+              blurRadius: 15,
+              offset: const Offset(0, 5))
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFDE047),
+                  shape: BoxShape.circle,
+                ),
+                child: const Text('🏆', style: TextStyle(fontSize: 24)),
+              ),
+              const SizedBox(width: 16),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('إنجازات والدك الصحية',
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF854D0E))),
+                    Text('أتم أخذ أدويته في موعدها وحصل على ١٠ نقاط! 🎉',
+                        style:
+                            TextStyle(fontSize: 12, color: Color(0xFFA16207))),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            height: 45,
+            child: ElevatedButton.icon(
+              onPressed: () => _showEncouragementSheet(provider, context),
+              icon: const Icon(Icons.favorite_rounded,
+                  color: Colors.white, size: 18),
+              label: const Text('إرسال تشجيع أو هدية',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFEAB308),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+                elevation: 0,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEncouragementSheet(AppRiverpod provider, BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                  width: 50,
+                  height: 5,
+                  decoration: BoxDecoration(
+                      color: const Color(0xFFE2E8F0),
+                      borderRadius: BorderRadius.circular(4))),
+            ),
+            const SizedBox(height: 24),
+            const Text('شجّع والدك ❤️',
+                style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0F172A))),
+            const Text('اختر طريقة لإرسال الدعم العاطفي لوالدك ليراه فوراً.',
+                style: TextStyle(fontSize: 14, color: Color(0xFF64748B))),
+            const SizedBox(height: 32),
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      provider.sendEncouragementMessage('voice');
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content:
+                                Text('تم إرسال رسالتك الصوتية بنجاح 🎤✨'),
+                            backgroundColor: Color(0xFF0EA5E9)),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF0F9FF),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFFBAE6FD)),
+                      ),
+                      child: const Column(
+                        children: [
+                          Icon(Icons.mic_rounded,
+                              color: Color(0xFF0EA5E9), size: 36),
+                          SizedBox(height: 8),
+                          Text('رسالة صوتية',
+                              style: TextStyle(
+                                  color: Color(0xFF0369A1),
+                                  fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      provider.sendEncouragementMessage('gift');
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content:
+                                Text('تم إرسال الهدية الافتراضية بنجاح 🎁✨'),
+                            backgroundColor: Color(0xFFEAB308)),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFEFCE8),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFFFEF08A)),
+                      ),
+                      child: const Column(
+                        children: [
+                          Icon(Icons.local_florist_rounded,
+                              color: Color(0xFFEAB308), size: 36),
+                          SizedBox(height: 8),
+                          Text('باقة ورد افتراضية',
+                              style: TextStyle(
+                                  color: Color(0xFFA16207),
+                                  fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 32),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildHealthMetricsGrid(AppRiverpod provider) {
     return Column(
       children: [
@@ -720,7 +898,7 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
                 border: Border.all(color: const Color(0xFFf1f5f9)),
                 boxShadow: [
                   BoxShadow(
-                      color: Colors.black.withOpacity(0.02), blurRadius: 10)
+                      color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)
                 ],
               ),
               child: Column(
@@ -849,16 +1027,33 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
             ),
           ),
           const SizedBox(width: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-                color: const Color(0xFF3b82f6),
-                borderRadius: BorderRadius.circular(12)),
-            child: const Text('تذكير',
-                style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold)),
+          GestureDetector(
+            onTap: () {
+              final medName = ref.read(appRiverpod).nextMedication?.name ?? 'الدواء';
+              ref.read(appRiverpod).triggerNotification(
+                    title: 'تذكير بموعد الدواء 💊',
+                    body: 'عائلتك تذكرك بموعد أخذ $medName. نتمنى لك دوام الصحة والعافية!',
+                    type: 'medical',
+                    targetRole: 'مسن',
+                  );
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('تم إرسال تذكير الدواء بنجاح 💊'),
+                  backgroundColor: Color(0xFF3b82f6),
+                ),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                  color: const Color(0xFF3b82f6),
+                  borderRadius: BorderRadius.circular(12)),
+              child: const Text('تذكير',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold)),
+            ),
           ),
         ],
       ),
@@ -878,7 +1073,7 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: const Color(0xFFf1f5f9)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15)
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 15)
         ],
       ),
       child: Column(
@@ -967,7 +1162,7 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
       children: [
         _buildSectionHeader('سجل الأدوية اليوم'),
         const SizedBox(height: 16),
-        ...provider.medications.map((m) => _buildCareLogCard(m)).toList(),
+        ...provider.medications.map((m) => _buildCareLogCard(m)),
         const SizedBox(height: 32),
         _buildSectionHeader('آخر التقارير الطبية'),
         const SizedBox(height: 16),
@@ -1085,13 +1280,13 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
                 MaterialPageRoute(
                     builder: (_) =>
                         CareReportDetailScreen(title: title, date: date))),
-            child: Row(
+            child: const Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                const Icon(Icons.arrow_back_ios,
+                Icon(Icons.arrow_back_ios,
                     size: 12, color: Color(0xFFea580c)),
-                const SizedBox(width: 4),
-                const Text('عرض التقرير الكامل',
+                SizedBox(width: 4),
+                Text('عرض التقرير الكامل',
                     style: TextStyle(
                         color: Color(0xFFea580c),
                         fontSize: 12,
@@ -1124,10 +1319,10 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
                             'الزيارات القادمة (${provider.familyVisits.where((v) => v.status == 'upcoming').length})',
                             style:
                                 const TextStyle(fontWeight: FontWeight.bold))),
-                    Tab(
+                    const Tab(
                         child: Text('السجل السابق',
                             style:
-                                const TextStyle(fontWeight: FontWeight.bold))),
+                                TextStyle(fontWeight: FontWeight.bold))),
                   ],
                 ),
                 Expanded(
@@ -1168,17 +1363,17 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
             borderRadius: BorderRadius.circular(28),
             boxShadow: [
               BoxShadow(
-                  color: const Color(0xFFea580c).withOpacity(0.3),
+                  color: const Color(0xFFea580c).withValues(alpha: 0.3),
                   blurRadius: 20,
                   offset: const Offset(0, 10))
             ],
           ),
           child: const Row(
             children: [
-              const Icon(Icons.add_circle_outline_rounded,
+              Icon(Icons.add_circle_outline_rounded,
                   color: Colors.white, size: 40),
-              const SizedBox(width: 16),
-              const Column(
+              SizedBox(width: 16),
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text('جدولة لقاء مودة',
@@ -1190,8 +1385,8 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
                       style: TextStyle(color: Colors.white70, fontSize: 12)),
                 ],
               ),
-              const Spacer(),
-              const Icon(Icons.chevron_left_rounded,
+              Spacer(),
+              Icon(Icons.chevron_left_rounded,
                   color: Colors.white, size: 28),
             ],
           ),
@@ -1202,14 +1397,14 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
 
   Widget _buildVisitsList(List<FamilyVisit> visits) {
     if (visits.isEmpty) {
-      return Center(
+      return const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.calendar_today_outlined,
-                size: 64, color: const Color(0xFFcbd5e1)),
-            const SizedBox(height: 16),
-            const Text('لا توجد زيارات حالياً',
+                size: 64, color: Color(0xFFcbd5e1)),
+            SizedBox(height: 16),
+            Text('لا توجد زيارات حالياً',
                 style: TextStyle(color: Color(0xFF94a3b8), fontSize: 16)),
           ],
         ),
@@ -1233,7 +1428,7 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
         border: Border.all(color: const Color(0xFFf1f5f9)),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: Colors.black.withValues(alpha: 0.02),
               blurRadius: 10,
               offset: const Offset(0, 4))
         ],
@@ -1369,7 +1564,7 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
         const SizedBox(height: 32),
         _buildSectionHeaderWithAction('الفواتير المتاحة', 'رؤية الكل'),
         const SizedBox(height: 16),
-        ...provider.familyBills.map((b) => _buildBillCard(b)).toList(),
+        ...provider.familyBills.map((b) => _buildBillCard(b)),
         const SizedBox(height: 32),
         _buildSectionHeader('طرق الدفع'),
         const SizedBox(height: 16),
@@ -1387,29 +1582,24 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-              color: const Color(0xFF0f172a).withOpacity(0.3),
+              color: const Color(0xFF0f172a).withValues(alpha: 0.3),
               blurRadius: 20,
               offset: const Offset(0, 10))
         ],
-        image: const DecorationImage(
-          image: NetworkImage(
-              'https://www.transparenttextures.com/patterns/cubes.png'),
-          opacity: 0.05,
-          repeat: ImageRepeat.repeat,
-        ),
+
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('المستحقات الحالية',
+              Text('المستحقات الحالية',
                   style: TextStyle(
                       color: Colors.white,
                       fontSize: 16,
                       fontWeight: FontWeight.w900)),
-              const Icon(Icons.account_balance_wallet_rounded,
+              Icon(Icons.account_balance_wallet_rounded,
                   color: Colors.white, size: 28),
             ],
           ),
@@ -1432,7 +1622,7 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                          color: const Color(0xFFea580c).withOpacity(0.3),
+                          color: const Color(0xFFea580c).withValues(alpha: 0.3),
                           blurRadius: 10,
                           offset: const Offset(0, 4))
                     ],
@@ -1466,7 +1656,7 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
                   width: 56,
                   height: 56,
                   decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
+                      color: Colors.white.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(16)),
                   child:
                       const Icon(Icons.download_rounded, color: Colors.white),
@@ -1781,7 +1971,7 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, -5))
         ],

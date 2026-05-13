@@ -71,8 +71,8 @@ class VisitApprovalView extends ConsumerWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-                color: const Color(0xFFf8fafc), shape: BoxShape.circle),
+            decoration: const BoxDecoration(
+                color: Color(0xFFf8fafc), shape: BoxShape.circle),
             child: Icon(Icons.event_available_rounded,
                 size: 48, color: Colors.grey[300]),
           ),
@@ -95,7 +95,7 @@ class VisitApprovalView extends ConsumerWidget {
         border: Border.all(color: const Color(0xFFf1f5f9)),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: Colors.black.withValues(alpha: 0.02),
               blurRadius: 10,
               offset: const Offset(0, 4))
         ],

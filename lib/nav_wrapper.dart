@@ -128,7 +128,7 @@ class _NavWrapperState extends ConsumerState<NavWrapper>
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: const Color(0xFF818CF8)
-                          .withOpacity(0.2 * (1 - progress)),
+                          .withValues(alpha: 0.2 * (1 - progress)),
                       width: 1.2,
                     ),
                   ),
@@ -148,7 +148,7 @@ class _NavWrapperState extends ConsumerState<NavWrapper>
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF6366F1).withOpacity(0.35),
+                      color: const Color(0xFF6366F1).withValues(alpha: 0.35),
                       blurRadius: 25,
                       spreadRadius: 3,
                     ),
@@ -183,11 +183,11 @@ class _NavWrapperState extends ConsumerState<NavWrapper>
                             gradient: SweepGradient(
                               colors: [
                                 Colors.transparent,
-                                Colors.white.withOpacity(0.25),
-                                const Color(0xFFF472B6).withOpacity(0.3),
+                                Colors.white.withValues(alpha: 0.25),
+                                const Color(0xFFF472B6).withValues(alpha: 0.3),
                                 Colors.transparent,
-                                const Color(0xFF38BDF8).withOpacity(0.3),
-                                Colors.white.withOpacity(0.2),
+                                const Color(0xFF38BDF8).withValues(alpha: 0.3),
+                                Colors.white.withValues(alpha: 0.2),
                                 Colors.transparent,
                               ],
                               stops: const [
@@ -209,7 +209,7 @@ class _NavWrapperState extends ConsumerState<NavWrapper>
                           shape: BoxShape.circle,
                           gradient: RadialGradient(
                             colors: [
-                              Colors.white.withOpacity(0.35),
+                              Colors.white.withValues(alpha: 0.35),
                               Colors.transparent,
                             ],
                             center: const Alignment(-0.3, -0.3),
@@ -226,7 +226,7 @@ class _NavWrapperState extends ConsumerState<NavWrapper>
                           height: 18,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Colors.white.withOpacity(0.35),
+                            color: Colors.white.withValues(alpha: 0.35),
                           ),
                         ),
                       ),
@@ -256,7 +256,7 @@ class _NavWrapperState extends ConsumerState<NavWrapper>
       filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10), // ضبابية خفيفة للخلفية
       child: Container(
         // وعاء أحمر شفاف
-        color: const Color(0xFFef4444).withOpacity(0.85), // لون أحمر طوارئ
+        color: const Color(0xFFef4444).withValues(alpha: 0.85), // لون أحمر طوارئ
         width: double.infinity, // كامل العرض
         height: double.infinity, // كامل الارتفاع
         child: Column(

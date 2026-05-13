@@ -52,10 +52,12 @@ class MyApp extends ConsumerWidget {
 
     Widget getHomeWidget() {
       // تحديد الشاشة الحالية بناءً على حالة المستخدم
-      if (!provider.hasSeenOnboarding)
+      if (!provider.hasSeenOnboarding) {
         return const OnboardingScreen(); // فحص شاشة البداية
-      if (!provider.isAuthenticated)
+      }
+      if (!provider.isAuthenticated) {
         return const LoginScreen(); // فحص تسجيل الدخول
+      }
 
       switch (provider.currentRole) {
         // فحص دور المستخدم وتوجيهه لشاشته
@@ -121,7 +123,7 @@ class MyApp extends ConsumerWidget {
 
   Widget _buildRefreshOverlay() {
     return Container(
-      color: Colors.black.withOpacity(0.5),
+      color: Colors.black.withValues(alpha: 0.5),
       child: Center(
         child: Container(
           padding: const EdgeInsets.all(24),

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/app_riverpod.dart';
 import '../../models/app_models.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 class CallsScreen extends ConsumerStatefulWidget {
   const CallsScreen({super.key});
@@ -112,7 +111,7 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
             borderRadius: BorderRadius.circular(32),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF6C63FF).withOpacity(0.4),
+                color: const Color(0xFF6C63FF).withValues(alpha: 0.4),
                 blurRadius: 20,
                 spreadRadius: 4,
               ),
@@ -189,7 +188,7 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                           color: (isRecording
                                   ? const Color(0xFFef4444)
                                   : const Color(0xFF6C63FF))
-                              .withOpacity(0.4),
+                              .withValues(alpha: 0.4),
                           blurRadius: 20,
                           spreadRadius: 4,
                         ),
@@ -283,8 +282,8 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
+                    const Padding(
+                      padding: EdgeInsets.symmetric(
                           horizontal: 20, vertical: 8),
                     ),
                     Padding(
@@ -301,7 +300,7 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                           const SizedBox(height: 4),
                           Text('$availableCount متاحين الآن',
                               style: TextStyle(
-                                  color: Colors.white.withOpacity(0.85),
+                                  color: Colors.white.withValues(alpha: 0.85),
                                   fontSize: 18)),
                         ],
                       ),
@@ -348,7 +347,7 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
               width: size,
               height: size,
               decoration: BoxDecoration(
-                  shape: BoxShape.circle, color: color.withOpacity(0.4))),
+                  shape: BoxShape.circle, color: color.withValues(alpha: 0.4))),
         );
       },
     );
@@ -367,10 +366,10 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
-              color: Colors.white.withOpacity(hc ? 0.08 : 0.13),
+              color: Colors.white.withValues(alpha: hc ? 0.08 : 0.13),
               borderRadius: BorderRadius.circular(14),
               border:
-                  Border.all(color: Colors.white.withOpacity(hc ? 0.05 : 0.1))),
+                  Border.all(color: Colors.white.withValues(alpha: hc ? 0.05 : 0.1))),
           child: Column(children: [
             FittedBox(
               fit: BoxFit.scaleDown,
@@ -385,7 +384,7 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
               fit: BoxFit.scaleDown,
               child: Text(label,
                   style: TextStyle(
-                      color: Colors.white.withOpacity(hc ? 0.7 : 0.9),
+                      color: Colors.white.withValues(alpha: hc ? 0.7 : 0.9),
                       fontSize: 16)),
             ),
           ]),
@@ -411,7 +410,7 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
             borderRadius: BorderRadius.circular(26),
             boxShadow: [
               BoxShadow(
-                  color: const Color(0xFF10b981).withOpacity(0.3),
+                  color: const Color(0xFF10b981).withValues(alpha: 0.3),
                   blurRadius: 24,
                   offset: const Offset(0, 6))
             ],
@@ -428,7 +427,7 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                         height: 100,
                         decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Colors.white.withOpacity(0.1)))),
+                            color: Colors.white.withValues(alpha: 0.1)))),
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -451,7 +450,7 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                                         decoration: BoxDecoration(
                                             shape: BoxShape.circle,
                                             border: Border.all(
-                                                color: Colors.white.withOpacity(
+                                                color: Colors.white.withValues(alpha: 
                                                     0.5 *
                                                         (1 -
                                                             _rippleController
@@ -473,7 +472,7 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                                     height: 52,
                                     decoration: BoxDecoration(
                                         shape: BoxShape.circle,
-                                        color: Colors.white.withOpacity(0.25)),
+                                        color: Colors.white.withValues(alpha: 0.25)),
                                     child: const Center(
                                         child: Padding(
                                       padding: EdgeInsets.all(4.0),
@@ -551,7 +550,7 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                                         boxShadow: [
                                           BoxShadow(
                                               color: const Color(0xFF4ade80)
-                                                  .withOpacity(0.5 +
+                                                  .withValues(alpha: 0.5 +
                                                       (_glowController.value *
                                                           0.5)),
                                               blurRadius: 10 +
@@ -572,7 +571,7 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                                   height: 48,
                                   decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: Colors.white.withOpacity(0.25)),
+                                      color: Colors.white.withValues(alpha: 0.25)),
                                   child: const Icon(Icons.close,
                                       color: Colors.white, size: 22),
                                 ),
@@ -596,7 +595,7 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                           const SizedBox(width: 8),
                           Text('مكالمة واردة',
                               style: TextStyle(
-                                  color: Colors.white.withOpacity(0.75),
+                                  color: Colors.white.withValues(alpha: 0.75),
                                   fontSize: 10)),
                         ],
                       ),
@@ -624,7 +623,7 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
               width: 3,
               height: height,
               decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                   borderRadius: BorderRadius.circular(2))),
         );
       },
@@ -649,7 +648,7 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                   width: 1.5),
               boxShadow: [
                 BoxShadow(
-                    color: const Color(0xFF6C63FF).withOpacity(hc ? 0.2 : 0.06),
+                    color: const Color(0xFF6C63FF).withValues(alpha: hc ? 0.2 : 0.06),
                     blurRadius: 16,
                     offset: const Offset(0, 4))
               ]),
@@ -664,7 +663,7 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF6C63FF).withOpacity(0.1),
+                        color: const Color(0xFF6C63FF).withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(Icons.people_alt_rounded,
@@ -728,14 +727,14 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
           borderRadius: BorderRadius.circular(28),
           border: Border.all(
               color: isOnline
-                  ? const Color(0xFF6C63FF).withOpacity(0.3)
+                  ? const Color(0xFF6C63FF).withValues(alpha: 0.3)
                   : (hc ? const Color(0xFF333333) : const Color(0xFFF3F4F6)),
               width: 1.5),
           boxShadow: [
             BoxShadow(
               color: isOnline
-                  ? const Color(0xFF6C63FF).withOpacity(0.12)
-                  : Colors.black.withOpacity(0.04),
+                  ? const Color(0xFF6C63FF).withValues(alpha: 0.12)
+                  : Colors.black.withValues(alpha: 0.04),
               blurRadius: 24,
               offset: const Offset(0, 8),
             )
@@ -761,7 +760,7 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                       BoxShadow(
                         color:
                             (isOnline ? gradient[0] : const Color(0xFF9CA3AF))
-                                .withOpacity(0.4),
+                                .withValues(alpha: 0.4),
                         blurRadius: 15,
                         offset: const Offset(0, 5),
                       )
@@ -793,7 +792,7 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                             width: 3.5),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF4ade80).withOpacity(0.5),
+                            color: const Color(0xFF4ade80).withValues(alpha: 0.5),
                             blurRadius: 8,
                           )
                         ],
@@ -825,7 +824,7 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                       color: (isOnline
                               ? const Color(0xFF6C63FF)
                               : const Color(0xFF9CA3AF))
-                          .withOpacity(0.1),
+                          .withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -886,21 +885,21 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
         decoration: BoxDecoration(
           color: isOutlined
               ? (isActive
-                  ? color.withOpacity(0.1)
+                  ? color.withValues(alpha: 0.1)
                   : (hc ? Colors.white10 : const Color(0xFFF3F4F6)))
               : (isActive
                   ? color
                   : (hc
-                      ? Colors.white.withOpacity(0.05)
+                      ? Colors.white.withValues(alpha: 0.05)
                       : const Color(0xFFE5E7EB))),
           shape: BoxShape.circle,
           border: isOutlined && isActive
-              ? Border.all(color: color.withOpacity(0.4), width: 2)
+              ? Border.all(color: color.withValues(alpha: 0.4), width: 2)
               : null,
           boxShadow: !isOutlined && isActive
               ? [
                   BoxShadow(
-                    color: color.withOpacity(0.3),
+                    color: color.withValues(alpha: 0.3),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   )
@@ -933,7 +932,7 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
           border: Border.all(color: const Color(0xFFede9fe), width: 1.5),
           boxShadow: [
             BoxShadow(
-                color: const Color(0xFF6C63FF).withOpacity(0.06),
+                color: const Color(0xFF6C63FF).withValues(alpha: 0.06),
                 blurRadius: 16,
                 offset: const Offset(0, 4))
           ]),
@@ -942,13 +941,13 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Row(
+            const Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                const Icon(Icons.mic_rounded,
+                Icon(Icons.mic_rounded,
                     color: Color(0xFF6C63FF), size: 24),
-                const SizedBox(width: 8),
-                const Text('رسائل صوتية من الأسرة',
+                SizedBox(width: 8),
+                Text('رسائل صوتية من الأسرة',
                     style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -976,7 +975,7 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                   _buildVoiceMessageRow(provider, msg, sender, pGradient)
                 ],
               );
-            }).toList(),
+            }),
           ],
         ),
       ),
@@ -999,7 +998,7 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: gradient[0].withOpacity(0.3),
+                    color: gradient[0].withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 3),
                   )
@@ -1093,7 +1092,7 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
           border: Border.all(color: const Color(0xFFede9fe), width: 1.5),
           boxShadow: [
             BoxShadow(
-                color: const Color(0xFF6C63FF).withOpacity(0.06),
+                color: const Color(0xFF6C63FF).withValues(alpha: 0.06),
                 blurRadius: 16,
                 offset: const Offset(0, 4))
           ]),
@@ -1163,7 +1162,7 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: gradient[0].withOpacity(0.2),
+                    color: gradient[0].withValues(alpha: 0.2),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   )
@@ -1197,7 +1196,7 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
-                color: badgeBg.withOpacity(0.9),
+                color: badgeBg.withValues(alpha: 0.9),
                 borderRadius: BorderRadius.circular(10)),
             child: Text(badge,
                 style: TextStyle(
@@ -1232,16 +1231,16 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
               : null,
           color: isOutlined
               ? (isActive
-                  ? primaryColor.withOpacity(0.08)
+                  ? primaryColor.withValues(alpha: 0.08)
                   : (hc ? Colors.white10 : const Color(0xFFF3F4F6)))
               : (isActive
                   ? null
                   : (hc
-                      ? Colors.white.withOpacity(0.05)
+                      ? Colors.white.withValues(alpha: 0.05)
                       : const Color(0xFFE5E7EB))),
           borderRadius: BorderRadius.circular(14),
           border: isOutlined && isActive
-              ? Border.all(color: primaryColor.withOpacity(0.3), width: 1.5)
+              ? Border.all(color: primaryColor.withValues(alpha: 0.3), width: 1.5)
               : null,
         ),
         child: Row(

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../providers/app_riverpod.dart';
-import '../../../models/app_models.dart';
 
 class EditProfileSheet extends ConsumerStatefulWidget {
   const EditProfileSheet({super.key});

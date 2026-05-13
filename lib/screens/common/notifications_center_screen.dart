@@ -59,8 +59,8 @@ class NotificationsCenterScreen extends ConsumerWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: const Color(0xFFe2e8f0),
+            decoration: const BoxDecoration(
+              color: Color(0xFFe2e8f0),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.notifications_off_outlined,
@@ -109,10 +109,36 @@ class NotificationsCenterScreen extends ConsumerWidget {
                 ? const Color(0xFF16a34a)
                 : const Color(0xFF6366f1);
 
-    return GestureDetector(
-      onTap: () => provider.markNotificationAsRead(notif.id),
-      child: Container(
+    return Dismissible(
+      key: Key(notif.id),
+      direction: DismissDirection.horizontal,
+      onDismissed: (direction) {
+        provider.deleteNotification(notif.id);
+      },
+      background: Container(
         margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFef4444),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: const Icon(Icons.delete_outline, color: Colors.white),
+      ),
+      secondaryBackground: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFef4444),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: const Icon(Icons.delete_outline, color: Colors.white),
+      ),
+      child: GestureDetector(
+        onTap: () => provider.markNotificationAsRead(notif.id),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: notif.isRead ? Colors.white : const Color(0xFFf0f9ff),
@@ -126,7 +152,7 @@ class NotificationsCenterScreen extends ConsumerWidget {
           boxShadow: [
             if (!notif.isRead)
               BoxShadow(
-                color: const Color(0xFF0369a1).withOpacity(0.05),
+                color: const Color(0xFF0369a1).withValues(alpha: 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -184,6 +210,7 @@ class NotificationsCenterScreen extends ConsumerWidget {
           ],
         ),
       ),
+    ),
     );
   }
 }

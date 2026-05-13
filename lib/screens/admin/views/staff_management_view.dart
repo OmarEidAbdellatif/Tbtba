@@ -38,7 +38,7 @@ class StaffManagementView extends StatelessWidget {
                       child: _buildStaffCard(
                           s.name, s.role, s.completionRate, s.status, s.lastActive),
                     );
-                  }).toList(),
+                  }),
                 ],
               ),
             ),

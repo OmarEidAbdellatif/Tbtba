@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart'; // مكتبة فلاتر الأساسية للواجهات
+import 'widgets/healing_particles.dart'; // الأنيميشن الموحد
 
 class NurseProfileScreen extends StatelessWidget { // شاشة الملف الشخصي الخاصة بالممرض
   const NurseProfileScreen({super.key}); // مشيد الفئة
@@ -16,7 +17,7 @@ class NurseProfileScreen extends StatelessWidget { // شاشة الملف الش
             child: Padding(
               padding: const EdgeInsets.all(20), // هوامش جانبية
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end, // ترتيب RTL
+                crossAxisAlignment: CrossAxisAlignment.start, // ترتيب RTL
                 children: [
                   _buildStatsGrid(context), // شبكة الإحصائيات (ساعات، دقة، تقييم)
                   const SizedBox(height: 24),
@@ -56,19 +57,26 @@ class NurseProfileScreen extends StatelessWidget { // شاشة الملف الش
               colors: [Color(0xFF0369A1), Color(0xFF0EA5E9)],
             ),
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: Stack(
             children: [
-              const SizedBox(height: 40),
-              _buildProfileImage(), // عرض صورة الملف الشخصي
-              const SizedBox(height: 16),
-              const Text('أ. منى علي محمود', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)), // اسم الممرض
-              const Text('مشرف تمريض — المستوى الذهبي', style: TextStyle(color: Color(0xFFE0F2FE), fontSize: 13)), // المسمى الوظيفي والمستوى
-              const SizedBox(height: 12),
-              Container( // بطاقة تعريفية بكود الموظف
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(20)),
-                child: const Text('كود الموظف: #N-4892', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+              const HealingParticles(), // الأنيميشن الموحد
+              Positioned.fill(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 40),
+                    _buildProfileImage(), // عرض صورة الملف الشخصي
+                    const SizedBox(height: 16),
+                    const Text('أ. منى علي محمود', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)), // اسم الممرض
+                    const Text('مشرف تمريض — المستوى الذهبي', style: TextStyle(color: Color(0xFFE0F2FE), fontSize: 13)), // المسمى الوظيفي والمستوى
+                    const SizedBox(height: 12),
+                    Container( // بطاقة تعريفية بكود الموظف
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(20)),
+                      child: const Text('كود الموظف: #N-4892', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -109,7 +117,7 @@ class NurseProfileScreen extends StatelessWidget { // شاشة الملف الش
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
-        boxShadow: [BoxShadow(color: color.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: [BoxShadow(color: color.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: Column(
         children: [
@@ -158,14 +166,14 @@ class NurseProfileScreen extends StatelessWidget { // شاشة الملف الش
         Container( // شارة نوع الوردية
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
-            color: active ? (isDark ? const Color(0xFF0369A1).withOpacity(0.2) : const Color(0xFFF0F9FF)) : (isDark ? Colors.white10 : const Color(0xFFF1F5F9)),
+            color: active ? (isDark ? const Color(0xFF0369A1).withValues(alpha: 0.2) : const Color(0xFFF0F9FF)) : (isDark ? Colors.white10 : const Color(0xFFF1F5F9)),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(type, style: TextStyle(color: active ? (isDark ? const Color(0xFF38BDF8) : const Color(0xFF0369A1)) : (isDark ? Colors.white38 : const Color(0xFF64748B)), fontSize: 10, fontWeight: FontWeight.bold)),
         ),
         const Spacer(),
         Column( // تفاصيل التاريخ والوقت
-          crossAxisAlignment: CrossAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(date, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
             Text(time, style: TextStyle(fontSize: 11, color: isDark ? Colors.white60 : const Color(0xFF64748B))),
@@ -195,9 +203,9 @@ class NurseProfileScreen extends StatelessWidget { // شاشة الملف الش
       margin: const EdgeInsets.only(left: 12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(
         children: [
@@ -221,10 +229,10 @@ class NurseProfileScreen extends StatelessWidget { // شاشة الملف الش
       child: Column(
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('سارة أحمد (ابنة الحاج يحيى)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)), // اسم صاحب الرأي
                   Text('منذ ٣ أيام', style: TextStyle(fontSize: 10, color: isDark ? Colors.white38 : const Color(0xFF94A3B8))), // توقيت الرأي

@@ -106,9 +106,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> with Ticker
       builder: (context, child) {
         return Stack(
           children: [
-            _buildBlob(200, _pages[_currentPage].color.withOpacity(0.12), -50, 100, 1.2),
-            _buildBlob(150, _pages[_currentPage].color.withOpacity(0.08), 250, -50, 1.5),
-            _buildBlob(100, _pages[_currentPage].color.withOpacity(0.05), 50, 400, 1.8),
+            _buildBlob(200, _pages[_currentPage].color.withValues(alpha: 0.12), -50, 100, 1.2),
+            _buildBlob(150, _pages[_currentPage].color.withValues(alpha: 0.08), 250, -50, 1.5),
+            _buildBlob(100, _pages[_currentPage].color.withValues(alpha: 0.05), 50, 400, 1.8),
           ],
         );
       },
@@ -162,11 +162,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> with Ticker
             width: 220,
             height: 220,
             decoration: BoxDecoration(
-              color: data.color.withOpacity(0.1),
+              color: data.color.withValues(alpha: 0.1),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: data.color.withOpacity(0.2),
+                  color: data.color.withValues(alpha: 0.2),
                   blurRadius: 30,
                   offset: const Offset(0, 15),
                 )
@@ -183,7 +183,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> with Ticker
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: data.color.withOpacity(0.1),
+                        color: data.color.withValues(alpha: 0.1),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       )
@@ -226,7 +226,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> with Ticker
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: _pages[_currentPage].color.withOpacity(0.3),
+                    color: _pages[_currentPage].color.withValues(alpha: 0.3),
                     blurRadius: 15,
                     offset: const Offset(0, 8),
                   )

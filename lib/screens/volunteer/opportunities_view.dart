@@ -93,7 +93,7 @@ class _VolunteerOpportunitiesViewState
                 const SizedBox(height: 12),
                 ...others
                     .map((o) => _buildOpportunityCard(o, provider))
-                    .toList(),
+                    ,
                 const SizedBox(height: 24),
               ],
               if (filteredOpp.isEmpty)
@@ -284,7 +284,7 @@ class _VolunteerOpportunitiesViewState
                     )),
               ),
             );
-          }).toList(),
+          }),
         ],
       ),
     );
@@ -331,7 +331,7 @@ class _VolunteerOpportunitiesViewState
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                  color: const Color(0xFF10b981).withOpacity(0.3),
+                  color: const Color(0xFF10b981).withValues(alpha: 0.3),
                   blurRadius: 15,
                   spreadRadius: 2),
             ],
@@ -368,7 +368,7 @@ class _VolunteerOpportunitiesViewState
               Text(opp.org,
                   textAlign: TextAlign.right,
                   style: TextStyle(
-                      color: Colors.white.withOpacity(0.9), fontSize: 13)),
+                      color: Colors.white.withValues(alpha: 0.9), fontSize: 13)),
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -395,7 +395,7 @@ class _VolunteerOpportunitiesViewState
                         const SizedBox(height: 4),
                         Text('${opp.filledSlots}/${opp.totalSlots} سُجّل',
                             style: TextStyle(
-                                color: Colors.white.withOpacity(0.7),
+                                color: Colors.white.withValues(alpha: 0.7),
                                 fontSize: 10)),
                       ],
                     ),
@@ -452,7 +452,7 @@ class _VolunteerOpportunitiesViewState
             borderRadius: BorderRadius.circular(14),
             boxShadow: [
               BoxShadow(
-                color: Colors.white.withOpacity(0.4),
+                color: Colors.white.withValues(alpha: 0.4),
                 blurRadius: 10,
                 spreadRadius: 2,
               ),
@@ -537,7 +537,7 @@ class _VolunteerOpportunitiesViewState
                               fontWeight: FontWeight.bold,
                               color: Color(0xFF0f172a))),
                       Text(opp.org,
-                          style: TextStyle(
+                          style: const TextStyle(
                               color: Color(0xFF64748b), fontSize: 10)),
                       const SizedBox(height: 6),
                       Text(opp.description,
@@ -656,7 +656,7 @@ class _VolunteerOpportunitiesViewState
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.8),
+        color: Colors.white.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: const Color(0xFFffe4e6), width: 1.5),
       ),

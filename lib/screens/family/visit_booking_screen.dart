@@ -11,14 +11,15 @@ class VisitBookingScreen extends ConsumerStatefulWidget {
   ConsumerState<VisitBookingScreen> createState() => _VisitBookingScreenState();
 }
 
-class _VisitBookingScreenState extends ConsumerState<VisitBookingScreen> with TickerProviderStateMixin {
+class _VisitBookingScreenState extends ConsumerState<VisitBookingScreen>
+    with TickerProviderStateMixin {
   late AnimationController _floatController;
   late AnimationController _rotationController;
   int _selectedType = 0; // 0: Physical, 1: Video
   int _selectedDay = DateTime.now().day;
   String? _selectedSlot;
   final DateTime _now = DateTime.now();
-  
+
   int get _daysInMonth => DateTime(_now.year, _now.month + 1, 0).day;
   String get _monthName => _arabicMonths[_now.month - 1];
 
@@ -147,8 +148,8 @@ class _VisitBookingScreenState extends ConsumerState<VisitBookingScreen> with Ti
               top: -50 + (30 * _floatController.value),
               right: -40 + (20 * _floatController.value),
               child: _buildRealisticOrb(180, [
-                const Color(0xFFfb923c).withOpacity(0.3),
-                const Color(0xFFea580c).withOpacity(0.15),
+                const Color(0xFFfb923c).withValues(alpha: 0.3),
+                const Color(0xFFea580c).withValues(alpha: 0.15),
                 Colors.transparent,
               ]),
             ),
@@ -157,8 +158,8 @@ class _VisitBookingScreenState extends ConsumerState<VisitBookingScreen> with Ti
               bottom: -30 + (40 * (1 - _floatController.value)),
               left: -40 + (25 * _floatController.value),
               child: _buildRealisticOrb(160, [
-                const Color(0xFFfdba74).withOpacity(0.25),
-                const Color(0xFFf97316).withOpacity(0.1),
+                const Color(0xFFfdba74).withValues(alpha: 0.25),
+                const Color(0xFFf97316).withValues(alpha: 0.1),
                 Colors.transparent,
               ]),
             ),
@@ -167,7 +168,7 @@ class _VisitBookingScreenState extends ConsumerState<VisitBookingScreen> with Ti
               top: 40 + (30 * sin(_floatController.value * pi)),
               left: 100 + (20 * cos(_floatController.value * pi)),
               child: _buildRealisticOrb(80, [
-                const Color(0xFFfed7aa).withOpacity(0.15),
+                const Color(0xFFfed7aa).withValues(alpha: 0.15),
                 Colors.transparent,
               ]),
             ),
@@ -176,7 +177,7 @@ class _VisitBookingScreenState extends ConsumerState<VisitBookingScreen> with Ti
               top: 20,
               left: -10,
               child: _buildRealisticOrb(60, [
-                const Color(0xFFfb923c).withOpacity(0.1),
+                const Color(0xFFfb923c).withValues(alpha: 0.1),
                 Colors.transparent,
               ]),
             ),
@@ -198,7 +199,6 @@ class _VisitBookingScreenState extends ConsumerState<VisitBookingScreen> with Ti
               shape: BoxShape.circle,
               gradient: RadialGradient(
                 colors: baseColors,
-                stops: const [0.0, 0.6, 1.0],
               ),
             ),
           ),
@@ -210,9 +210,9 @@ class _VisitBookingScreenState extends ConsumerState<VisitBookingScreen> with Ti
                 gradient: SweepGradient(
                   colors: [
                     Colors.transparent,
-                    Colors.white.withOpacity(0.1),
+                    Colors.white.withValues(alpha: 0.1),
                     Colors.transparent,
-                    Colors.white.withOpacity(0.05),
+                    Colors.white.withValues(alpha: 0.05),
                     Colors.transparent,
                   ],
                   stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
@@ -249,12 +249,10 @@ class _VisitBookingScreenState extends ConsumerState<VisitBookingScreen> with Ti
     return Row(
       children: [
         Expanded(
-            child:
-                _buildTypeCard(1, 'مكالمة فيديو', Icons.videocam_rounded)),
+            child: _buildTypeCard(1, 'مكالمة فيديو', Icons.videocam_rounded)),
         const SizedBox(width: 16),
         Expanded(
-            child: _buildTypeCard(
-                0, 'لقاء مودة', Icons.people_alt_rounded)),
+            child: _buildTypeCard(0, 'لقاء مودة', Icons.people_alt_rounded)),
       ],
     );
   }
@@ -273,7 +271,7 @@ class _VisitBookingScreenState extends ConsumerState<VisitBookingScreen> with Ti
               width: 2),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withOpacity(isSel ? 0.05 : 0.02),
+                color: Colors.black.withValues(alpha: isSel ? 0.05 : 0.02),
                 blurRadius: 10,
                 offset: const Offset(0, 4))
           ],
@@ -281,7 +279,8 @@ class _VisitBookingScreenState extends ConsumerState<VisitBookingScreen> with Ti
         child: Column(
           children: [
             Icon(icon,
-                color: isSel ? const Color(0xFFea580c) : const Color(0xFF94a3b8),
+                color:
+                    isSel ? const Color(0xFFea580c) : const Color(0xFF94a3b8),
                 size: 32),
             const SizedBox(height: 12),
             Text(label,
@@ -306,7 +305,7 @@ class _VisitBookingScreenState extends ConsumerState<VisitBookingScreen> with Ti
         border: Border.all(color: const Color(0xFFf1f5f9)),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: Colors.black.withValues(alpha: 0.02),
               blurRadius: 20,
               offset: const Offset(0, 10))
         ],
@@ -390,7 +389,7 @@ class _VisitBookingScreenState extends ConsumerState<VisitBookingScreen> with Ti
                   width: 1.5),
               boxShadow: [
                 BoxShadow(
-                    color: Colors.black.withOpacity(isSel ? 0.1 : 0.02),
+                    color: Colors.black.withValues(alpha: isSel ? 0.1 : 0.02),
                     blurRadius: 8,
                     offset: const Offset(0, 2))
               ],
@@ -417,14 +416,15 @@ class _VisitBookingScreenState extends ConsumerState<VisitBookingScreen> with Ti
       height: 64,
       decoration: BoxDecoration(
         gradient: canConfirm
-            ? const LinearGradient(colors: [Color(0xFFea580c), Color(0xFFf97316)])
+            ? const LinearGradient(
+                colors: [Color(0xFFea580c), Color(0xFFf97316)])
             : null,
         color: canConfirm ? null : const Color(0xFFe2e8f0),
         borderRadius: BorderRadius.circular(20),
         boxShadow: canConfirm
             ? [
                 BoxShadow(
-                    color: const Color(0xFFea580c).withOpacity(0.3),
+                    color: const Color(0xFFea580c).withValues(alpha: 0.3),
                     blurRadius: 20,
                     offset: const Offset(0, 8))
               ]

@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw; // مكتبة تصميم صفحات PDF
 import 'package:printing/printing.dart'; // مكتبة الطباعة ومعاينة الملفات
@@ -33,8 +32,8 @@ class PdfService {
                 pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
-                    pw.Text('طبـطبـة - نظام رعاية المسنين', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
-                    pw.Text('تقرير تقييم دوري', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+                    pw.Text('طبـطبـة - نظام رعاية المسنين', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+                    pw.Text('تقرير تقييم دوري', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
                   ],
                 ),
                 pw.SizedBox(height: 20),
@@ -61,9 +60,9 @@ class PdfService {
                 // الملخص التنفيذي (Summary Box)
                 pw.Container(
                   padding: const pw.EdgeInsets.all(10),
-                  decoration: pw.BoxDecoration(
+                  decoration: const pw.BoxDecoration(
                     color: PdfColors.grey100,
-                    borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
+                    borderRadius: pw.BorderRadius.all(pw.Radius.circular(8)),
                   ),
                   child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -102,7 +101,7 @@ class PdfService {
                       ],
                     ),
                   );
-                }).toList(),
+                }),
                 
                 pw.Spacer(), // مساحة فارغة لدفع التوقيع للأسفل
                 pw.Divider(),

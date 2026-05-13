@@ -100,14 +100,14 @@ class LockPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = color.withOpacity(0.9)
+      ..color = color.withValues(alpha: 0.9)
       ..style = PaintingStyle.fill;
     final strokePaint = Paint()
       ..color = const Color(0xFF6C63FF)
       ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke;
     final whitePaint = Paint()
-      ..color = color.withOpacity(0.9)
+      ..color = color.withValues(alpha: 0.9)
       ..strokeWidth = 1.8
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
@@ -312,10 +312,11 @@ class StarPainter extends CustomPainter {
       final angle = (i * 3.14159 / 5) - (3.14159 / 2);
       final x = center.dx + radius * cos(angle);
       final y = center.dy + radius * sin(angle);
-      if (i == 0)
+      if (i == 0) {
         path.moveTo(x, y);
-      else
+      } else {
         path.lineTo(x, y);
+      }
     }
     path.close();
     canvas.drawPath(path, paint);

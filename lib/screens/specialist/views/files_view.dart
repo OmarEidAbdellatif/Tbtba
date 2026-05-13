@@ -73,7 +73,7 @@ class SpecialistFilesView extends ConsumerWidget {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 15,
                     offset: const Offset(0, 5))
               ],
@@ -81,14 +81,14 @@ class SpecialistFilesView extends ConsumerWidget {
             child: TextField(
               onChanged: (v) => provider.setResidentFilesSearchQuery(v),
               textAlign: TextAlign.right,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText: 'بحث باسم المقيم أو رقم الغرفة...',
                 hintStyle:
-                    const TextStyle(fontSize: 13, color: Color(0xFF94a3b8)),
-                prefixIcon: const Icon(Icons.search, color: Color(0xFFea580c)),
+                    TextStyle(fontSize: 13, color: Color(0xFF94a3b8)),
+                prefixIcon: Icon(Icons.search, color: Color(0xFFea580c)),
                 border: InputBorder.none,
                 contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                    EdgeInsets.symmetric(horizontal: 20, vertical: 15),
               ),
             ),
           ),
@@ -123,7 +123,7 @@ class SpecialistFilesView extends ConsumerWidget {
                 boxShadow: isAct
                     ? [
                         BoxShadow(
-                            color: const Color(0xFFea580c).withOpacity(0.3),
+                            color: const Color(0xFFea580c).withValues(alpha: 0.3),
                             blurRadius: 8,
                             offset: const Offset(0, 3))
                       ]
@@ -153,10 +153,10 @@ class SpecialistFilesView extends ConsumerWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xFFfed7aa).withOpacity(0.5)),
+          border: Border.all(color: const Color(0xFFfed7aa).withValues(alpha: 0.5)),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withOpacity(0.03),
+                color: Colors.black.withValues(alpha: 0.03),
                 blurRadius: 20,
                 offset: const Offset(0, 10))
           ],
@@ -231,7 +231,7 @@ class SpecialistFilesView extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                              color: const Color(0xFFea580c).withOpacity(0.2),
+                              color: const Color(0xFFea580c).withValues(alpha: 0.2),
                               blurRadius: 10)
                         ],
                       ),
@@ -453,9 +453,9 @@ class SpecialistFilesView extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Text(label,
           style: TextStyle(
@@ -556,7 +556,7 @@ class SpecialistFilesView extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration:
-          BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
+          BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
       child: Icon(icon, color: color, size: 20),
     );
   }

@@ -57,7 +57,7 @@ class SpecialistAssessmentView extends ConsumerWidget {
                 // عرض قائمة المقيمين الذين يحتاجون لتقييم دوري
                 ...provider.filteredResidentScores
                     .map((score) => _buildResidentAssessmentCard(context, score))
-                    .toList(),
+                    ,
               ],
               const SizedBox(height: 40),
             ]),
@@ -69,8 +69,9 @@ class SpecialistAssessmentView extends ConsumerWidget {
 
   // بناء بنر المزامنة عند وجود بيانات لم تُرفع بعد
   Widget _buildSyncBanner(AppRiverpod provider) {
-    if (provider.pendingAssessments.isEmpty && !provider.isSyncing)
+    if (provider.pendingAssessments.isEmpty && !provider.isSyncing) {
       return const SizedBox.shrink();
+    }
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -358,7 +359,7 @@ class SpecialistAssessmentView extends ConsumerWidget {
               border: Border.all(color: const Color(0xFFe2e8f0)),
               boxShadow: [
                 BoxShadow(
-                    color: Colors.black.withOpacity(0.02),
+                    color: Colors.black.withValues(alpha: 0.02),
                     blurRadius: 10,
                     offset: const Offset(0, 4))
               ]),
@@ -421,7 +422,7 @@ class SpecialistAssessmentView extends ConsumerWidget {
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                   color: score.isUrgent
-                      ? const Color(0xFFef4444).withOpacity(0.5)
+                      ? const Color(0xFFef4444).withValues(alpha: 0.5)
                       : const Color(0xFFfed7aa),
                   width: 1.5)),
           child: Column(
@@ -454,8 +455,8 @@ class SpecialistAssessmentView extends ConsumerWidget {
                 Container(
                     width: 44,
                     height: 44,
-                    decoration: BoxDecoration(
-                        color: const Color(0xFFffe4e6), shape: BoxShape.circle),
+                    decoration: const BoxDecoration(
+                        color: Color(0xFFffe4e6), shape: BoxShape.circle),
                     child: Center(
                         child: Text(score.initials,
                             style: const TextStyle(
@@ -466,7 +467,7 @@ class SpecialistAssessmentView extends ConsumerWidget {
               const SizedBox(height: 16),
               ...score.scores.entries
                   .map((e) => _buildProgressRow(e.key, e.value))
-                  .toList(), // عرض أشرطة التقدم لكل نوع تقييم
+                  , // عرض أشرطة التقدم لكل نوع تقييم
               const SizedBox(height: 16),
               Row(children: [
                 Expanded(
@@ -703,7 +704,7 @@ class SpecialistAssessmentView extends ConsumerWidget {
           },
           child: Container(
             decoration: BoxDecoration(
-              color: (r['color'] as Color).withOpacity(0.1), // لون الخلفية شفاف قليلاً
+              color: (r['color'] as Color).withValues(alpha: 0.1), // لون الخلفية شفاف قليلاً
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: r['color'] as Color, width: 2), // إطار ملون يعكس الحالة
             ),
@@ -711,7 +712,7 @@ class SpecialistAssessmentView extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(r['initials'], style: TextStyle(color: r['color'] as Color, fontWeight: FontWeight.bold, fontSize: 12)),
-                Text('غ ${r['room']}', style: TextStyle(color: (r['color'] as Color).withOpacity(0.8), fontSize: 9)),
+                Text('غ ${r['room']}', style: TextStyle(color: (r['color'] as Color).withValues(alpha: 0.8), fontSize: 9)),
               ],
             ),
           ),

@@ -39,7 +39,7 @@ class AdminReportsView extends ConsumerWidget {
       children: [
         const Text('تقارير الأداء المركزية', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF0f172a))),
         const SizedBox(height: 4),
-        Text('محدث بتاريخ الآن', style: TextStyle(fontSize: 12, color: const Color(0xFF64748b).withOpacity(0.8))),
+        Text('محدث بتاريخ الآن', style: TextStyle(fontSize: 12, color: const Color(0xFF64748b).withValues(alpha: 0.8))),
       ],
     );
   }
@@ -138,7 +138,7 @@ class AdminReportsView extends ConsumerWidget {
         children: List.generate(6, (index) => Container(
           width: 25,
           height: (20 + (index * 10)).toDouble(),
-          decoration: BoxDecoration(color: color.withOpacity(0.2), borderRadius: BorderRadius.circular(6)),
+          decoration: BoxDecoration(color: color.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(6)),
         )),
       ),
     );
@@ -176,7 +176,7 @@ class AdminReportsView extends ConsumerWidget {
       borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: c.withOpacity(0.2))),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: c.withValues(alpha: 0.2))),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

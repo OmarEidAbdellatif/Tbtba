@@ -69,7 +69,7 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
             child: Container(
               padding: const EdgeInsets.all(15),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.18),
+                color: Colors.white.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Row(
@@ -97,7 +97,7 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
                         Text(
                             'من ${provider.totalReviews} تقييم من المقيمين والإدارة',
                             style: TextStyle(
-                                color: Colors.white.withOpacity(0.75),
+                                color: Colors.white.withValues(alpha: 0.75),
                                 fontSize: 10)),
                       ],
                     ),
@@ -123,7 +123,7 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
           CircularProgressIndicator(
             value: score / 5,
             strokeWidth: 5,
-            backgroundColor: Colors.white.withOpacity(0.2),
+            backgroundColor: Colors.white.withValues(alpha: 0.2),
             color: Colors.white,
           ),
           Text('${(score / 5 * 100).toInt()}%',
@@ -205,7 +205,7 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
     return [
       _buildSectionLabel('تقييمات بانتظار الإرسال', const Color(0xFF10b981), 0),
       const SizedBox(height: 12),
-      ...pending.map((r) => _buildInteractiveRatingCard(r)).toList(),
+      ...pending.map((r) => _buildInteractiveRatingCard(r)),
       const SizedBox(height: 24),
       _buildSectionLabel('تاريخ تقييماتي للمقيمين', const Color(0xFF10b981), 1),
       const SizedBox(height: 12),
@@ -239,7 +239,7 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-                color: const Color(0xFF10b981).withOpacity(0.3),
+                color: const Color(0xFF10b981).withValues(alpha: 0.3),
                 blurRadius: 10,
                 spreadRadius: 1)
           ],
@@ -253,7 +253,7 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8)),
                     child: const Text('⏰ منذ يوم',
                         textAlign: TextAlign.center,
@@ -290,7 +290,7 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.25),
+                      color: Colors.white.withValues(alpha: 0.25),
                       shape: BoxShape.circle),
                   child: Center(
                       child: Text(review.icon,
@@ -325,9 +325,9 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
               decoration: InputDecoration(
                 hintText: 'أضف ملاحظة للأخصائي الاجتماعي...',
                 hintStyle: TextStyle(
-                    color: Colors.white.withOpacity(0.5), fontSize: 11),
+                    color: Colors.white.withValues(alpha: 0.5), fontSize: 11),
                 filled: true,
-                fillColor: Colors.white.withOpacity(0.15),
+                fillColor: Colors.white.withValues(alpha: 0.15),
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none),
@@ -500,7 +500,7 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
       _buildSectionLabel(
           'آخر ما قاله عنك المقيمون', const Color(0xFF10b981), 1),
       const SizedBox(height: 12),
-      ...provider.volunteerRatings.map((r) => _buildReviewCard(r)).toList(),
+      ...provider.volunteerRatings.map((r) => _buildReviewCard(r)),
     ];
   }
 
@@ -719,18 +719,18 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
   }
 
   Widget _buildPerformanceRing() {
-    return SizedBox(
+    return const SizedBox(
       width: 65,
       height: 65,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          const CircularProgressIndicator(
+          CircularProgressIndicator(
               value: 0.85,
               strokeWidth: 6,
               backgroundColor: Color(0xFFd1fae5),
               color: Color(0xFF10b981)),
-          const Column(
+          Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text('٨٥٪',

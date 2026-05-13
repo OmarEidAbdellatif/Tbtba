@@ -1,17 +1,16 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/app_riverpod.dart';
 import '../../models/app_models.dart';
-import 'nurse_dashboard_screen.dart';
-import 'nurse_medications_screen.dart';
 import 'nurse_resident_detail_screen.dart';
+import 'widgets/healing_particles.dart';
 
 class NurseResidentsScreen extends ConsumerStatefulWidget {
   const NurseResidentsScreen({super.key});
 
   @override
-  ConsumerState<NurseResidentsScreen> createState() => _NurseResidentsScreenState();
+  ConsumerState<NurseResidentsScreen> createState() =>
+      _NurseResidentsScreenState();
 }
 
 class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
@@ -75,7 +74,8 @@ class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+      backgroundColor:
+          isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
       body: Column(
         children: [
           Expanded(
@@ -109,12 +109,13 @@ class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       child: Stack(
         children: [
+          const HealingParticles(), // إضافة الأنيميشن
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 30),
               const Text(
-                'ملفات المقيمين 📋',
+                'ملفات المقيمين',
                 style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -150,7 +151,7 @@ class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
       margin: const EdgeInsets.only(left: 7),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.18),
+        color: Colors.white.withValues(alpha: 0.18),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -197,18 +198,27 @@ class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
                   decoration: BoxDecoration(
                     color: isDark ? const Color(0xFF1E293B) : Colors.white,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
+                    border: Border.all(
+                        color:
+                            isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
                   ),
                   child: TextField(
                     textAlign: TextAlign.right,
                     onChanged: (v) => setState(() => _searchQuery = v),
-                    style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 13),
+                    style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black,
+                        fontSize: 13),
                     decoration: InputDecoration(
                       hintText: '...ابحث بالاسم أو رقم الغرفة',
-                      hintStyle:
-                          TextStyle(fontSize: 12, color: isDark ? Colors.white38 : const Color(0xFF94A3B8)),
-                      prefixIcon:
-                          Icon(Icons.search, color: isDark ? Colors.white38 : const Color(0xFF94A3B8), size: 20),
+                      hintStyle: TextStyle(
+                          fontSize: 12,
+                          color: isDark
+                              ? Colors.white38
+                              : const Color(0xFF94A3B8)),
+                      prefixIcon: Icon(Icons.search,
+                          color:
+                              isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                          size: 20),
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(vertical: 10),
                     ),
@@ -222,7 +232,8 @@ class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
                 decoration: BoxDecoration(
                   color: isDark ? const Color(0xFF1E293B) : Colors.white,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
+                  border: Border.all(
+                      color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
                 ),
                 child: const Icon(Icons.filter_list_rounded,
                     color: Color(0xFF0369A1)),
@@ -235,11 +246,11 @@ class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
             reverse: true,
             child: Row(
               children: [
-                _filterChip(isDark, '🆕 جديد', 'جديد'),
-                _filterChip(isDark, '✅ مستقرة', 'مستقرة ✅'),
-                _filterChip(isDark, '🟡 تحذير', 'تحذير 🟡'),
-                _filterChip(isDark, '🔴 حرجة', 'حرجة 🔴'),
                 _filterChip(isDark, 'الكل (٢٤)', 'الكل (٢٤)'),
+                _filterChip(isDark, '🔴 حرجة', 'حرجة 🔴'),
+                _filterChip(isDark, '🟡 تحذير', 'تحذير 🟡'),
+                _filterChip(isDark, '✅ مستقرة', 'مستقرة ✅'),
+                _filterChip(isDark, '🆕 جديد', 'جديد'),
               ],
             ),
           ),
@@ -256,17 +267,23 @@ class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
         margin: const EdgeInsets.only(left: 8),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF0369A1) : (isDark ? const Color(0xFF1E293B) : Colors.white),
+          color: isSelected
+              ? const Color(0xFF0369A1)
+              : (isDark ? const Color(0xFF1E293B) : Colors.white),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-              color: isSelected ? const Color(0xFF0369A1) : (isDark ? Colors.white12 : const Color(0xFFE2E8F0))),
+              color: isSelected
+                  ? const Color(0xFF0369A1)
+                  : (isDark ? Colors.white12 : const Color(0xFFE2E8F0))),
         ),
         child: Text(
           label,
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.bold,
-            color: isSelected ? Colors.white : (isDark ? Colors.white70 : const Color(0xFF64748B)),
+            color: isSelected
+                ? Colors.white
+                : (isDark ? Colors.white70 : const Color(0xFF64748B)),
           ),
         ),
       ),
@@ -275,25 +292,34 @@ class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
 
   Widget _buildBody(bool isDark) {
     final provider = ref.watch(appRiverpod);
-    
+
     String getLatestNote(String name) {
       final notes = provider.getNotesForResident(name);
-      return notes.isNotEmpty ? '${notes.first.title}: ${notes.first.content}' : '';
+      return notes.isNotEmpty
+          ? '${notes.first.title}: ${notes.first.content}'
+          : '';
     }
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         children: [
-          if ((_selectedFilter == 'الكل (٢٤)' || _selectedFilter == 'حرجة 🔴') &&
-              ('الحاج محمود سالم'.contains(_searchQuery) || '١٠٣'.contains(_searchQuery)))
+          if ((_selectedFilter == 'الكل (٢٤)' ||
+                  _selectedFilter == 'حرجة 🔴') &&
+              ('الحاج محمود سالم'.contains(_searchQuery) ||
+                  '١٠٣'.contains(_searchQuery)))
             _buildCriticalSection(getLatestNote('الحاج محمود سالم')),
-          if ((_selectedFilter == 'الكل (٢٤)' || _selectedFilter == 'تحذير 🟡') &&
-              ('الحاجة فاطمة علي'.contains(_searchQuery) || '١٠٧'.contains(_searchQuery)))
+          if ((_selectedFilter == 'الكل (٢٤)' ||
+                  _selectedFilter == 'تحذير 🟡') &&
+              ('الحاجة فاطمة علي'.contains(_searchQuery) ||
+                  '١٠٧'.contains(_searchQuery)))
             _buildWarningSection(getLatestNote('الحاجة فاطمة علي')),
-          if ((_selectedFilter == 'الكل (٢٤)' || _selectedFilter == 'مستقرة ✅') &&
-              ('الحاج أحمد كمال'.contains(_searchQuery) || '١١٢'.contains(_searchQuery) ||
-               'الحاجة سمية إبراهيم'.contains(_searchQuery) || '١١٥'.contains(_searchQuery)))
+          if ((_selectedFilter == 'الكل (٢٤)' ||
+                  _selectedFilter == 'مستقرة ✅') &&
+              ('الحاج أحمد كمال'.contains(_searchQuery) ||
+                  '١١٢'.contains(_searchQuery) ||
+                  'الحاجة سمية إبراهيم'.contains(_searchQuery) ||
+                  '١١٥'.contains(_searchQuery)))
             _buildStableSection(
               getLatestNote('الحاج أحمد كمال'),
               getLatestNote('الحاجة سمية إبراهيم'),
@@ -304,7 +330,6 @@ class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
       ),
     );
   }
-
 
   Widget _buildCriticalSection(String latestNote) {
     return Column(
@@ -350,16 +375,21 @@ class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
           medPercentage: '٣٣٪',
           note: latestNote,
           actions: [
-            _actionBtn('🚑 طوارئ',
+            _actionBtn('طوارئ',
                 color: const Color(0xFF7F1D1D),
                 bg: const Color(0xFFFEE2E2),
                 onTap: () => _showEmergencyAlert('الحاج محمود سالم')),
-            _actionBtn('📋 الملف الكامل',
+            _actionBtn('الملف الكامل',
                 color: Colors.white,
                 isPrimary: true,
                 bg: const Color(0xFF0369A1),
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NurseResidentDetailScreen(residentName: 'الحاج محمود سالم', roomNumber: '١٠٣')))),
-            _actionBtn('💬 ملاحظة',
+                onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const NurseResidentDetailScreen(
+                            residentName: 'الحاج محمود سالم',
+                            roomNumber: '١٠٣')))),
+            _actionBtn('ملاحظة',
                 color: const Color(0xFF0369A1),
                 bg: const Color(0xFFF0F9FF),
                 onTap: () => _showNoteDialog('الحاج محمود سالم')),
@@ -414,16 +444,21 @@ class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
           medPercentage: '٥٠٪',
           note: latestNote,
           actions: [
-            _actionBtn('🚑 طوارئ',
+            _actionBtn('طوارئ',
                 color: const Color(0xFF7F1D1D),
                 bg: const Color(0xFFFEE2E2),
                 onTap: () => _showEmergencyAlert('الحاجة فاطمة علي')),
-            _actionBtn('📋 الملف الكامل',
+            _actionBtn('الملف الكامل',
                 color: const Color(0xFF0369A1),
                 bg: const Color(0xFFF0F9FF),
                 border: const Color(0xFFBAE6FD),
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NurseResidentDetailScreen(residentName: 'الحاجة فاطمة علي', roomNumber: '١٠٧')))),
-            _actionBtn('💬 ملاحظة',
+                onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const NurseResidentDetailScreen(
+                            residentName: 'الحاجة فاطمة علي',
+                            roomNumber: '١٠٧')))),
+            _actionBtn('ملاحظة',
                 color: const Color(0xFF0369A1),
                 bg: const Color(0xFFF0F9FF),
                 border: const Color(0xFFBAE6FD),
@@ -479,16 +514,21 @@ class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
           medPercentage: '٨٠٪',
           note: note1,
           actions: [
-            _actionBtn('💬 ملاحظة',
+            _actionBtn('ملاحظة',
                 color: const Color(0xFF0369A1),
                 bg: const Color(0xFFF0F9FF),
                 border: const Color(0xFFBAE6FD),
                 onTap: () => _showNoteDialog('الحاج أحمد كمال')),
-            _actionBtn('📋 الملف الكامل',
+            _actionBtn('الملف الكامل',
                 color: const Color(0xFF0369A1),
                 bg: const Color(0xFFF0F9FF),
                 border: const Color(0xFFBAE6FD),
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NurseResidentDetailScreen(residentName: 'الحاج أحمد كمال', roomNumber: '١١٢')))),
+                onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const NurseResidentDetailScreen(
+                            residentName: 'الحاج أحمد كمال',
+                            roomNumber: '١١٢')))),
           ],
         ),
         const SizedBox(height: 8),
@@ -505,12 +545,17 @@ class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
           medPercentage: '',
           note: note2,
           actions: [
-            _actionBtn('📋 الملف الكامل',
+            _actionBtn('الملف الكامل',
                 color: const Color(0xFF0369A1),
                 bg: const Color(0xFFF0F9FF),
                 border: const Color(0xFFBAE6FD),
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NurseResidentDetailScreen(residentName: 'الحاجة سمية إبراهيم', roomNumber: '١١٥')))),
-            _actionBtn('💬 ملاحظة',
+                onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const NurseResidentDetailScreen(
+                            residentName: 'الحاجة سمية إبراهيم',
+                            roomNumber: '١١٥')))),
+            _actionBtn('ملاحظة',
                 color: const Color(0xFF0369A1),
                 bg: const Color(0xFFF0F9FF),
                 border: const Color(0xFFBAE6FD),
@@ -520,7 +565,6 @@ class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
       ],
     );
   }
-
 
   Widget _buildResidentCard({
     required String name,
@@ -546,21 +590,33 @@ class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
 
     if (type == 'critical') {
       cardBorder = isDark ? const Color(0xFF991B1B) : const Color(0xFFFCA5A5);
-      headerBg = isDark ? const Color(0xFF7F1D1D).withOpacity(0.2) : const Color(0xFFFFF5F5);
-      avBg = isDark ? const Color(0xFF7F1D1D).withOpacity(0.3) : const Color(0xFFFFE4E6);
+      headerBg = isDark
+          ? const Color(0xFF7F1D1D).withValues(alpha: 0.2)
+          : const Color(0xFFFFF5F5);
+      avBg = isDark
+          ? const Color(0xFF7F1D1D).withValues(alpha: 0.3)
+          : const Color(0xFFFFE4E6);
       avFg = isDark ? const Color(0xFFFECACA) : const Color(0xFF9F1239);
       pipColor = const Color(0xFFEF4444);
       showPulse = true;
     } else if (type == 'warning') {
       cardBorder = isDark ? const Color(0xFF92400E) : const Color(0xFFFDE68A);
-      headerBg = isDark ? const Color(0xFF78350F).withOpacity(0.2) : const Color(0xFFFFFBEB);
-      avBg = isDark ? const Color(0xFF78350F).withOpacity(0.3) : const Color(0xFFFEF3C7);
+      headerBg = isDark
+          ? const Color(0xFF78350F).withValues(alpha: 0.2)
+          : const Color(0xFFFFFBEB);
+      avBg = isDark
+          ? const Color(0xFF78350F).withValues(alpha: 0.3)
+          : const Color(0xFFFEF3C7);
       avFg = isDark ? const Color(0xFFFDE68A) : const Color(0xFF92400E);
       pipColor = const Color(0xFFF59E0B);
     } else {
       cardBorder = isDark ? const Color(0xFF075985) : const Color(0xFFE0F2FE);
-      headerBg = isDark ? const Color(0xFF0C4A6E).withOpacity(0.2) : const Color(0xFFF0FDF4);
-      avBg = isDark ? const Color(0xFF0C4A6E).withOpacity(0.3) : const Color(0xFFD1FAE5);
+      headerBg = isDark
+          ? const Color(0xFF0C4A6E).withValues(alpha: 0.2)
+          : const Color(0xFFF0FDF4);
+      avBg = isDark
+          ? const Color(0xFF0C4A6E).withValues(alpha: 0.3)
+          : const Color(0xFFD1FAE5);
       avFg = isDark ? const Color(0xFFBAE6FD) : const Color(0xFF065F46);
       pipColor = const Color(0xFF10B981);
     }
@@ -665,7 +721,7 @@ class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
                   ),
                 ),
                 Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -726,7 +782,8 @@ class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
                     child: Text(
                       note,
                       textAlign: TextAlign.right,
-                      style: const TextStyle(fontSize: 10, color: Color(0xFF475569)),
+                      style: const TextStyle(
+                          fontSize: 10, color: Color(0xFF475569)),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -738,9 +795,14 @@ class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
           // Actions
           Container(
             padding: const EdgeInsets.all(13),
-            color: const Color(0xFFF8FAFC).withOpacity(0.5),
+            color: const Color(0xFFF8FAFC).withValues(alpha: 0.5),
             child: Row(
-              children: actions.map((a) => Expanded(child: Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: a))).toList(),
+              children: actions
+                  .map((a) => Expanded(
+                      child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: a)))
+                  .toList(),
             ),
           ),
         ],
@@ -748,7 +810,8 @@ class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
     );
   }
 
-  Widget _medDot(String txt, bool success, {bool warning = false, bool empty = false}) {
+  Widget _medDot(String txt, bool success,
+      {bool warning = false, bool empty = false}) {
     Color bg = const Color(0xFFF1F5F9);
     Color fg = const Color(0xFF94A3B8);
 
@@ -770,8 +833,8 @@ class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
       decoration: BoxDecoration(shape: BoxShape.circle, color: bg),
       child: Center(
         child: Text(txt,
-            style: TextStyle(
-                fontSize: 8, fontWeight: FontWeight.bold, color: fg)),
+            style:
+                TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: fg)),
       ),
     );
 
@@ -816,15 +879,22 @@ class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
   void _showNoteDialog(String residentName) {
     final titleController = TextEditingController();
     final contentController = TextEditingController();
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Column(
           children: [
-            Text('إضافة ملاحظة تمريضية', textAlign: TextAlign.right, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0369A1))),
-            Text('المقيم: $residentName', textAlign: TextAlign.right, style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+            const Text('إضافة ملاحظة تمريضية',
+                textAlign: TextAlign.right,
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0369A1))),
+            Text('المقيم: $residentName',
+                textAlign: TextAlign.right,
+                style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
           ],
         ),
         content: Column(
@@ -837,8 +907,12 @@ class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
                 hintText: 'عنوان الملاحظة (مثال: وجبة الغداء)',
                 filled: true,
                 fillColor: const Color(0xFFF8FAFC),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: const Color(0xFFE2E8F0))),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: const Color(0xFFE2E8F0))),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
               ),
             ),
             const SizedBox(height: 12),
@@ -850,26 +924,38 @@ class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
                 hintText: 'اكتب تفاصيل الملاحظة هنا...',
                 filled: true,
                 fillColor: const Color(0xFFF8FAFC),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: const Color(0xFFE2E8F0))),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: const Color(0xFFE2E8F0))),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
               ),
             ),
             const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                const Text('بواسطة: أ. منى (مشرف)', style: TextStyle(fontSize: 10, color: Color(0xFF94A3B8), fontWeight: FontWeight.bold)),
-                const SizedBox(width: 4),
-                const Icon(Icons.person_pin_rounded, size: 14, color: Color(0xFF94A3B8)),
+                Text('بواسطة: أ. منى (مشرف)',
+                    style: TextStyle(
+                        fontSize: 10,
+                        color: Color(0xFF94A3B8),
+                        fontWeight: FontWeight.bold)),
+                SizedBox(width: 4),
+                Icon(Icons.person_pin_rounded,
+                    size: 14, color: Color(0xFF94A3B8)),
               ],
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('إلغاء')),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('إلغاء')),
           ElevatedButton(
             onPressed: () {
-              if (titleController.text.isNotEmpty && contentController.text.isNotEmpty) {
+              if (titleController.text.isNotEmpty &&
+                  contentController.text.isNotEmpty) {
                 final newNote = NursingNote(
                   id: DateTime.now().millisecondsSinceEpoch.toString(),
                   residentName: residentName,
@@ -880,11 +966,17 @@ class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
                 );
                 ref.read(appRiverpod).addNursingNote(newNote);
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم تسجيل الملاحظة بنجاح ✅')));
+                ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('تم تسجيل الملاحظة بنجاح')));
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0EA5E9), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-            child: const Text('حفظ الملاحظة', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0EA5E9),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10))),
+            child: const Text('حفظ الملاحظة',
+                style: TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -897,18 +989,29 @@ class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         backgroundColor: const Color(0xFF7F1D1D),
-        title: const Text('🚨 تأكيد استغاثة', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        content: Text('هل أنت متأكد من تفعيل حالة الطوارئ لـ $residentName؟ سيتم تنبيه الفريق الطبي فوراً.', 
-          textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 14)),
+        title: const Text('🚨 تأكيد استغاثة',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        content: Text(
+            'هل أنت متأكد من تفعيل حالة الطوارئ لـ $residentName؟ سيتم تنبيه الفريق الطبي فوراً.',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.white, fontSize: 14)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('إلغاء', style: TextStyle(color: Colors.white70))),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child:
+                  const Text('إلغاء', style: TextStyle(color: Colors.white70))),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.red, content: Text('تم إرسال إشارة الطوارئ! 🚑')));
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  backgroundColor: Colors.red,
+                  content: Text('تم إرسال إشارة الطوارئ!')));
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
-            child: const Text('تأكيد الطوارئ', style: TextStyle(color: Color(0xFF7F1D1D), fontWeight: FontWeight.bold)),
+            child: const Text('تأكيد الطوارئ',
+                style: TextStyle(
+                    color: Color(0xFF7F1D1D), fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -922,13 +1025,18 @@ class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFBAE6FD), width: 1.5, style: BorderStyle.solid),
+        border: Border.all(
+            color: const Color(0xFFBAE6FD),
+            width: 1.5,
+            style: BorderStyle.solid),
       ),
       child: const Text(
         '+ ٢٠ مقيم آخر — اضغط لتحميل المزيد',
         textAlign: TextAlign.center,
         style: TextStyle(
-            fontSize: 11, color: Color(0xFF0369A1), fontWeight: FontWeight.bold),
+            fontSize: 11,
+            color: Color(0xFF0369A1),
+            fontWeight: FontWeight.bold),
       ),
     );
   }

@@ -51,7 +51,7 @@ class _VoiceMessagesPlaybackScreenState
                 width: 300,
                 height: 300,
                 decoration: BoxDecoration(
-                    color: const Color(0xFF6366f1).withOpacity(0.15),
+                    color: const Color(0xFF6366f1).withValues(alpha: 0.15),
                     shape: BoxShape.circle)),
           ),
 
@@ -116,7 +116,7 @@ class _VoiceMessagesPlaybackScreenState
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.voice_over_off_rounded,
-              size: 80, color: Colors.white.withOpacity(0.1)),
+              size: 80, color: Colors.white.withValues(alpha: 0.1)),
           const SizedBox(height: 24),
           const Text('لا توجد رسائل جديدة حالياً',
               style: TextStyle(color: Color(0xFF64748b), fontSize: 18)),
@@ -138,21 +138,21 @@ class _VoiceMessagesPlaybackScreenState
             ? const LinearGradient(
                 colors: [Color(0xFF6366f1), Color(0xFF8b5cf6)])
             : LinearGradient(colors: [
-                Colors.white.withOpacity(0.05),
-                Colors.white.withOpacity(0.02)
+                Colors.white.withValues(alpha: 0.05),
+                Colors.white.withValues(alpha: 0.02)
               ]),
         borderRadius: BorderRadius.circular(32),
         border: Border.all(
             color: isPlaying
                 ? Colors.transparent
                 : (isUnread
-                    ? const Color(0xFF6366f1).withOpacity(0.5)
+                    ? const Color(0xFF6366f1).withValues(alpha: 0.5)
                     : Colors.white10),
             width: 2),
         boxShadow: isPlaying
             ? [
                 BoxShadow(
-                    color: const Color(0xFF6366f1).withOpacity(0.4),
+                    color: const Color(0xFF6366f1).withValues(alpha: 0.4),
                     blurRadius: 20,
                     offset: const Offset(0, 8))
               ]
@@ -197,7 +197,7 @@ class _VoiceMessagesPlaybackScreenState
                                 : 'تم الاستماع إليها'),
                         style: TextStyle(
                             color: isPlaying
-                                ? Colors.white.withOpacity(0.8)
+                                ? Colors.white.withValues(alpha: 0.8)
                                 : (isUnread
                                     ? const Color(0xFF38bdf8)
                                     : const Color(0xFF94a3b8)),
@@ -238,7 +238,7 @@ class _VoiceMessagesPlaybackScreenState
                   ? [
                       BoxShadow(
                           color: Colors.white
-                              .withOpacity(0.3 * _pulseController.value),
+                              .withValues(alpha: 0.3 * _pulseController.value),
                           spreadRadius: 10 * _pulseController.value,
                           blurRadius: 15)
                     ]
@@ -275,7 +275,7 @@ class _VoiceMessagesPlaybackScreenState
               height: h,
               margin: const EdgeInsets.symmetric(horizontal: 2),
               decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.6),
+                  color: Colors.white.withValues(alpha: 0.6),
                   borderRadius: BorderRadius.circular(2)),
             );
           },

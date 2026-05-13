@@ -49,7 +49,6 @@ class _NurseMedicationsScreenState extends ConsumerState<NurseMedicationsScreen>
     return SingleChildScrollView(
       child: Column(
         children: [
-          _buildHero(), // الجزء العلوي: ملخص الورديات والأداء
           _buildPeriodTabs(), // التبويبات الزمنية (الصباح، الظهر، إلخ)
           _buildSearchFilter(), // شريط البحث والفرز المتقدم
           const SizedBox(height: 10),
@@ -64,139 +63,6 @@ class _NurseMedicationsScreenState extends ConsumerState<NurseMedicationsScreen>
     );
   }
 
-  // بناء الجزء العلوي (Hero) الذي يعرض ملخص الوردية الحالية
-  Widget _buildHero() {
-    final provider = ref.watch(appRiverpod);
-    final medications = provider.medications;
-    final completed = medications.where((m) => m.isTaken).length;
-    final missed = medications.where((m) => m.isMissed || m.isSkipped).length;
-    final upcoming = medications
-        .where((m) => !m.isTaken && !m.isSkipped && !m.isMissed)
-        .length;
-
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF0369A1), Color(0xFF0EA5E9), Color(0xFF38BDF8)],
-        ),
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            right: -30,
-            top: -40,
-            child: Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.08)),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('💊 جدول الأدوية',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 2),
-                        Text('اليوم — ${_getShiftName()}',
-                            style: TextStyle(
-                                color: Colors.white.withOpacity(0.8),
-                                fontSize: 11)),
-                      ],
-                    ),
-                    GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: Container(
-                        width: 34,
-                        height: 34,
-                        decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.18),
-                            shape: BoxShape.circle),
-                        child: const Icon(Icons.arrow_forward_ios_rounded,
-                            color: Colors.white, size: 16),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                // عرض مؤشرات الحالة السريعة (مكتمل، فائت، قادم)
-                Wrap(
-                  spacing: 7,
-                  runSpacing: 7,
-                  children: [
-                    _heroChip(
-                        'مكتمل $completed', const Color(0xFF4ADE80), false),
-                    _heroChip(
-                        'فائت $missed', const Color(0xFFEF4444), missed > 0),
-                    _heroChip('قادم $upcoming', const Color(0xFFFBBF24), false),
-                  ],
-                )
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _getShiftName() {
-    final hour = DateTime.now().hour;
-    if (hour >= 6 && hour < 14) return 'الوردية الصباحية (٦ ص - ٢ ظ)';
-    if (hour >= 14 && hour < 22) return 'الوردية المسائية (٢ ظ - ١٠ م)';
-    return 'الوردية الليلية (١٠ م - ٦ ص)';
-  }
-
-  Widget _heroChip(String label, Color dotColor, bool isBlink) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.18),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (isBlink)
-            FadeTransition(
-              opacity: Tween<double>(begin: 0.15, end: 1.0)
-                  .animate(_blinkController),
-              child: Container(
-                  width: 7,
-                  height: 7,
-                  decoration:
-                      BoxDecoration(shape: BoxShape.circle, color: dotColor)),
-            )
-          else
-            Container(
-                width: 7,
-                height: 7,
-                decoration:
-                    BoxDecoration(shape: BoxShape.circle, color: dotColor)),
-          const SizedBox(width: 5),
-          Text(label,
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold)),
-        ],
-      ),
-    );
-  }
-
   Widget _buildPeriodTabs() {
     return Container(
       decoration: const BoxDecoration(
@@ -204,21 +70,21 @@ class _NurseMedicationsScreenState extends ConsumerState<NurseMedicationsScreen>
           border: Border(bottom: BorderSide(color: Color(0xFFE0F2FE)))),
       child: Row(
         children: [
-          _periodTab('🌅', 'الصباح', '٨/٨ ✓', const Color(0xFFD1FAE5),
+          _periodTab('الصباح', '٨/٨ ✓', const Color(0xFFD1FAE5),
               const Color(0xFF065F46), false),
-          _periodTab('☀️', 'الظهر', '٢ فائت', const Color(0xFFFEE2E2),
+          _periodTab('الظهر', '٢ فائت', const Color(0xFFFEE2E2),
               const Color(0xFF7F1D1D), true),
-          _periodTab('🌆', 'المساء', '٧ قادم', const Color(0xFFFEF3C7),
+          _periodTab('المساء', '٧ قادم', const Color(0xFFFEF3C7),
               const Color(0xFF92400E), false),
-          _periodTab('🌙', 'الليل', '١٢ قادم', const Color(0xFFFEF3C7),
+          _periodTab('الليل', '١٢ قادم', const Color(0xFFFEF3C7),
               const Color(0xFF92400E), false),
         ],
       ),
     );
   }
 
-  Widget _periodTab(String icon, String label, String count, Color bg,
-      Color textC, bool active) {
+  Widget _periodTab(
+      String label, String count, Color bg, Color textC, bool active) {
     return Expanded(
       child: Container(
         decoration: BoxDecoration(
@@ -231,8 +97,6 @@ class _NurseMedicationsScreenState extends ConsumerState<NurseMedicationsScreen>
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         child: Column(
           children: [
-            Text(icon, style: const TextStyle(fontSize: 16)),
-            const SizedBox(height: 2),
             Text(label,
                 style: TextStyle(
                     fontSize: 9,
@@ -291,9 +155,9 @@ class _NurseMedicationsScreenState extends ConsumerState<NurseMedicationsScreen>
             child: Row(
               children: [
                 _filterChip('الكل (٢٤)', true),
-                _filterChip('فائت 🔴', false),
-                _filterChip('قادم ⏰', false),
-                _filterChip('مكتمل ✅', false),
+                _filterChip('فائت', false),
+                _filterChip('قادم', false),
+                _filterChip('مكتمل', false),
                 _filterChip('الغرفة', false),
               ],
             ),
@@ -383,12 +247,11 @@ class _NurseMedicationsScreenState extends ConsumerState<NurseMedicationsScreen>
               child: Column(
                 children: [
                   _statRow(
-                      '✅ مكتملة', '$completed جرعة', const Color(0xFF10B981)),
-                  _statRow('❌ فائتة', '$missed جرعة', const Color(0xFFEF4444)),
+                      'مكتملة', '$completed جرعة', const Color(0xFF10B981)),
+                  _statRow('فائتة', '$missed جرعة', const Color(0xFFEF4444)),
+                  _statRow('قادمة', '$upcoming جرعة', const Color(0xFFF59E0B)),
                   _statRow(
-                      '⏰ قادمة', '$upcoming جرعة', const Color(0xFFF59E0B)),
-                  _statRow(
-                      '📊 الالتزام العام',
+                      'الالتزام العام',
                       '${provider.compliancePercentage}%',
                       const Color(0xFF0369A1)),
                 ],
@@ -435,7 +298,7 @@ class _NurseMedicationsScreenState extends ConsumerState<NurseMedicationsScreen>
             final isCritical =
                 name.contains('محمود'); // محاكاة الأولوية للحالات الحرجة
             return _buildResidentCard(name, meds, isCritical);
-          }).toList(),
+          }),
           const SizedBox(height: 10),
           Container(
             width: double.infinity,
@@ -553,7 +416,7 @@ class _NurseMedicationsScreenState extends ConsumerState<NurseMedicationsScreen>
                             ? _getStatusWidget(m)
                             : _na(),
                         _na()))
-                    .toList(),
+                    ,
               ],
             ),
           ),
@@ -759,7 +622,7 @@ class _NurseMedicationsScreenState extends ConsumerState<NurseMedicationsScreen>
                       Border.all(color: const Color(0xFFBAE6FD), width: 1.5),
                   borderRadius: BorderRadius.circular(12)),
               child: const Center(
-                  child: Text('📤 إرسال تقرير',
+                  child: Text('إرسال تقرير',
                       style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
@@ -775,7 +638,7 @@ class _NurseMedicationsScreenState extends ConsumerState<NurseMedicationsScreen>
                       colors: [Color(0xFF0369A1), Color(0xFF0EA5E9)]),
                   borderRadius: BorderRadius.circular(12)),
               child: const Center(
-                  child: Text('✓ تأكيد جماعي',
+                  child: Text('تأكيد جماعي',
                       style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,

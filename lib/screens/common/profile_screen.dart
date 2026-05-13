@@ -61,7 +61,7 @@ class ProfileScreen extends ConsumerWidget { // شاشة الملف الشخصي
         gradient: LinearGradient( // تدرج لوني يعتمد على لون الدور
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [themeColor, themeColor.withOpacity(0.8)],
+          colors: [themeColor, themeColor.withValues(alpha: 0.8)],
         ),
         borderRadius: const BorderRadius.only( // حواف دائرية سفلية
           bottomLeft: Radius.circular(50),
@@ -111,7 +111,7 @@ class ProfileScreen extends ConsumerWidget { // شاشة الملف الشخصي
           Container( // شارة توضح الدور الوظيفي
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(role == 'مسن' ? 'خبير سعادة' : role,
@@ -157,7 +157,7 @@ class ProfileScreen extends ConsumerWidget { // شاشة الملف الشخصي
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 5))],
       ),
       child: Column(
         children: [

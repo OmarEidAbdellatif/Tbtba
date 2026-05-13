@@ -154,7 +154,7 @@ class _ResidentsManagementViewState
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.1),
+                    color: statusColor.withValues(alpha: 0.1),
                     shape: BoxShape.circle),
                 child: Center(
                   child: Text(r.name.substring(0, min(2, r.name.length)),
@@ -250,7 +250,7 @@ class _ResidentsManagementViewState
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.1),
+                    color: statusColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10)),
                 child: Text(statusText,
                     style: TextStyle(

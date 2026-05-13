@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/app_riverpod.dart';
@@ -70,7 +69,7 @@ class _TaptabaBellState extends ConsumerState<TaptabaBell>
           },
           child: Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF64748b).withOpacity(0.08),
+              color: const Color(0xFF64748b).withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
             child: IconButton(
@@ -168,18 +167,44 @@ class _TaptabaBellState extends ConsumerState<TaptabaBell>
                         itemCount: provider.filteredNotifications.length,
                         itemBuilder: (context, index) {
                           final notif = provider.filteredNotifications[index];
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 15),
+                          return Dismissible(
+                            key: Key(notif.id),
+                            direction: DismissDirection.horizontal,
+                            onDismissed: (direction) {
+                              provider.deleteNotification(notif.id);
+                            },
+                            background: Container(
+                              margin: const EdgeInsets.only(bottom: 15),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFEF4444),
+                                borderRadius: BorderRadius.circular(18),
+                              ),
+                              alignment: Alignment.centerRight,
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              child: const Icon(Icons.delete_outline, color: Colors.white),
+                            ),
+                            secondaryBackground: Container(
+                              margin: const EdgeInsets.only(bottom: 15),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFEF4444),
+                                borderRadius: BorderRadius.circular(18),
+                              ),
+                              alignment: Alignment.centerLeft,
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              child: const Icon(Icons.delete_outline, color: Colors.white),
+                            ),
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: 15),
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               color: notif.isRead
                                   ? Colors.grey[50]
-                                  : const Color(0xFF6C63FF).withOpacity(0.05),
+                                  : const Color(0xFF6C63FF).withValues(alpha: 0.05),
                               borderRadius: BorderRadius.circular(18),
                               border: Border.all(
                                 color: notif.isRead
                                     ? Colors.transparent
-                                    : const Color(0xFF6C63FF).withOpacity(0.1),
+                                    : const Color(0xFF6C63FF).withValues(alpha: 0.1),
                               ),
                             ),
                             child: Row(
@@ -188,7 +213,7 @@ class _TaptabaBellState extends ConsumerState<TaptabaBell>
                                   padding: const EdgeInsets.all(10),
                                   decoration: BoxDecoration(
                                     color: _getNotifColor(notif.type)
-                                        .withOpacity(0.1),
+                                        .withValues(alpha: 0.1),
                                     shape: BoxShape.circle,
                                   ),
                                   child: Icon(_getNotifIcon(notif.type),
@@ -226,6 +251,7 @@ class _TaptabaBellState extends ConsumerState<TaptabaBell>
                                   ),
                               ],
                             ),
+                          ),
                           );
                         },
                       ),

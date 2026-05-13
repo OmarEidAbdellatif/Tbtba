@@ -4,8 +4,8 @@ import 'package:flutter/material.dart'; // مكتبة فلاتر الأساسي�
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // مكتبة إدارة الحالة
 import '../../providers/app_riverpod.dart'; // مزود الحالة الرئيسي للتطبيق
 import '../../models/app_models.dart'; // نماذج البيانات (Medication, User, etc.)
-import '../../widgets/ai_companion_chat.dart'; // ويدجت رفيق الذكاء الاصطناعي
-import 'widgets/permission_dialog.dart'; // حوار طلب الصلاحيات المخصص
+// ويدجت رفيق الذكاء الاصطناعي
+// حوار طلب الصلاحيات المخصص
 
 class HomeScreen extends ConsumerStatefulWidget {
   // شاشة المسن الرئيسية
@@ -117,6 +117,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         provider, context), // بطاقة التواصل مع العائلة
                     const SizedBox(height: 12),
                     _buildPointsCard(provider), // بطاقة إجمالي النقاط
+                    const SizedBox(height: 12),
+                    _buildVolunteerRatingCard(provider, context), // بطاقة تقييم المتطوع
+                    const SizedBox(height: 12),
+                    _buildComplaintCard(provider, context), // بطاقة طلب المساعدة
                   ],
                 ),
               ),
@@ -217,15 +221,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-              color: const Color(0xFF6C63FF).withOpacity(0.1),
+              color: const Color(0xFF6C63FF).withValues(alpha: 0.1),
               blurRadius: 20,
               offset: const Offset(0, 8)),
         ],
       ),
       child: Column(
         children: [
-          Text('طمنا عليك، كيف حالك اليوم؟ ✨',
-              style: const TextStyle(
+          const Text('طمنا عليك، كيف حالك اليوم؟ ✨',
+              style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF1e293b))),
@@ -289,7 +293,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             height: size,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: color.withOpacity(0.4),
+              color: color.withValues(alpha: 0.4),
             ),
             child: BackdropFilter(
               filter:
@@ -317,10 +321,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 4),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.14),
+            color: Colors.white.withValues(alpha: 0.14),
             borderRadius: BorderRadius.circular(14),
             border:
-                Border.all(color: Colors.white.withOpacity(0.12), width: 0.8),
+                Border.all(color: Colors.white.withValues(alpha: 0.12), width: 0.8),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -338,7 +342,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 fit: BoxFit.scaleDown,
                 child: Text(label,
                     style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                         fontSize: 13,
                         fontWeight: FontWeight.w500)),
               ),
@@ -372,7 +376,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             borderRadius: BorderRadius.circular(28),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF6366F1).withOpacity(0.35),
+                color: const Color(0xFF6366F1).withValues(alpha: 0.35),
                 blurRadius: 24,
                 offset: const Offset(0, 8),
               ),
@@ -383,15 +387,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                const Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('الجرعة القادمة 💊',
+                    Text('الجرعة القادمة 💊',
                         style: TextStyle(
                             color: Colors.white,
                             fontSize: 22,
                             fontWeight: FontWeight.bold)),
-                    const SizedBox.shrink(),
+                    SizedBox.shrink(),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -423,7 +427,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                           Text(
                             nextMed != null ? 'بعد الغداء' : 'ممتاز!',
                             style: TextStyle(
-                                color: Colors.white.withOpacity(0.9),
+                                color: Colors.white.withValues(alpha: 0.9),
                                 fontSize: 18,
                                 fontWeight: FontWeight.w500),
                           ),
@@ -441,7 +445,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       padding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Row(
@@ -489,7 +493,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: Colors.white
-                        .withOpacity(0.4 * (1 - _ringController.value)),
+                        .withValues(alpha: 0.4 * (1 - _ringController.value)),
                     width: 5 * _ringController.value,
                   ),
                 ),
@@ -538,7 +542,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           borderRadius: BorderRadius.circular(22),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.12),
+              color: Colors.black.withValues(alpha: 0.12),
               blurRadius: 12,
               offset: const Offset(0, 5),
             ),
@@ -554,7 +558,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     fontWeight: FontWeight.bold)),
             const SizedBox(width: 10),
             Icon(Icons.check_circle_outline_rounded,
-                color: const Color(0xFF6366F1).withOpacity(0.3), size: 24),
+                color: const Color(0xFF6366F1).withValues(alpha: 0.3), size: 24),
           ],
         ),
       ),
@@ -570,7 +574,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         borderRadius: BorderRadius.circular(26),
         boxShadow: [
           BoxShadow(
-              color: const Color(0xFF6C63FF).withOpacity(hc ? 0.2 : 0.08),
+              color: const Color(0xFF6C63FF).withValues(alpha: hc ? 0.2 : 0.08),
               blurRadius: 20,
               offset: const Offset(0, 4))
         ],
@@ -582,13 +586,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            Row(
+            const Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                const Icon(Icons.phone_enabled_rounded,
+                Icon(Icons.phone_enabled_rounded,
                     color: Color(0xFF6C63FF), size: 28),
-                const SizedBox(width: 8),
-                const Text('اتصل بالأسرة',
+                SizedBox(width: 8),
+                Text('اتصل بالأسرة',
                     style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -681,7 +685,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: color.withOpacity(0.3),
+                          color: color.withValues(alpha: 0.3),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         )
@@ -732,7 +736,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         borderRadius: BorderRadius.circular(26),
         boxShadow: [
           BoxShadow(
-              color: const Color(0xFF6C63FF).withOpacity(hc ? 0.2 : 0.08),
+              color: const Color(0xFF6C63FF).withValues(alpha: hc ? 0.2 : 0.08),
               blurRadius: 20,
               offset: const Offset(0, 4))
         ],
@@ -837,6 +841,371 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     color: Color(0xFF7c3aed))),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildComplaintCard(AppRiverpod provider, BuildContext context) {
+    bool hc = provider.isHighContrast;
+    return GestureDetector(
+      onTap: () => _showElderlyComplaintSheet(provider, context),
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: hc ? const Color(0xFF1E1E1E) : const Color(0xFFFEF2F2),
+          borderRadius: BorderRadius.circular(26),
+          boxShadow: [
+            BoxShadow(
+                color: const Color(0xFFEF4444).withValues(alpha: hc ? 0.2 : 0.08),
+                blurRadius: 20,
+                offset: const Offset(0, 4))
+          ],
+          border: Border.all(
+              color: hc ? const Color(0xFF450a0a) : const Color(0xFFFECACA),
+              width: 1.5),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFCA5A5),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.room_service_rounded,
+                    color: Color(0xFFB91C1C), size: 32),
+              ),
+              const SizedBox(width: 16),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('طلب مساعدة / شكوى',
+                        style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF991B1B))),
+                    Text('هل تحتاج لشيء؟ نحن هنا لخدمتك.',
+                        style:
+                            TextStyle(fontSize: 16, color: Color(0xFFB91C1C))),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showElderlyComplaintSheet(AppRiverpod provider, BuildContext context) {
+    String selectedType = 'جودة الطعام';
+    final TextEditingController descController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return Padding(
+            padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                left: 20,
+                right: 20,
+                top: 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                      width: 50,
+                      height: 5,
+                      decoration: BoxDecoration(
+                          color: const Color(0xFFE2E8F0),
+                          borderRadius: BorderRadius.circular(4))),
+                ),
+                const SizedBox(height: 24),
+                const Text('أخبرنا بما يزعجك 📝',
+                    style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0F172A))),
+                const SizedBox(height: 24),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: [
+                    'جودة الطعام',
+                    'صيانة الغرفة',
+                    'مساعدة في التنظيف',
+                    'أحتاج ممرض',
+                    'أخرى'
+                  ].map((type) {
+                    final isSelected = selectedType == type;
+                    return GestureDetector(
+                      onTap: () => setModalState(() => selectedType = type),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? const Color(0xFFEA580C)
+                              : const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(type,
+                            style: TextStyle(
+                                color: isSelected
+                                    ? Colors.white
+                                    : const Color(0xFF475569),
+                                fontSize: 18,
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal)),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 24),
+                TextField(
+                  controller: descController,
+                  maxLines: 2,
+                  style: const TextStyle(fontSize: 18),
+                  decoration: InputDecoration(
+                    hintText: 'اكتب تفاصيل إضافية إن أردت...',
+                    filled: true,
+                    fillColor: const Color(0xFFF8FAFC),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  height: 60,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      provider.submitComplaint(
+                          descController.text.isNotEmpty
+                              ? descController.text
+                              : 'طلب من المسن بخصوص $selectedType',
+                          selectedType,
+                          'مسن');
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('تم استلام طلبك وسيتوجه فريقنا لخدمتك فوراً 🧡',
+                              style: TextStyle(fontSize: 18, fontFamily: 'Cairo')),
+                          backgroundColor: Color(0xFFEA580C),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFEA580C),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20)),
+                    ),
+                    child: const Text('إرسال الطلب',
+                        style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white)),
+                  ),
+                ),
+                const SizedBox(height: 32),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildVolunteerRatingCard(AppRiverpod provider, BuildContext context) {
+    bool hc = provider.isHighContrast;
+    return GestureDetector(
+      onTap: () => _showVolunteerRatingSheet(provider, context),
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: hc ? const Color(0xFF1E1E1E) : const Color(0xFFF0FDF4),
+          borderRadius: BorderRadius.circular(26),
+          boxShadow: [
+            BoxShadow(
+                color: const Color(0xFF22C55E).withValues(alpha: hc ? 0.2 : 0.08),
+                blurRadius: 20,
+                offset: const Offset(0, 4))
+          ],
+          border: Border.all(
+              color: hc ? const Color(0xFF052e16) : const Color(0xFFBBF7D0),
+              width: 1.5),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF86EFAC),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.volunteer_activism_rounded,
+                    color: Color(0xFF15803D), size: 32),
+              ),
+              const SizedBox(width: 16),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('كيف كانت جلستك التطوعية؟',
+                        style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF166534))),
+                    Text('أخبرنا برأيك في المتطوع الذي زارك مؤخراً.',
+                        style:
+                            TextStyle(fontSize: 14, color: Color(0xFF15803D))),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showVolunteerRatingSheet(AppRiverpod provider, BuildContext context) {
+    int selectedRating = 0; // 3 = happy, 2 = normal, 1 = sad
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return Padding(
+            padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                left: 20,
+                right: 20,
+                top: 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Center(
+                  child: Container(
+                      width: 50,
+                      height: 5,
+                      decoration: BoxDecoration(
+                          color: const Color(0xFFE2E8F0),
+                          borderRadius: BorderRadius.circular(4))),
+                ),
+                const SizedBox(height: 24),
+                const Text('تقييم زيارة التطوع 🌟',
+                    style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0F172A))),
+                const SizedBox(height: 12),
+                const Text('كيف كان وقتك مع المتطوع أحمد؟',
+                    style: TextStyle(fontSize: 18, color: Color(0xFF475569))),
+                const SizedBox(height: 32),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildRatingEmoji('☹️', 'غير سعيد', 1, selectedRating, () {
+                      setModalState(() => selectedRating = 1);
+                    }),
+                    _buildRatingEmoji('😐', 'عادي', 2, selectedRating, () {
+                      setModalState(() => selectedRating = 2);
+                    }),
+                    _buildRatingEmoji('😊', 'سعيد', 3, selectedRating, () {
+                      setModalState(() => selectedRating = 3);
+                    }),
+                  ],
+                ),
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  height: 60,
+                  child: ElevatedButton(
+                    onPressed: selectedRating == 0
+                        ? null
+                        : () {
+                            provider.rateVolunteerSession('v_123', selectedRating);
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('شكراً لتقييمك! نحن سعداء بخدمتك 🌸',
+                                    style: TextStyle(fontSize: 18, fontFamily: 'Cairo')),
+                                backgroundColor: Color(0xFF22C55E),
+                              ),
+                            );
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF22C55E),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20)),
+                      disabledBackgroundColor: const Color(0xFFE2E8F0),
+                    ),
+                    child: const Text('إرسال التقييم',
+                        style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white)),
+                  ),
+                ),
+                const SizedBox(height: 32),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildRatingEmoji(String emoji, String label, int value,
+      int selectedValue, VoidCallback onTap) {
+    bool isSelected = value == selectedValue;
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isSelected ? const Color(0xFFDCFCE7) : const Color(0xFFF1F5F9),
+              shape: BoxShape.circle,
+              border: Border.all(
+                  color: isSelected
+                      ? const Color(0xFF22C55E)
+                      : Colors.transparent,
+                  width: 3),
+            ),
+            child: Text(emoji,
+                style: TextStyle(fontSize: isSelected ? 48 : 36)),
+          ),
+          const SizedBox(height: 12),
+          Text(label,
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color:
+                      isSelected ? const Color(0xFF166534) : const Color(0xFF64748B))),
+        ],
       ),
     );
   }

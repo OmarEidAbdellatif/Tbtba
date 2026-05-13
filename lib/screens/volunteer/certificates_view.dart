@@ -162,7 +162,7 @@ class _VolunteerCertificatesViewState
             borderRadius: BorderRadius.circular(28),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF059669).withOpacity(0.15),
+                color: const Color(0xFF059669).withValues(alpha: 0.15),
                 blurRadius: 30,
                 offset: const Offset(0, 15),
               ),
@@ -214,11 +214,11 @@ class _VolunteerCertificatesViewState
                               TextStyle(color: Color(0xFF64748b), fontSize: 11),
                         ),
                         const SizedBox(height: 16),
-                        Text(
+                        const Text(
                           'عمر أحمد الشريف',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: const Color(0xFF065f46),
+                            color: Color(0xFF065f46),
                             fontSize: 28,
                             fontWeight: FontWeight.w900,
                             fontFamily: 'Cairo',
@@ -238,13 +238,13 @@ class _VolunteerCertificatesViewState
                           ),
                         ),
                         const SizedBox(height: 16),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 10),
                           child: Text(
                             'لمساهمته الاستثنائية وتفانيه في خدمة المجتمع من خلال برنامج "تابتيبا" للتطوع الرقمي والاجتماعي.',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: const Color(0xFF64748b),
+                              color: Color(0xFF64748b),
                               fontSize: 11,
                               height: 1.6,
                             ),
@@ -268,7 +268,7 @@ class _VolunteerCertificatesViewState
                     width: 100,
                     height: 100,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFd1fae5).withOpacity(0.1),
+                      color: const Color(0xFFd1fae5).withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -296,7 +296,7 @@ class _VolunteerCertificatesViewState
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF065f46).withOpacity(0.2),
+            color: const Color(0xFF065f46).withValues(alpha: 0.2),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -319,7 +319,7 @@ class _VolunteerCertificatesViewState
               Text(
                 'صدرت في ${cert.date}',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha: 0.8),
                   fontSize: 9,
                 ),
               ),
@@ -619,7 +619,7 @@ class _VolunteerCertificatesViewState
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                     color: cert.isLocked
-                        ? const Color(0xFFd1fae5).withOpacity(0.5)
+                        ? const Color(0xFFd1fae5).withValues(alpha: 0.5)
                         : const Color(0xFFd1fae5),
                     width: cert.isLocked ? 1 : 2),
               ),
@@ -739,18 +739,18 @@ class _VolunteerCertificatesViewState
   }
 
   Widget _buildRingSummary() {
-    return SizedBox(
+    return const SizedBox(
       width: 70,
       height: 70,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          const CircularProgressIndicator(
+          CircularProgressIndicator(
               value: 0.76,
               strokeWidth: 6,
               backgroundColor: Color(0xFFd1fae5),
               color: Color(0xFF059669)),
-          const Column(
+          Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text('٧٦٪',

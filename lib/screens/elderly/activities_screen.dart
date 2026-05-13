@@ -167,7 +167,7 @@ class _ActivitiesScreenState extends ConsumerState<ActivitiesScreen>
         Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.2),
+            color: color.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(icon, color: color, size: 20),
@@ -285,7 +285,7 @@ class _ActivitiesScreenState extends ConsumerState<ActivitiesScreen>
         ),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2))
         ],
@@ -337,7 +337,7 @@ class _ActivitiesScreenState extends ConsumerState<ActivitiesScreen>
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: (isDone ? const Color(0xFF16A34A) : const Color(0xFF6366F1)).withOpacity(0.15),
+                  color: (isDone ? const Color(0xFF16A34A) : const Color(0xFF6366F1)).withValues(alpha: 0.15),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 )
@@ -387,7 +387,7 @@ class _ActivitiesScreenState extends ConsumerState<ActivitiesScreen>
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFF4F46E5)
-                    .withOpacity(0.25 + _glowController.value * 0.2),
+                    .withValues(alpha: 0.25 + _glowController.value * 0.2),
                 blurRadius: 20 + _glowController.value * 10,
                 spreadRadius: _glowController.value * 3,
               ),
@@ -408,16 +408,16 @@ class _ActivitiesScreenState extends ConsumerState<ActivitiesScreen>
                     Text(act.location,
                         style: TextStyle(
                             fontSize: 16,
-                            color: Colors.white.withOpacity(0.85))),
+                            color: Colors.white.withValues(alpha: 0.85))),
                     const SizedBox(height: 10),
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20),
                         border:
-                            Border.all(color: Colors.white.withOpacity(0.3)),
+                            Border.all(color: Colors.white.withValues(alpha: 0.3)),
                       ),
                       child: const Text(
                         '● جارٍ الآن  •  اضغط للإتمام',
@@ -435,7 +435,7 @@ class _ActivitiesScreenState extends ConsumerState<ActivitiesScreen>
                 width: 58,
                 height: 58,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(18),
                 ),
                 child: Center(
@@ -461,7 +461,7 @@ class _ActivitiesScreenState extends ConsumerState<ActivitiesScreen>
         border: Border.all(color: const Color(0xFFf1f5f9), width: 2),
         boxShadow: [
           BoxShadow(
-              color: const Color(0xFF6366f1).withOpacity(0.05),
+              color: const Color(0xFF6366f1).withValues(alpha: 0.05),
               blurRadius: 20,
               offset: const Offset(0, 10)),
         ],
@@ -615,12 +615,12 @@ class _ActivitiesScreenState extends ConsumerState<ActivitiesScreen>
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: locked ? const Color(0xFFe2e8f0) : color.withOpacity(0.3),
+                  color: locked ? const Color(0xFFe2e8f0) : color.withValues(alpha: 0.3),
                   width: 2,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: (locked ? Colors.grey : color).withOpacity(0.1),
+                    color: (locked ? Colors.grey : color).withValues(alpha: 0.1),
                     blurRadius: 15,
                     offset: const Offset(0, 8),
                   )
@@ -631,7 +631,7 @@ class _ActivitiesScreenState extends ConsumerState<ActivitiesScreen>
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: (locked ? Colors.grey : color).withOpacity(0.1),
+                      color: (locked ? Colors.grey : color).withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -689,7 +689,7 @@ class _ActivitiesScreenState extends ConsumerState<ActivitiesScreen>
         border: Border.all(color: const Color(0xFFEDE9FE), width: 1.5),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 12,
               offset: const Offset(0, 3))
         ],
@@ -718,7 +718,7 @@ class _ActivitiesScreenState extends ConsumerState<ActivitiesScreen>
                         width: 36,
                         height: 36,
                         decoration: BoxDecoration(
-                          color: color.withOpacity(0.12),
+                          color: color.withValues(alpha: 0.12),
                           shape: BoxShape.circle,
                         ),
                         child: Center(
@@ -772,7 +772,7 @@ class _ActivitiesScreenState extends ConsumerState<ActivitiesScreen>
                         padding: const EdgeInsets.symmetric(
                             horizontal: 14, vertical: 8),
                         decoration: BoxDecoration(
-                          color: color.withOpacity(0.1),
+                          color: color.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text('${r['pts']} ⭐',
@@ -807,7 +807,7 @@ class _RingPainter extends CustomPainter {
         center,
         radius,
         Paint()
-          ..color = Colors.white.withOpacity(0.2)
+          ..color = Colors.white.withValues(alpha: 0.2)
           ..strokeWidth = 7
           ..style = PaintingStyle.stroke);
 

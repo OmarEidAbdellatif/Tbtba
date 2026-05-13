@@ -42,7 +42,7 @@ class AccessibilityDialog extends ConsumerWidget {
               minimumSize: const Size(double.infinity, 60),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               elevation: 4,
-              shadowColor: (hc ? const Color(0xFF9FA8DA) : const Color(0xFF6C63FF)).withOpacity(0.3),
+              shadowColor: (hc ? const Color(0xFF9FA8DA) : const Color(0xFF6C63FF)).withValues(alpha: 0.3),
             ),
             child: Text('حفظ الإعدادات', style: TextStyle(color: hc ? Colors.black : Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
           ),
@@ -99,7 +99,7 @@ class AccessibilityDialog extends ConsumerWidget {
         Switch(
           value: dm,
           onChanged: (val) => ref.read(appRiverpod).toggleDarkMode(),
-          activeColor: (hc || dm) ? const Color(0xFF9FA8DA) : const Color(0xFF6C63FF),
+          activeThumbColor: (hc || dm) ? const Color(0xFF9FA8DA) : const Color(0xFF6C63FF),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -124,7 +124,7 @@ class AccessibilityDialog extends ConsumerWidget {
         Switch(
           value: provider.isHighContrast,
           onChanged: (val) => ref.read(appRiverpod).toggleHighContrast(),
-          activeColor: (hc || dm) ? const Color(0xFF9FA8DA) : const Color(0xFF6C63FF),
+          activeThumbColor: (hc || dm) ? const Color(0xFF9FA8DA) : const Color(0xFF6C63FF),
         ),
         const SizedBox(width: 12),
         Expanded(

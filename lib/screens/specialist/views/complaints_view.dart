@@ -53,21 +53,21 @@ class SpecialistComplaintsView extends ConsumerWidget {
               ...provider.filteredSocialComplaints
                   .where((c) => c.status == 'open' && c.priority == 'high')
                   .map((c) => _buildDetailedComplaintCard(context, ref, c))
-                  .toList(),
+                  ,
               const SizedBox(height: 20),
               _buildSectionLabel('قيد المعالجة', const Color(0xFFf59e0b), 4),
               const SizedBox(height: 8),
               ...provider.filteredSocialComplaints
                   .where((c) => c.status == 'progress')
                   .map((c) => _buildDetailedComplaintCard(context, ref, c))
-                  .toList(),
+                  ,
               const SizedBox(height: 20),
               _buildSectionLabel('مُغلقة مؤخراً', const Color(0xFF10b981), 5),
               const SizedBox(height: 8),
               ...provider.filteredSocialComplaints
                   .where((c) => c.status == 'done')
                   .map((c) => _buildDetailedComplaintCard(context, ref, c))
-                  .toList(),
+                  ,
               const SizedBox(height: 24),
               _buildMonthlyStats(),
               const SizedBox(height: 40),
@@ -118,7 +118,7 @@ class SpecialistComplaintsView extends ConsumerWidget {
             child: Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
+                  color: Colors.white.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12)),
               child: Row(
                 children: stats
@@ -131,7 +131,7 @@ class SpecialistComplaintsView extends ConsumerWidget {
                                   : Border(
                                       left: BorderSide(
                                           color:
-                                              Colors.white.withOpacity(0.2))),
+                                              Colors.white.withValues(alpha: 0.2))),
                             ),
                             child: Column(
                               children: [
@@ -142,7 +142,7 @@ class SpecialistComplaintsView extends ConsumerWidget {
                                         fontWeight: FontWeight.bold)),
                                 Text(s['lbl'] as String,
                                     style: TextStyle(
-                                        color: Colors.white.withOpacity(0.75),
+                                        color: Colors.white.withValues(alpha: 0.75),
                                         fontSize: 8)),
                               ],
                             ),
@@ -235,7 +235,7 @@ class SpecialistComplaintsView extends ConsumerWidget {
             ),
             const SizedBox(height: 10),
             DropdownButtonFormField<String>(
-              value: 'medium',
+              initialValue: 'medium',
               items: const [
                 DropdownMenuItem(value: 'high', child: Text('عاجل')),
                 DropdownMenuItem(value: 'medium', child: Text('متوسط')),
@@ -371,7 +371,7 @@ class SpecialistComplaintsView extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(7),
               decoration: BoxDecoration(
-                  color: bg.withOpacity(0.3),
+                  color: bg.withValues(alpha: 0.3),
                   border: Border(bottom: BorderSide(color: col, width: 2))),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -400,11 +400,12 @@ class SpecialistComplaintsView extends ConsumerWidget {
                 padding: const EdgeInsets.all(5),
                 itemCount: min(items.length, 2) + (items.length > 2 ? 1 : 0),
                 itemBuilder: (context, i) {
-                  if (i == 2)
+                  if (i == 2) {
                     return Center(
                         child: Text('+ ${items.length - 2} أخرى',
                             style: const TextStyle(
                                 fontSize: 8, color: Color(0xFF94a3b8))));
+                  }
                   final item = items[i];
                   return Container(
                     margin: const EdgeInsets.only(bottom: 5),
@@ -1081,15 +1082,15 @@ class SpecialistComplaintsView extends ConsumerWidget {
                 .toList(),
           ),
           const Divider(color: Color(0xFFf1f5f9), height: 20),
-          Row(
+          const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('٢.٣ يوم',
+              Text('٢.٣ يوم',
                   style: TextStyle(
                       color: Color(0xFFea580c),
                       fontWeight: FontWeight.bold,
                       fontSize: 10)),
-              const Text('متوسط وقت الإغلاق',
+              Text('متوسط وقت الإغلاق',
                   style: TextStyle(color: Color(0xFF64748b), fontSize: 10)),
             ],
           ),

@@ -160,6 +160,9 @@ class VolunteerOpportunity {
     this.filledSlots = 0,
     this.points = 10,
   });
+
+  String get status => filledSlots < totalSlots ? 'متاحة' : 'مكتملة';
+  String get date => dateInfo;
 }
 
 class VolunteerImpact {
@@ -586,6 +589,7 @@ class MedicalPrescription {
   final String doctorName;
   final String date;
   final String residentName;
+  final String? imagePath;
 
   MedicalPrescription({
     required this.id,
@@ -593,6 +597,7 @@ class MedicalPrescription {
     required this.doctorName,
     required this.date,
     required this.residentName,
+    this.imagePath,
   });
 }
 
@@ -879,6 +884,20 @@ class CompanionMessage {
     required this.text,
     required this.isFromAI,
     required this.timestamp,
+  });
+}
+
+class SpecialistRecommendation {
+  final String id;
+  final String residentName;
+  final String content;
+  final String time;
+
+  SpecialistRecommendation({
+    required this.id,
+    required this.residentName,
+    required this.content,
+    required this.time,
   });
 }
 class AppAccount {

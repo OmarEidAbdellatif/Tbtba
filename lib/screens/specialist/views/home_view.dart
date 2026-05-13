@@ -42,6 +42,7 @@ class SpecialistHomeView extends ConsumerWidget {
           child: Column(
             children: [
               _buildActionRow(context, ref, provider), // أزرار الإجراءات (بث سعادة، تسجيل احتياج)
+              _buildNursingHandoffsSection(provider), // ملخص ملاحظات التمريض
               _buildStatsStrip(provider), // شريط الإحصائيات السريع
               Expanded(child: _buildNeedsList(provider)), // قائمة الاحتياجات المسجلة
             ],
@@ -122,7 +123,7 @@ class SpecialistHomeView extends ConsumerWidget {
               onTap: () => _showAddMomentSheet(context, ref, provider),
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF0ea5e9), Color(0xFF38bdf8)]), borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.blue.withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 4))]),
+                decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF0ea5e9), Color(0xFF38bdf8)]), borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.blue.withValues(alpha: 0.2), blurRadius: 8, offset: const Offset(0, 4))]),
                 child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.camera_alt_rounded, color: Colors.white, size: 16), SizedBox(width: 8), Text('بث سعادة 📸', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold))]),
               ),
             ),
@@ -134,12 +135,100 @@ class SpecialistHomeView extends ConsumerWidget {
               onTap: () => _showAddNeedSheet(context, ref),
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFFea580c), Color(0xFFf97316)]), borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.orange.withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 4))]),
+                decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFFea580c), Color(0xFFf97316)]), borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.orange.withValues(alpha: 0.2), blurRadius: 8, offset: const Offset(0, 4))]),
                 child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.add, color: Colors.white, size: 16), SizedBox(width: 8), Text('تسجيل احتياج', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold))]),
               ),
             ),
           ),
+          const SizedBox(width: 8),
+          // زر "توصية نفسية" لمخاطبة التمريض
+          Expanded(
+            child: GestureDetector(
+              onTap: () => _showAddRecommendationSheet(context, ref, provider),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF8b5cf6), Color(0xFFa855f7)]), borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.purple.withValues(alpha: 0.2), blurRadius: 8, offset: const Offset(0, 4))]),
+                child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.psychology, color: Colors.white, size: 14), SizedBox(width: 4), Text('توصية نفسية', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold))]),
+              ),
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  // نافذة إضافة توصية للتمريض
+  void _showAddRecommendationSheet(BuildContext context, WidgetRef ref, AppRiverpod provider) {
+    String selectedResident = provider.filteredResidentScores.isNotEmpty ? provider.filteredResidentScores.first.name : 'الحاج محمود';
+    final textController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context, isScrollControlled: true, backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom + 20, top: 20, left: 24, right: 24),
+          decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(30))),
+          child: Column(
+            mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(10)))),
+              const SizedBox(height: 20),
+              const Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [Text('إضافة توصية للتمريض 🧠', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)))],
+              ),
+              const SizedBox(height: 20),
+              const Text('اسم المقيم', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF64748B))),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE2E8F0))),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    isExpanded: true,
+                    value: selectedResident,
+                    items: provider.filteredResidentScores.map((r) => DropdownMenuItem(value: r.name, child: Text(r.name))).toList(),
+                    onChanged: (val) { if (val != null) setModalState(() => selectedResident = val); },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text('محتوى التوصية', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF64748B))),
+              const SizedBox(height: 8),
+              TextField(
+                controller: textController,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  hintText: 'مثال: تعاملوا معه بهدوء اليوم وتجنبوا الأخبار السيئة...',
+                  filled: true,
+                  fillColor: const Color(0xFFF8FAFC),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (textController.text.isNotEmpty) {
+                      provider.addSpecialistRecommendation(SpecialistRecommendation(
+                        id: DateTime.now().millisecondsSinceEpoch.toString(),
+                        residentName: selectedResident,
+                        content: textController.text,
+                        time: 'الآن',
+                      ));
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم إرسال التوصية بنجاح!')));
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF8b5cf6), padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+                  child: const Text('إرسال التوصية', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -244,7 +333,7 @@ class SpecialistHomeView extends ConsumerWidget {
               const SizedBox(height: 8),
               TextField(controller: titleCtrl, textAlign: TextAlign.right, decoration: InputDecoration(hintText: 'مثال: يحتاج دعم نفسي بسبب عزلة مؤقتة...', hintStyle: const TextStyle(fontSize: 12, color: Color(0xFFcbd5e1)), filled: true, fillColor: const Color(0xFFf8fafc), border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none))),
               const SizedBox(height: 20),
-              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Switch(value: isUrgent, onChanged: (v) => setModalState(() => isUrgent = v), activeColor: const Color(0xFFea580c)), const Text('حالة عاجلة؟', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold))]),
+              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Switch(value: isUrgent, onChanged: (v) => setModalState(() => isUrgent = v), activeThumbColor: const Color(0xFFea580c)), const Text('حالة عاجلة؟', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold))]),
               const SizedBox(height: 32),
               SizedBox(width: double.infinity, height: 54, child: ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFea580c), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), elevation: 0), onPressed: () {
                 if (titleCtrl.text.isNotEmpty) {
@@ -261,6 +350,56 @@ class SpecialistHomeView extends ConsumerWidget {
   }
 
   Widget _buildLabel(String text) => Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF334155)));
+
+  // بناء قسم ملخص ملاحظات التمريض
+  Widget _buildNursingHandoffsSection(AppRiverpod provider) {
+    if (provider.nursingNotes.isEmpty) return const SizedBox.shrink();
+    
+    // نجلب آخر 3 ملاحظات تمريضية فقط لعرضها كملخص للأخصائي
+    final recentNotes = provider.nursingNotes.take(3).toList();
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.nightlight_round, color: Color(0xFF6366F1), size: 18),
+              const SizedBox(width: 8),
+              const Text('ملاحظات التمريض (Shift Handoffs) 📋', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(color: const Color(0xFFEEF2FF), borderRadius: BorderRadius.circular(8)),
+                child: const Text('تسليم الوردية', style: TextStyle(fontSize: 9, color: Color(0xFF4F46E5), fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...recentNotes.map((note) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('• ', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.bold)),
+                Expanded(
+                  child: Text('${note.residentName}: ${note.content}', 
+                    style: const TextStyle(fontSize: 12, color: Color(0xFF334155))),
+                ),
+              ],
+            ),
+          )),
+        ],
+      ),
+    );
+  }
 
   // بناء شريط الإحصائيات السريعة في منتصف الصفحة
   Widget _buildStatsStrip(AppRiverpod provider) {
@@ -314,7 +453,7 @@ class SpecialistHomeView extends ConsumerWidget {
         children: [
           Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: _getBadgeBg(need.type, need.isUrgent), borderRadius: BorderRadius.circular(8)), child: Text(need.isUrgent ? 'عاجل' : need.type, style: TextStyle(color: _getBadgeFg(need.type, need.isUrgent), fontSize: 9, fontWeight: FontWeight.bold))),
           const Spacer(),
-          Column(crossAxisAlignment: CrossAxisAlignment.end, children: [Text('المقيم في غرفة ${need.roomNumber} — احتياج ${need.type}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF0f172a))), Text('غرفة ${need.roomNumber} · تم التحقق مؤخراً', style: const TextStyle(fontSize: 10, color: Color(0xFF64748b))), const SizedBox(height: 4), Row(mainAxisSize: MainAxisSize.min, children: [const Text('تحت المراجعة', style: TextStyle(fontSize: 9, color: Color(0xFF94a3b8))), const SizedBox(width: 4), Icon(Icons.access_time, size: 10, color: const Color(0xFF94a3b8))])]),
+          Column(crossAxisAlignment: CrossAxisAlignment.end, children: [Text('المقيم في غرفة ${need.roomNumber} — احتياج ${need.type}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF0f172a))), Text('غرفة ${need.roomNumber} · تم التحقق مؤخراً', style: const TextStyle(fontSize: 10, color: Color(0xFF64748b))), const SizedBox(height: 4), const Row(mainAxisSize: MainAxisSize.min, children: [Text('تحت المراجعة', style: TextStyle(fontSize: 9, color: Color(0xFF94a3b8))), SizedBox(width: 4), Icon(Icons.access_time, size: 10, color: Color(0xFF94a3b8))])]),
           const SizedBox(width: 12),
           Container(width: 34, height: 34, decoration: BoxDecoration(color: _getIconBg(need.type), borderRadius: BorderRadius.circular(10)), child: Center(child: Text(_getEmoji(need.type), style: const TextStyle(fontSize: 15)))),
           const SizedBox(width: 10),
