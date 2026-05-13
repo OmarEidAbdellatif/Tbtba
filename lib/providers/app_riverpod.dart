@@ -529,7 +529,10 @@ class AppRiverpod extends ChangeNotifier {
   }
 
   // عملية تسجيل الدخول وحفظ البيانات آمنياً مع ضبط موعد انتهاء الجلسة (US-SmartLogin)
-  Future<bool> login(String identifier, String password) async {
+  Future<bool> login(String idRaw, String passRaw) async {
+    final identifier = idRaw.trim();
+    final password = passRaw.trim();
+
     // البحث في الحسابات المسجلة
     final accountIdx = accounts
         .indexWhere((a) => a.email == identifier && a.password == password);

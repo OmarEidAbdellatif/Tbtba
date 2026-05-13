@@ -540,7 +540,8 @@ class SpecialistResidentFile {
   final String room;
   final String status; // 'updated', 'pending', 'critical'
   final String lastUpdate;
-  final List<String> categories; // 'social', 'medical', 'psychological', 'admin'
+  final List<String>
+      categories; // 'social', 'medical', 'psychological', 'admin'
   final String initials;
   final String? phone; // رقم التواصل
   final int? age; // العمر
@@ -643,7 +644,8 @@ class TaptabaNotification {
   final String time; // وقت وصول التنبيه (مثال: منذ ٥ دقائق)
   final String type; // نوع التنبيه (medical, complaint, social, stable)
   final String targetRole; // الدور المستهدف بالتنبيه (مدير، أخصائي، إلخ)
-  final String? residentId; // معرف المقيم المرتبط بالتنبيه (للتنقل السريع لملفه)
+  final String?
+      residentId; // معرف المقيم المرتبط بالتنبيه (للتنقل السريع لملفه)
   bool isRead; // حالة القراءة (هل تمت معالجة التنبيه؟)
 
   TaptabaNotification({
@@ -666,69 +668,71 @@ class MemoryMoment {
   final String activityTitle;
   final String date;
   final int appreciations;
- 
-   MemoryMoment({
-     required this.id,
-     required this.residentId,
-     required this.residentName,
-     required this.imageUrl,
-     required this.activityTitle,
-     required this.date,
-     this.appreciations = 0,
-   });
- }
- 
- class VolunteerProfile {
-   final String name;
-   final String location;
-   final String bio;
-   final List<String> skills;
-   final String? linkedinUrl;
-   final String? facebookUrl;
-   final String? instagramUrl;
-   final String? cvFileName;
-   final String? recommendationFileName;
-   final List<String> otherWorks;
- 
-   VolunteerProfile({
-     required this.name,
-     required this.location,
-     required this.bio,
-     required this.skills,
-     this.linkedinUrl,
-     this.facebookUrl,
-     this.instagramUrl,
-     this.cvFileName,
-     this.recommendationFileName,
-     this.otherWorks = const [],
-   });
- 
-   VolunteerProfile copyWith({
-     String? name,
-     String? location,
-     String? bio,
-     List<String>? skills,
-     String? linkedinUrl,
-     String? facebookUrl,
-     String? instagramUrl,
-     String? cvFileName,
-     String? recommendationFileName,
-     List<String>? otherWorks,
-   }) {
-     return VolunteerProfile(
-       name: name ?? this.name,
-       location: location ?? this.location,
-       bio: bio ?? this.bio,
-       skills: skills ?? this.skills,
-       linkedinUrl: linkedinUrl ?? this.linkedinUrl,
-       facebookUrl: facebookUrl ?? this.facebookUrl,
-       instagramUrl: instagramUrl ?? this.instagramUrl,
-       cvFileName: cvFileName ?? this.cvFileName,
-       recommendationFileName: recommendationFileName ?? this.recommendationFileName,
-       otherWorks: otherWorks ?? this.otherWorks,
-     );
-   }
- }
+
+  MemoryMoment({
+    required this.id,
+    required this.residentId,
+    required this.residentName,
+    required this.imageUrl,
+    required this.activityTitle,
+    required this.date,
+    this.appreciations = 0,
+  });
+}
+
+class VolunteerProfile {
+  final String name;
+  final String location;
+  final String bio;
+  final List<String> skills;
+  final String? linkedinUrl;
+  final String? facebookUrl;
+  final String? instagramUrl;
+  final String? cvFileName;
+  final String? recommendationFileName;
+  final List<String> otherWorks;
+
+  VolunteerProfile({
+    required this.name,
+    required this.location,
+    required this.bio,
+    required this.skills,
+    this.linkedinUrl,
+    this.facebookUrl,
+    this.instagramUrl,
+    this.cvFileName,
+    this.recommendationFileName,
+    this.otherWorks = const [],
+  });
+
+  VolunteerProfile copyWith({
+    String? name,
+    String? location,
+    String? bio,
+    List<String>? skills,
+    String? linkedinUrl,
+    String? facebookUrl,
+    String? instagramUrl,
+    String? cvFileName,
+    String? recommendationFileName,
+    List<String>? otherWorks,
+  }) {
+    return VolunteerProfile(
+      name: name ?? this.name,
+      location: location ?? this.location,
+      bio: bio ?? this.bio,
+      skills: skills ?? this.skills,
+      linkedinUrl: linkedinUrl ?? this.linkedinUrl,
+      facebookUrl: facebookUrl ?? this.facebookUrl,
+      instagramUrl: instagramUrl ?? this.instagramUrl,
+      cvFileName: cvFileName ?? this.cvFileName,
+      recommendationFileName:
+          recommendationFileName ?? this.recommendationFileName,
+      otherWorks: otherWorks ?? this.otherWorks,
+    );
+  }
+}
+
 class NursingNote {
   final String id;
   final String residentName;
@@ -900,6 +904,7 @@ class SpecialistRecommendation {
     required this.time,
   });
 }
+
 class AppAccount {
   final String name;
   final String email;
