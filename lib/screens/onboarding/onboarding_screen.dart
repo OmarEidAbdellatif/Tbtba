@@ -19,32 +19,37 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   late AnimationController _floatController;
   late AnimationController _pageTransitionController;
 
+  // بيانات صفحات الترحيب - الألوان مأخوذة مباشرة من ملفات الأنيميشن
   final List<OnboardingData> _pages = [
     OnboardingData(
       title: 'وصلت',
       description: 'بيتك الثاني ومجتمعك الذي ينبض بالحياة والدفء',
-      color: const Color(0xFF6C63FF),
+      primaryColor: const Color(0xFF7B61FF),   // بنفسجي الروبوت
+      secondaryColor: const Color(0xFF00C8FF), // سيان جسم الروبوت
       icon: Icons.home_rounded,
       lottieAsset: 'assets/animations/Welcome.json',
     ),
     OnboardingData(
       title: 'قريبون',
       description: 'افتح نوافذ التواصل مع عائلتك والأخصائيين بضغطة واحدة',
-      color: const Color(0xFFec4899),
+      primaryColor: const Color(0xFFFF5039),   // برتقالي حيوي الأنيميشن
+      secondaryColor: const Color(0xFFFF8ECC), // وردي ناعم
       icon: Icons.favorite_rounded,
       lottieAsset: 'assets/animations/connect.json',
     ),
     OnboardingData(
       title: 'اطمن',
       description: 'نظام ذكي يذكرك بمواعيد أدويتك ويتابع حالتك بدقة',
-      color: const Color(0xFF10b981),
+      primaryColor: const Color(0xFF2CA6FF),   // أزرق طبي
+      secondaryColor: const Color(0xFFF0ADB5), // وردي بشري
       icon: Icons.health_and_safety_rounded,
       lottieAsset: 'assets/animations/health.json',
     ),
     OnboardingData(
       title: 'معاك',
       description: 'اختر هويتك وادخل عالم طبطبة المتكامل',
-      color: const Color(0xFF3b82f6),
+      primaryColor: const Color(0xFF21257C),   // نيلي غامق
+      secondaryColor: const Color(0xFF4AA5FF), // سماوي لامع
       icon: Icons.rocket_launch_rounded,
       lottieAsset: 'assets/animations/start.json',
     ),
@@ -84,7 +89,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
   @override
   Widget build(BuildContext context) {
-    final currentColor = _pages[_currentPage].color;
+    final currentColor = _pages[_currentPage].primaryColor;
     return Scaffold(
       backgroundColor: Colors.white,
       body: AnimatedContainer(
@@ -103,54 +108,54 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
           ),
         ),
         child: LayoutBuilder(
-        builder: (context, constraints) {
-          final screenH = constraints.maxHeight;
-          final screenW = constraints.maxWidth;
-          // أحجام نسبية تضمن التناسق على كل الشاشات
-          final lottieSize = screenH * 0.36;
-          final titleSize = screenW * 0.115; // ~44px على شاشة 390px
-          final descSize = screenW * 0.043; // ~17px
-          final btnFontSize = screenW * 0.048;
-          final footerPadBottom = screenH * 0.07;
+          builder: (context, constraints) {
+            final screenH = constraints.maxHeight;
+            final screenW = constraints.maxWidth;
+            // أحجام نسبية تضمن التناسق على كل الشاشات
+            final lottieSize = screenH * 0.36;
+            final titleSize = screenW * 0.115; // ~44px على شاشة 390px
+            final descSize = screenW * 0.043; // ~17px
+            final btnFontSize = screenW * 0.048;
+            final footerPadBottom = screenH * 0.07;
 
-          return Stack(
-            children: [
-              // خلفية فقاعات متحركة بلون الصفحة
-              _buildAnimatedBackground(currentColor),
+            return Stack(
+              children: [
+                // خلفية فقاعات متحركة بلون الصفحة
+                _buildAnimatedBackground(currentColor),
 
-              Column(
-                children: [
-                  // منطقة المحتوى
-                  Expanded(
-                    child: PageView.builder(
-                      controller: _pageController,
-                      itemCount: _pages.length,
-                      onPageChanged: (idx) {
-                        setState(() => _currentPage = idx);
-                        _pageTransitionController
-                          ..reset()
-                          ..forward();
-                      },
-                      itemBuilder: (context, index) {
-                        return _buildPage(
-                          _pages[index],
-                          lottieSize,
-                          titleSize,
-                          descSize,
-                          screenH,
-                        );
-                      },
+                Column(
+                  children: [
+                    // منطقة المحتوى
+                    Expanded(
+                      child: PageView.builder(
+                        controller: _pageController,
+                        itemCount: _pages.length,
+                        onPageChanged: (idx) {
+                          setState(() => _currentPage = idx);
+                          _pageTransitionController
+                            ..reset()
+                            ..forward();
+                        },
+                        itemBuilder: (context, index) {
+                          return _buildPage(
+                            _pages[index],
+                            lottieSize,
+                            titleSize,
+                            descSize,
+                            screenH,
+                          );
+                        },
+                      ),
                     ),
-                  ),
 
-                  // الشريط السفلي: الزر + المؤشرات
-                  _buildFooter(currentColor, btnFontSize, footerPadBottom),
-                ],
-              ),
-            ],
-          );
-        },
-      ),
+                    // الشريط السفلي: الزر + المؤشرات
+                    _buildFooter(currentColor, btnFontSize, footerPadBottom),
+                  ],
+                ),
+              ],
+            );
+          },
+        ),
       ), // AnimatedContainer
     );
   }
@@ -214,7 +219,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
               style: TextStyle(
                 fontSize: titleSize,
                 fontWeight: FontWeight.w900,
-                color: data.color,
+                color: data.primaryColor,
                 letterSpacing: -1,
                 height: 1.0,
               ),
@@ -230,10 +235,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                 vertical: screenH * 0.018,
               ),
               decoration: BoxDecoration(
-                color: data.color.withValues(alpha: 0.07),
+                color: data.primaryColor.withValues(alpha: 0.07),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: data.color.withValues(alpha: 0.15),
+                  color: data.primaryColor.withValues(alpha: 0.15),
                   width: 1.2,
                 ),
               ),
@@ -272,10 +277,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                 height: lottieSize * 0.80,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: data.color.withValues(alpha: 0.12),
+                  color: data.primaryColor.withValues(alpha: 0.12),
                   boxShadow: [
                     BoxShadow(
-                      color: data.color.withValues(alpha: 0.22),
+                      color: data.primaryColor.withValues(alpha: 0.22),
                       blurRadius: 60,
                       spreadRadius: 12,
                       offset: const Offset(0, 14),
@@ -292,7 +297,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, _) {
                     return Icon(data.icon,
-                        size: lottieSize * 0.42, color: data.color);
+                        size: lottieSize * 0.42, color: data.primaryColor);
                   },
                 ),
               ),
@@ -379,14 +384,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 class OnboardingData {
   final String title;
   final String description;
-  final Color color;
+  final Color primaryColor;
+  final Color secondaryColor;
   final IconData icon;
   final String lottieAsset;
 
   OnboardingData({
     required this.title,
     required this.description,
-    required this.color,
+    required this.primaryColor,
+    required this.secondaryColor,
     required this.icon,
     required this.lottieAsset,
   });
