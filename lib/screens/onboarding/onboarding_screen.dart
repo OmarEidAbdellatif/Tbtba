@@ -24,15 +24,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     OnboardingData(
       title: 'وصلت',
       description: 'بيتك الثاني ومجتمعك الذي ينبض بالحياة والدفء',
-      primaryColor: const Color(0xFF7B61FF),   // بنفسجي الروبوت
-      secondaryColor: const Color(0xFF00C8FF), // سيان جسم الروبوت
+      primaryColor: const Color(0xFF00C896), // أخضر سيان - لون جسم الروبوت
+      secondaryColor: const Color(0xFF4ADE80), // أخضر فاتح - إضاءة الروبوت
       icon: Icons.home_rounded,
       lottieAsset: 'assets/animations/Welcome.json',
     ),
     OnboardingData(
       title: 'قريبون',
       description: 'افتح نوافذ التواصل مع عائلتك والأخصائيين بضغطة واحدة',
-      primaryColor: const Color(0xFFFF5039),   // برتقالي حيوي الأنيميشن
+      primaryColor: const Color(0xFFFF5039), // برتقالي حيوي الأنيميشن
       secondaryColor: const Color(0xFFFF8ECC), // وردي ناعم
       icon: Icons.favorite_rounded,
       lottieAsset: 'assets/animations/connect.json',
@@ -40,7 +40,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     OnboardingData(
       title: 'اطمن',
       description: 'نظام ذكي يذكرك بمواعيد أدويتك ويتابع حالتك بدقة',
-      primaryColor: const Color(0xFF2CA6FF),   // أزرق طبي
+      primaryColor: const Color(0xFF2CA6FF), // أزرق طبي
       secondaryColor: const Color(0xFFF0ADB5), // وردي بشري
       icon: Icons.health_and_safety_rounded,
       lottieAsset: 'assets/animations/health.json',
@@ -48,7 +48,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     OnboardingData(
       title: 'معاك',
       description: 'اختر هويتك وادخل عالم طبطبة المتكامل',
-      primaryColor: const Color(0xFF21257C),   // نيلي غامق
+      primaryColor: const Color(0xFF21257C), // نيلي غامق
       secondaryColor: const Color(0xFF4AA5FF), // سماوي لامع
       icon: Icons.rocket_launch_rounded,
       lottieAsset: 'assets/animations/start.json',
