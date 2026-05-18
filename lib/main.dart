@@ -51,6 +51,15 @@ class MyApp extends ConsumerWidget {
     });
 
     Widget getHomeWidget() {
+      // شاشة تحميل بيضاء بسيطة حتى تكتمل قراءة الذاكرة
+      if (!provider.isInitialized) {
+        return const Scaffold(
+          body: Center(
+            child: CircularProgressIndicator(color: Color(0xFF6C63FF)),
+          ),
+        );
+      }
+
       // تحديد الشاشة الحالية بناءً على حالة المستخدم
       if (!provider.hasSeenOnboarding) {
         return const OnboardingScreen(); // فحص شاشة البداية

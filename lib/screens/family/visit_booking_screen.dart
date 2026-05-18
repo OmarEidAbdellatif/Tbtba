@@ -117,17 +117,17 @@ class _VisitBookingScreenState extends ConsumerState<VisitBookingScreen>
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const SizedBox(width: 48), // Spacer for balance
-                  const Text('جدولة لقاء مودة',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold)),
                   IconButton(
                     icon: const Icon(Icons.arrow_back_ios_new_rounded,
                         color: Colors.white, size: 22),
                     onPressed: () => Navigator.pop(context),
                   ),
+                  const Text('جدولة لقاء مودة',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold)),
+                  const SizedBox(width: 48), // Spacer for balance
                 ],
               ),
             ),

@@ -24,6 +24,7 @@ class _MedicalAdminViewState extends ConsumerState<MedicalAdminView> {
   final TextEditingController _bpDia = TextEditingController();
   final TextEditingController _glucose = TextEditingController();
   final TextEditingController _temp = TextEditingController();
+  final TextEditingController _searchResident = TextEditingController(text: 'الحاج محمود سالم');
 
   final String _bpStatus = '';
   final String _sugarStatus = '';
@@ -57,6 +58,7 @@ class _MedicalAdminViewState extends ConsumerState<MedicalAdminView> {
     _bpDia.dispose();
     _glucose.dispose();
     _temp.dispose();
+    _searchResident.dispose();
     super.dispose();
   }
 
@@ -86,9 +88,9 @@ class _MedicalAdminViewState extends ConsumerState<MedicalAdminView> {
                 const SizedBox(height: 32),
                 _buildSectionHeader('آخر العمليات المسجلة', Icons.history_rounded),
                 const SizedBox(height: 16),
-                ...provider.medicalSessions.take(3).map((s) => _buildSessionLog(s)),
+                ...provider.medicalSessions.take(3).map((s) => _buildSessionLog(s, provider)),
                 const SizedBox(height: 12),
-                ...provider.medicalPrescriptions.take(2).map((p) => _buildPrescriptionCard(p)),
+                ...provider.medicalPrescriptions.take(2).map((p) => _buildPrescriptionCard(p, provider)),
                 const SizedBox(height: 100),
               ],
             ),
@@ -120,12 +122,6 @@ class _MedicalAdminViewState extends ConsumerState<MedicalAdminView> {
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     const Text('الإدارة الطبية', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
-                    const SizedBox(width: 12),
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(12)),
-                      child: const Icon(Icons.admin_panel_settings_rounded, color: Colors.white, size: 24),
-                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -152,24 +148,29 @@ class _MedicalAdminViewState extends ConsumerState<MedicalAdminView> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(color: const Color(0xFFF0F9FF), borderRadius: BorderRadius.circular(12)),
-            child: const Icon(Icons.person_pin_rounded, color: Color(0xFF0369A1), size: 22),
+            child: const Icon(Icons.search_rounded, color: Color(0xFF0369A1), size: 22),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('المقيم المختار للتحديث', style: TextStyle(fontSize: 10, color: Color(0xFF64748B))),
-                DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: _selectedResident,
-                    isExpanded: true,
+                const Text('البحث عن مقيم (بالاسم أو رقم الغرفة)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF475569))),
+                const SizedBox(height: 2),
+                TextField(
+                  controller: _searchResident,
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+                  decoration: const InputDecoration(
+                    hintText: 'مثلاً: محمود أو ١٠١...',
+                    hintStyle: TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                    border: InputBorder.none,
                     isDense: true,
-                    icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF94A3B8)),
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF0F172A), fontFamily: 'Cairo'),
-                    items: _residents.map((r) => DropdownMenuItem(value: r, child: Text(r, textAlign: TextAlign.right))).toList(),
-                    onChanged: (v) => setState(() => _selectedResident = v!),
+                    contentPadding: EdgeInsets.zero,
                   ),
+                  onChanged: (val) {
+                    _selectedResident = val;
+                  },
                 ),
               ],
             ),
@@ -223,8 +224,13 @@ class _MedicalAdminViewState extends ConsumerState<MedicalAdminView> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
-          boxShadow: [BoxShadow(color: color.withValues(alpha: 0.08), blurRadius: 15, offset: const Offset(0, 8))],
+          border: Border.all(color: color.withValues(alpha: 0.5), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+                color: color.withValues(alpha: 0.15),
+                blurRadius: 10,
+                offset: const Offset(0, 4))
+          ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -235,7 +241,7 @@ class _MedicalAdminViewState extends ConsumerState<MedicalAdminView> {
               child: Icon(icon, color: color, size: 28),
             ),
             const SizedBox(height: 12),
-            Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+            Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
           ],
         ),
       ),
@@ -657,7 +663,7 @@ class _MedicalAdminViewState extends ConsumerState<MedicalAdminView> {
     );
   }
 
-  Widget _buildSessionLog(MedicalSession s) {
+  Widget _buildSessionLog(MedicalSession s, AppRiverpod provider) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -680,11 +686,18 @@ class _MedicalAdminViewState extends ConsumerState<MedicalAdminView> {
               children: [
                 Text(s.specialistName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
                 const SizedBox(height: 2),
-                Text('${s.residentName} · ${s.time}', style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+                Text('${s.residentName} · ${s.time}', style: const TextStyle(fontSize: 13, color: Color(0xFF475569))),
               ],
             ),
           ),
           _buildSessionBadge(s.type),
+          const SizedBox(width: 8),
+          IconButton(
+            onPressed: () => provider.deleteMedicalSession(s.id),
+            icon: const Icon(Icons.delete_outline, color: Color(0xFFEF4444), size: 20),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
         ],
       ),
     );
@@ -699,7 +712,7 @@ class _MedicalAdminViewState extends ConsumerState<MedicalAdminView> {
     );
   }
 
-  Widget _buildPrescriptionCard(MedicalPrescription p) {
+  Widget _buildPrescriptionCard(MedicalPrescription p, AppRiverpod provider) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -722,11 +735,18 @@ class _MedicalAdminViewState extends ConsumerState<MedicalAdminView> {
               children: [
                 Text(p.title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
                 const SizedBox(height: 2),
-                Text('${p.residentName} · ${p.date}', style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+                Text('${p.residentName} · ${p.date}', style: const TextStyle(fontSize: 13, color: Color(0xFF475569))),
               ],
             ),
           ),
           const Icon(Icons.download_rounded, color: Color(0xFF94A3B8), size: 20),
+          const SizedBox(width: 8),
+          IconButton(
+            onPressed: () => provider.deletePrescription(p.id),
+            icon: const Icon(Icons.delete_outline, color: Color(0xFFEF4444), size: 20),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
         ],
       ),
     );

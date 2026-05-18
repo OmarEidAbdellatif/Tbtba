@@ -16,6 +16,7 @@ class _ActivitiesScreenState extends ConsumerState<ActivitiesScreen>
   late AnimationController _ringController;
   late AnimationController _glowController;
   late AnimationController _shimmerController;
+  late AnimationController _bgController;
 
   int selectedDay = 1;
   final days = ['أمس', 'اليوم', 'غداً', 'الأسبوع'];
@@ -33,6 +34,9 @@ class _ActivitiesScreenState extends ConsumerState<ActivitiesScreen>
     _shimmerController =
         AnimationController(vsync: this, duration: const Duration(seconds: 2))
           ..repeat();
+    _bgController = AnimationController(
+        vsync: this, duration: const Duration(seconds: 15))
+      ..repeat();
   }
 
   @override
@@ -40,6 +44,7 @@ class _ActivitiesScreenState extends ConsumerState<ActivitiesScreen>
     _ringController.dispose();
     _glowController.dispose();
     _shimmerController.dispose();
+    _bgController.dispose();
     super.dispose();
   }
 
@@ -49,114 +54,168 @@ class _ActivitiesScreenState extends ConsumerState<ActivitiesScreen>
     final int points = provider.currentUser.points;
     final double progress = (points / targetPoints).clamp(0.0, 1.0);
 
-    // No Scaffold, no inner scroll conflicts — pure Column in SingleChildScrollView
-    return SingleChildScrollView(
-      physics: const ClampingScrollPhysics(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildHeader(provider, points, progress),
-          _buildDaySelector(),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildSectionTitle('جدول أنشطة اليوم'),
-                const SizedBox(height: 10),
-                _buildActivitiesList(provider),
-                const SizedBox(height: 20),
-                _buildPointsCard(points, progress),
-                const SizedBox(height: 20),
-                _buildSectionTitle('أوسمة التقدير والوفاء'),
-                const SizedBox(height: 10),
-                _buildBadgesSection(),
-                const SizedBox(height: 20),
-                _buildLeaderboard(),
-                const SizedBox(height: 20),
-              ],
+    return TweenAnimationBuilder(
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 800),
+      curve: Curves.easeOut,
+      builder: (context, value, child) => Opacity(
+        opacity: value,
+        child: Transform.translate(
+          offset: Offset(0, 30 * (1 - value)),
+          child: child,
+        ),
+      ),
+      child: SingleChildScrollView(
+        physics: const ClampingScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildHeader(provider, points, progress),
+            _buildDaySelector(),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildSectionTitle('جدول أنشطة اليوم'),
+                  const SizedBox(height: 10),
+                  _buildActivitiesList(provider),
+                  const SizedBox(height: 20),
+                  _buildPointsCard(points, progress),
+                  const SizedBox(height: 20),
+                  _buildSectionTitle('أوسمةُ فخرٍ بعطائك'),
+                  const SizedBox(height: 10),
+                  _buildBadgesSection(),
+                  const SizedBox(height: 20),
+                  _buildLeaderboard(),
+                  const SizedBox(height: 20),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   // ─── Header ──────────────────────────────────────────────────────────
   Widget _buildHeader(AppRiverpod provider, int points, double progress) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF312E81), Color(0xFF4F46E5), Color(0xFF6366F1)],
+    return AnimatedBuilder(
+      animation: _bgController,
+      builder: (context, child) => Container(
+        clipBehavior: Clip.antiAlias,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF312E81), Color(0xFF4F46E5), Color(0xFF6366F1)],
+          ),
+        ),
+        child: Stack(
+          children: [
+            _buildBlob(180, const Color(0xFF6C63FF).withValues(alpha: 0.3), -40,
+                -40, 0.8, _bgController),
+            _buildBlob(140, const Color(0xFFF472B6).withValues(alpha: 0.2), 100,
+                -20, 1.2, _bgController),
+            _buildBlob(100, const Color(0xFF60A5FA).withValues(alpha: 0.2), -20,
+                120, 0.9, _bgController),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 40, 28, 28),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title
+                  const Text('🏆 أنشطتي ونقاطي',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 4),
+                  const Text('أنت في المركز الأول هذا الشهر 👑',
+                      style: TextStyle(color: Colors.white70, fontSize: 17)),
+                  const SizedBox(height: 20),
+                  // Stats row
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          children: [
+                            _statRow(
+                                Icons.emoji_events_rounded,
+                                const Color(0xFFfbbf24),
+                                'المركز الأول 👑',
+                                'هذا الشهر'),
+                            const SizedBox(height: 10),
+                            _statRow(
+                                Icons.check_circle_rounded,
+                                const Color(0xFF34d399),
+                                '${provider.currentUser.completedActivities} نشاط',
+                                'مكتمل'),
+                            const SizedBox(height: 10),
+                            _statRow(
+                                Icons.local_fire_department_rounded,
+                                const Color(0xFFf87171),
+                                '${provider.currentUser.streakDays} يوم',
+                                'متواصل 🔥'),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      AnimatedBuilder(
+                        animation: _ringController,
+                        builder: (context, _) => SizedBox(
+                          width: 100,
+                          height: 100,
+                          child: CustomPaint(
+                            painter: _RingPainter(
+                                progress: _ringController.value * progress),
+                            child: Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text('$points',
+                                      style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.bold)),
+                                  const Text('نقطة',
+                                      style: TextStyle(
+                                          color: Colors.white70, fontSize: 13)),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
-      padding: const EdgeInsets.fromLTRB(20, 20, 28, 28),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Title
-          const Text('🏆 أنشطتي ونقاطي',
-              style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold)),
-          const SizedBox(height: 4),
-          const Text('أنت في المركز الأول هذا الشهر 👑',
-              style: TextStyle(color: Colors.white70, fontSize: 17)),
-          const SizedBox(height: 20),
-          // Stats row
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  children: [
-                    _statRow(Icons.emoji_events_rounded,
-                        const Color(0xFFfbbf24), 'المركز الأول 👑', 'هذا الشهر'),
-                    const SizedBox(height: 10),
-                    _statRow(Icons.check_circle_rounded,
-                        const Color(0xFF34d399),
-                        '${provider.currentUser.completedActivities} نشاط',
-                        'مكتمل'),
-                    const SizedBox(height: 10),
-                    _statRow(Icons.local_fire_department_rounded,
-                        const Color(0xFFf87171),
-                        '${provider.currentUser.streakDays} يوم',
-                        'متواصل 🔥'),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
-              AnimatedBuilder(
-                animation: _ringController,
-                builder: (context, _) => SizedBox(
-                  width: 100,
-                  height: 100,
-                  child: CustomPaint(
-                    painter: _RingPainter(
-                        progress: _ringController.value * progress),
-                    child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text('$points',
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold)),
-                          const Text('نقطة',
-                              style: TextStyle(
-                                  color: Colors.white70, fontSize: 13)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
+    );
+  }
+
+  Widget _buildBlob(double size, Color color, double top, double left,
+      double speed, AnimationController controller) {
+    return Positioned(
+      top: top + (sin(controller.value * 2 * pi * speed) * 30),
+      left: left + (cos(controller.value * 2 * pi * speed) * 30),
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+                color: color.withValues(alpha: 0.3),
+                blurRadius: 40,
+                spreadRadius: 10)
+          ],
+        ),
       ),
     );
   }
@@ -183,8 +242,7 @@ class _ActivitiesScreenState extends ConsumerState<ActivitiesScreen>
                       fontSize: 15,
                       fontWeight: FontWeight.bold)),
               Text(sub,
-                  style: const TextStyle(
-                      color: Colors.white60, fontSize: 13)),
+                  style: const TextStyle(color: Colors.white60, fontSize: 13)),
             ],
           ),
         ),
@@ -285,9 +343,9 @@ class _ActivitiesScreenState extends ConsumerState<ActivitiesScreen>
         ),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2))
+              color: const Color(0xFF6366F1).withValues(alpha: 0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4))
         ],
       ),
       child: Row(
@@ -306,8 +364,10 @@ class _ActivitiesScreenState extends ConsumerState<ActivitiesScreen>
                             : const Color(0xFF1e293b))),
                 const SizedBox(height: 4),
                 Text(act.location,
-                    style:
-                        TextStyle(fontSize: 16, color: Colors.grey.shade600, fontWeight: FontWeight.w600)),
+                    style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey.shade600,
+                        fontWeight: FontWeight.w600)),
                 const SizedBox(height: 6),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.start,
@@ -331,13 +391,14 @@ class _ActivitiesScreenState extends ConsumerState<ActivitiesScreen>
             width: 58,
             height: 58,
             decoration: BoxDecoration(
-              color: isDone
-                  ? const Color(0xFFDCFCE7)
-                  : const Color(0xFFEDE9FE),
+              color: isDone ? const Color(0xFFDCFCE7) : const Color(0xFFEDE9FE),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: (isDone ? const Color(0xFF16A34A) : const Color(0xFF6366F1)).withValues(alpha: 0.15),
+                  color: (isDone
+                          ? const Color(0xFF16A34A)
+                          : const Color(0xFF6366F1))
+                      .withValues(alpha: 0.15),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 )
@@ -347,8 +408,7 @@ class _ActivitiesScreenState extends ConsumerState<ActivitiesScreen>
               child: isDone
                   ? const Icon(Icons.check_circle_rounded,
                       color: Color(0xFF16A34A), size: 30)
-                  : Text(act.emoji,
-                      style: const TextStyle(fontSize: 28)),
+                  : Text(act.emoji, style: const TextStyle(fontSize: 28)),
             ),
           ),
           const SizedBox(width: 12),
@@ -395,52 +455,44 @@ class _ActivitiesScreenState extends ConsumerState<ActivitiesScreen>
           ),
           child: Row(
             children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Text(act.emoji, style: const TextStyle(fontSize: 26)),
+              ),
+              const SizedBox(width: 15),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(act.name,
                         style: const TextStyle(
+                            color: Colors.white,
                             fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white)),
+                            fontWeight: FontWeight.w900)),
                     const SizedBox(height: 4),
-                    Text(act.location,
-                        style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.white.withValues(alpha: 0.85))),
-                    const SizedBox(height: 10),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 8),
+                          horizontal: 10, vertical: 3),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20),
-                        border:
-                            Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                        border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.3)),
                       ),
                       child: const Text(
                         '● جارٍ الآن  •  اضغط للإتمام',
                         style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white),
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(width: 14),
-              Container(
-                width: 58,
-                height: 58,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: Center(
-                    child:
-                        Text(act.emoji, style: const TextStyle(fontSize: 28))),
               ),
             ],
           ),
@@ -461,9 +513,9 @@ class _ActivitiesScreenState extends ConsumerState<ActivitiesScreen>
         border: Border.all(color: const Color(0xFFf1f5f9), width: 2),
         boxShadow: [
           BoxShadow(
-              color: const Color(0xFF6366f1).withValues(alpha: 0.05),
-              blurRadius: 20,
-              offset: const Offset(0, 10)),
+              color: const Color(0xFF6366f1).withValues(alpha: 0.15),
+              blurRadius: 10,
+              offset: const Offset(0, 4)),
         ],
       ),
       child: Column(
@@ -472,17 +524,8 @@ class _ActivitiesScreenState extends ConsumerState<ActivitiesScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFeef2ff),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Icon(Icons.emoji_events_rounded,
-                    color: Color(0xFF4F46E5), size: 40),
-              ),
               Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('$points نقطة',
                       style: const TextStyle(
@@ -492,8 +535,19 @@ class _ActivitiesScreenState extends ConsumerState<ActivitiesScreen>
                           letterSpacing: -1)),
                   const Text('إجمالي نقاطك هذا الشهر',
                       style: TextStyle(
-                          fontSize: 16, color: Color(0xFF64748b), fontWeight: FontWeight.w600)),
+                          fontSize: 16,
+                          color: Color(0xFF64748b),
+                          fontWeight: FontWeight.w600)),
                 ],
+              ),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFeef2ff),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Icon(Icons.emoji_events_rounded,
+                    color: Color(0xFF4F46E5), size: 40),
               ),
             ],
           ),
@@ -504,7 +558,8 @@ class _ActivitiesScreenState extends ConsumerState<ActivitiesScreen>
               value: progress,
               minHeight: 14,
               backgroundColor: const Color(0xFFf1f5f9),
-              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF6366F1)),
+              valueColor:
+                  const AlwaysStoppedAnimation<Color>(Color(0xFF6366F1)),
             ),
           ),
           const SizedBox(height: 12),
@@ -571,96 +626,123 @@ class _ActivitiesScreenState extends ConsumerState<ActivitiesScreen>
   Widget _buildBadgesSection() {
     final badges = [
       {
-        'icon': Icons.workspace_premium_rounded,
+        'icon': Icons.stars_rounded,
         'label': 'وسام الحكمة',
-        'sub': 'للمواظبة',
-        'color': const Color(0xFFD4AF37), // Gold
+        'color': const Color(0xFFFBBF24),
         'locked': false
       },
       {
-        'icon': Icons.local_fire_department_rounded,
-        'label': 'وسام الحيوية',
-        'sub': 'للنشاط البدني',
-        'color': const Color(0xFFC0C0C0), // Silver
+        'icon': Icons.favorite_rounded,
+        'label': 'صديق الجميع',
+        'color': const Color(0xFFEC4899),
         'locked': false
       },
       {
-        'icon': Icons.auto_stories_rounded,
-        'label': 'وسام الثقافة',
-        'sub': 'للقراءة',
-        'color': const Color(0xFFCD7F32), // Bronze
-        'locked': false
+        'icon': Icons.lock_outline_rounded,
+        'label': 'بطل النشاط',
+        'color': const Color(0xFF94A3B8),
+        'locked': true
       },
       {
-        'icon': Icons.military_tech_rounded,
-        'label': 'بطل الشهر',
-        'sub': 'إنجاز استثنائي',
-        'color': const Color(0xFF4F46E5),
+        'icon': Icons.lock_outline_rounded,
+        'label': 'خبير السعادة',
+        'color': const Color(0xFF94A3B8),
         'locked': true
       },
     ];
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
+      reverse: true,
       physics: const BouncingScrollPhysics(),
       child: Row(
         children: badges.map((b) {
           final locked = b['locked'] as bool;
           final color = b['color'] as Color;
-          return Padding(
-            padding: const EdgeInsets.only(left: 16),
-            child: Container(
-              width: 120,
-              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: locked ? const Color(0xFFe2e8f0) : color.withValues(alpha: 0.3),
-                  width: 2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: (locked ? Colors.grey : color).withValues(alpha: 0.1),
-                    blurRadius: 15,
-                    offset: const Offset(0, 8),
-                  )
-                ],
+          return Container(
+            width: 170,
+            margin: const EdgeInsets.only(left: 14),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: locked
+                    ? [const Color(0xFFF8FAFC), const Color(0xFFF1F5F9)]
+                    : [
+                        color.withValues(alpha: 0.05),
+                        Colors.white,
+                      ],
               ),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: (locked ? Colors.grey : color).withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
+              borderRadius: BorderRadius.circular(32),
+              border: Border.all(
+                color: locked
+                    ? const Color(0xFFE2E8F0)
+                    : color.withValues(alpha: 0.3),
+                width: 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: locked
+                      ? Colors.transparent
+                      : color.withValues(alpha: 0.15),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                )
+              ],
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    if (!locked)
+                      Container(
+                        width: 65,
+                        height: 65,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: color.withValues(alpha: 0.1),
+                        ),
+                      ),
+                    Icon(
+                      locked ? Icons.lock_rounded : b['icon'] as IconData,
+                      color: locked ? const Color(0xFFCBD5E1) : color,
+                      size: 40,
                     ),
-                    child: Icon(
-                      locked ? Icons.lock_outline_rounded : b['icon'] as IconData,
-                      color: locked ? const Color(0xFF94a3b8) : color,
-                      size: 32,
-                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  b['label'] as String,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: locked ? const Color(0xFF94A3B8) : const Color(0xFF1E293B),
+                    letterSpacing: -0.5,
                   ),
-                  const SizedBox(height: 12),
-                  Text(
-                    b['label'] as String,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w900,
-                      color: locked ? const Color(0xFF94a3b8) : const Color(0xFF1e293b),
-                    ),
+                ),
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: locked
+                        ? Colors.transparent
+                        : color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    b['sub'] as String,
-                    textAlign: TextAlign.center,
+                  child: Text(
+                    locked ? 'بانتظارك ✨' : 'مكتسب بفخر 🏆',
                     style: TextStyle(
                       fontSize: 12,
-                      color: locked ? const Color(0xFFcbd5e1) : const Color(0xFF64748b),
+                      fontWeight: FontWeight.w800,
+                      color: locked ? const Color(0xFFCBD5E1) : color,
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           );
         }).toList(),
@@ -689,13 +771,13 @@ class _ActivitiesScreenState extends ConsumerState<ActivitiesScreen>
         border: Border.all(color: const Color(0xFFEDE9FE), width: 1.5),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 12,
-              offset: const Offset(0, 3))
+              color: const Color(0xFF6366F1).withValues(alpha: 0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4))
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text('🌟 لوح الشرف',
               style: TextStyle(

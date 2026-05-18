@@ -100,7 +100,11 @@ class _NurseResidentDetailScreenState
             child: TabBarView(
               controller: _tabController,
               children: [
-                _buildMedicalFileTab(medicalInfo, provider.specialistRecommendations.where((r) => r.residentName == widget.residentName).toList()), // واجهة الملف الطبي
+                _buildMedicalFileTab(
+                    medicalInfo,
+                    provider.specialistRecommendations
+                        .where((r) => r.residentName == widget.residentName)
+                        .toList()), // واجهة الملف الطبي
                 _buildNotesTab(residentNotes), // واجهة الملاحظات التمريضية
               ],
             ),
@@ -117,36 +121,39 @@ class _NurseResidentDetailScreenState
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
       child: Row(
         children: [
-          Column(
-            // بيانات المقيم جهة اليمين
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                // شارة توضح الحالة الصحية (مثال: حالة حرجة)
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFEF2F2),
-                  borderRadius: BorderRadius.circular(20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment:
+                  CrossAxisAlignment.start, // محاذاة لليمن في الـ RTL
+              children: [
+                Container(
+                  // شارة توضح الحالة الصحية (مثال: حالة حرجة)
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF2F2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text('حالة حرجة 🔴',
+                      style: TextStyle(
+                          color: Color(0xFFEF4444),
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold)),
                 ),
-                child: const Text('حالة حرجة 🔴',
-                    style: TextStyle(
-                        color: Color(0xFFEF4444),
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold)),
-              ),
-              const SizedBox(height: 8),
-              Text(widget.residentName,
-                  style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF0F172A))), // اسم المقيم
-              Text('غرفة ${widget.roomNumber} · ٧٨ سنة',
-                  style: const TextStyle(
-                      color: Color(0xFF64748B), fontSize: 14)), // الغرفة والسن
-            ],
+                const SizedBox(height: 8),
+                Text(widget.residentName,
+                    style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0F172A))), // اسم المقيم
+                Text('غرفة ${widget.roomNumber} · ٧٨ سنة',
+                    style: const TextStyle(
+                        color: Color(0xFF64748B),
+                        fontSize: 14)), // الغرفة والسن
+              ],
+            ),
           ),
-          const Spacer(),
+          const SizedBox(width: 12),
           Hero(
             // أنيميشن انتقال الصورة بين الشاشات
             tag: widget.residentName,
@@ -160,6 +167,7 @@ class _NurseResidentDetailScreenState
                       color: Color(0xFF0369A1))),
             ),
           ),
+          const SizedBox(width: 20), // لتبعد عن أقصى الشمال
         ],
       ),
     );
@@ -185,7 +193,8 @@ class _NurseResidentDetailScreenState
     );
   }
 
-  Widget _buildMedicalFileTab(ResidentMedicalInfo info, List<SpecialistRecommendation> recs) {
+  Widget _buildMedicalFileTab(
+      ResidentMedicalInfo info, List<SpecialistRecommendation> recs) {
     // محتوى تبويب الملف الطبي (أدوية، حساسية، أمراض)
     return ListView(
       padding: const EdgeInsets.all(20),
@@ -195,26 +204,40 @@ class _NurseResidentDetailScreenState
             padding: EdgeInsets.only(bottom: 12),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
-              children: [Text('توصيات الأخصائي النفسي 🧠', textAlign: TextAlign.right, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)))],
+              children: [
+                Text('توصيات الأخصائي النفسي 🧠',
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1E293B)))
+              ],
             ),
           ),
           ...recs.map((r) => Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: const Color(0xFFF3E8FF), borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFD8B4FE))),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(child: Text(r.content, textAlign: TextAlign.right, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF6B21A8)))),
-              ],
-            ),
-          )),
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                    color: const Color(0xFFF3E8FF),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFD8B4FE))),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                        child: Text(r.content,
+                            textAlign: TextAlign.right,
+                            style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF6B21A8)))),
+                  ],
+                ),
+              )),
           const SizedBox(height: 20),
         ],
-        _buildSectionTitleWithAdd(
-            'الأمراض المزمنة',
-            () => _showAddItemDialog('مرض مزمن', (v) {
-                  // قسم الأمراض المزمنة
+        _buildSectionTitle('الأمراض المزمنة',
+            onAdd: () => _showAddItemDialog('مرض مزمن', (v) {
                   final newDiseases = List<String>.from(info.chronicDiseases)
                     ..add(v);
                   ref.read(appRiverpod).updateMedicalInfo(ResidentMedicalInfo(
@@ -228,10 +251,8 @@ class _NurseResidentDetailScreenState
             ? 'لا توجد أمراض مسجلة'
             : info.chronicDiseases.join('، ')),
         const SizedBox(height: 20),
-        _buildSectionTitleWithAdd(
-            'الحساسية',
-            () => _showAddItemDialog('حساسية', (v) {
-                  // قسم الحساسية
+        _buildSectionTitle('الحساسية',
+            onAdd: () => _showAddItemDialog('حساسية', (v) {
                   final newAllergies = List<String>.from(info.allergies)
                     ..add(v);
                   ref.read(appRiverpod).updateMedicalInfo(ResidentMedicalInfo(
@@ -247,15 +268,14 @@ class _NurseResidentDetailScreenState
                 : info.allergies.join('، '),
             color: const Color(0xFFEF4444)),
         const SizedBox(height: 24),
-        _buildSectionTitleWithAdd(
-            'الأدوية الحالية', _showAddMedicationDialog), // قسم الأدوية
+        _buildSectionTitle('الأدوية الحالية', onAdd: _showAddMedicationDialog),
         _buildMedicineList(info.medications),
       ],
     );
   }
 
-  Widget _buildSectionTitleWithAdd(String title, VoidCallback onAdd) {
-    // عنوان قسم مع زر إضافة (RTL)
+  Widget _buildSectionTitle(String title, {VoidCallback? onAdd}) {
+    // عنوان قسم مع زر إضافة اختياري
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -267,13 +287,16 @@ class _NurseResidentDetailScreenState
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF1E293B))),
-          IconButton(
-            onPressed: onAdd,
-            icon: const Icon(Icons.add_circle_outline_rounded,
-                size: 20, color: Color(0xFF0369A1)),
-            constraints: const BoxConstraints(),
-            padding: EdgeInsets.zero,
-          ),
+          if (onAdd != null)
+            IconButton(
+              onPressed: onAdd,
+              icon: const Icon(Icons.add_circle_outline_rounded,
+                  size: 20, color: Color(0xFF0369A1)),
+              constraints: const BoxConstraints(),
+              padding: EdgeInsets.zero,
+            )
+          else
+            const SizedBox.shrink(),
         ],
       ),
     );
@@ -527,6 +550,19 @@ class _NurseResidentDetailScreenState
     );
   }
 
+  void _showSuccessDialog(String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return _SuccessDialog(message: message);
+      },
+    );
+    Future.delayed(const Duration(seconds: 1, milliseconds: 500), () {
+      Navigator.pop(context); // إغلاق حوار النجاح
+    });
+  }
+
   void _showAddItemDialog(String label, Function(String) onAdd) {
     // حوار منبثق لإضافة عناصر (حساسية، أمراض)
     final TextEditingController controller = TextEditingController();
@@ -559,8 +595,7 @@ class _NurseResidentDetailScreenState
               if (controller.text.isNotEmpty) {
                 onAdd(controller.text); // تنفيذ دالة الإضافة
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('تمت إضافة $label بنجاح ✅')));
+                _showSuccessDialog('تمت إضافة $label بنجاح');
               }
             },
             style: ElevatedButton.styleFrom(
@@ -615,8 +650,7 @@ class _NurseResidentDetailScreenState
                   chronicDiseases: info.chronicDiseases,
                 ));
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('تمت إضافة الدواء بنجاح ✅')));
+                _showSuccessDialog('تمت إضافة الدواء بنجاح');
               }
             },
             style: ElevatedButton.styleFrom(
@@ -658,5 +692,74 @@ class _NurseResidentDetailScreenState
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('تم تحميل الملف الطبي الكامل بنجاح ✅')));
     });
+  }
+}
+
+class _SuccessDialog extends StatefulWidget {
+  final String message;
+  const _SuccessDialog({required this.message});
+
+  @override
+  State<_SuccessDialog> createState() => _SuccessDialogState();
+}
+
+class _SuccessDialogState extends State<_SuccessDialog>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _scaleAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.elasticOut,
+    );
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 30),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ScaleTransition(
+                scale: _scaleAnimation,
+                child: const Icon(
+                  Icons.check_circle_rounded,
+                  color: Color(0xFF10B981),
+                  size: 60,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                widget.message,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

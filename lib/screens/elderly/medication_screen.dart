@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/app_riverpod.dart';
 import '../../models/app_models.dart';
+import 'package:lottie/lottie.dart';
 
 class MedicationScreen extends ConsumerStatefulWidget {
   const MedicationScreen({super.key});
@@ -14,6 +15,7 @@ class MedicationScreen extends ConsumerStatefulWidget {
 
 class _MedicationScreenState extends ConsumerState<MedicationScreen>
     with TickerProviderStateMixin {
+  bool _showSuccessAnimation = false;
   late AnimationController _bgController;
   late AnimationController _pillController;
   late AnimationController _ringController;
@@ -70,26 +72,80 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
   @override
   Widget build(BuildContext context) {
     final provider = ref.watch(appRiverpod);
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      child: Column(
-        children: [
-          _buildHero(provider),
-          _buildDayTabs(),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 14, 14, 34),
-            child: Column(
-              children: [
-                _buildMissBanner(),
-                const SizedBox(height: 12),
-                ..._buildDynamicSections(provider, selectedDay),
-                const SizedBox(height: 12),
-                _buildAppointmentsSection(provider),
-              ],
+    return Stack(
+      children: [
+        SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Column(
+            children: [
+              _buildHero(provider),
+              _buildDayTabs(),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 14, 14, 34),
+                child: Column(
+                  children: [
+                    _buildMissBanner(),
+                    const SizedBox(height: 12),
+                    ..._buildDynamicSections(provider, selectedDay),
+                    const SizedBox(height: 12),
+                    _buildAppointmentsSection(provider),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (_showSuccessAnimation) _buildCentralSuccessAnimation(),
+      ],
+    );
+  }
+
+  Widget _buildCentralSuccessAnimation() {
+    return TweenAnimationBuilder(
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 700),
+      curve: Curves.elasticOut,
+      builder: (context, value, child) {
+        return Container(
+          color: Colors.black.withValues(alpha: 0.5 * value),
+          child: Center(
+            child: Transform.scale(
+              scale: value,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Lottie Animation: Done.json (Transparent Background)
+                  SizedBox(
+                    width: 320,
+                    height: 320,
+                    child: Lottie.asset(
+                      'assets/animations/Done.json',
+                      repeat: false,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  const Text(
+                    'تم أخذ الدواء بنجاح ✨',
+                    style: TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black26,
+                          offset: Offset(0, 4),
+                          blurRadius: 10,
+                        )
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -124,8 +180,7 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
                       padding: EdgeInsets.only(left: 16.0, top: 16.0),
                     ),
                     const Padding(
-                      padding:
-                          EdgeInsets.only(right: 28, top: 8, bottom: 12),
+                      padding: EdgeInsets.only(right: 28, top: 8, bottom: 12),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
@@ -148,16 +203,16 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           _buildHeroChip(
-                              '✅ ${provider.getMedicationsForDay(selectedDay).where((m) => m.isTaken).length}',
+                              '${provider.getMedicationsForDay(selectedDay).where((m) => m.isTaken).length}',
                               'تم',
                               0),
                           const SizedBox(width: 8),
                           _buildHeroChip(
-                              '⏰ ${provider.getMedicationsForDay(selectedDay).where((m) => !m.isTaken).length}',
+                              '${provider.getMedicationsForDay(selectedDay).where((m) => !m.isTaken).length}',
                               'باقي',
                               1),
                           const SizedBox(width: 8),
-                          _buildHeroChip('🔵 ٠', 'لاحقاً', 2),
+                          _buildHeroChip('٠', 'لاحقاً', 2),
                         ],
                       ),
                     ),
@@ -194,6 +249,27 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
   }
 
   Widget _buildHeroChip(String value, String label, int index) {
+    Color chipColor;
+    Color borderColor;
+    
+    switch (index) {
+      case 0: // تم
+        chipColor = const Color(0xFF6C63FF).withValues(alpha: 0.15); // بنفسجي أساسي
+        borderColor = const Color(0xFF6C63FF).withValues(alpha: 0.3);
+        break;
+      case 1: // باقي
+        chipColor = const Color(0xFF8B5CF6).withValues(alpha: 0.15); // بنفسجي فاتح
+        borderColor = const Color(0xFF8B5CF6).withValues(alpha: 0.3);
+        break;
+      case 2: // لاحقاً
+        chipColor = const Color(0xFF3B82F6).withValues(alpha: 0.15); // أزرق
+        borderColor = const Color(0xFF3B82F6).withValues(alpha: 0.3);
+        break;
+      default:
+        chipColor = Colors.white.withValues(alpha: 0.14);
+        borderColor = Colors.white.withValues(alpha: 0.12);
+    }
+
     return Expanded(
       child: TweenAnimationBuilder(
         tween: Tween<double>(begin: 0.6, end: 1),
@@ -204,10 +280,22 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 4),
           decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.13),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.12), width: 0.8)),
+            color: chipColor,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: borderColor, width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+              BoxShadow(
+                color: borderColor.withValues(alpha: 0.2),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
           child: Column(children: [
             FittedBox(
               fit: BoxFit.scaleDown,
@@ -345,13 +433,16 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
 
       for (int i = 0; i < meds.length; i++) {
         var m = meds[i];
-        if (m == nextMed) {
+        // If confirmed by elderly but not yet final isTaken, it's pending nurse
+        bool isPendingNurse = m.isElderlyConfirmed && !m.isTaken;
+
+        if (m == nextMed && !isPendingNurse) {
           sections.add(_buildActiveMedCard(provider, m));
           sections.add(const SizedBox(height: 10));
           sections.add(_buildConfirmButton(provider, m));
         } else {
-          sections.add(_buildMedCard(
-              m.name, m.dosage, m.timeDescription, m.isTaken, false, false, i));
+          sections.add(_buildMedCard(m.name, m.dosage, m.timeDescription,
+              m.isTaken, false, false, i, m.isElderlyConfirmed));
         }
         sections.add(const SizedBox(height: 8));
       }
@@ -365,46 +456,67 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        Text(text,
-            style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF6C63FF))),
-        const SizedBox(width: 7),
         Container(
             width: 4,
             height: 16,
             decoration: BoxDecoration(
                 color: color, borderRadius: BorderRadius.circular(3))),
+        const SizedBox(width: 7),
+        Text(text,
+            style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF6C63FF))),
       ],
     );
   }
 
   Widget _buildMedCard(String name, String dose, String time, bool isDone,
-      bool isMissed, bool isLater, int delayIndex) {
+      bool isMissed, bool isLater, int delayIndex,
+      [bool isElderlyConfirmed = false]) {
     bool hc = ref.watch(appRiverpod).isHighContrast;
+
+    bool isPendingNurse = isElderlyConfirmed && !isDone;
+
     final bgColor = isDone
         ? const Color(0xFFd1fae5)
-        : (isMissed
-            ? const Color(0xFFfee2e2)
-            : (isLater ? const Color(0xFFf1f5f9) : Colors.white));
+        : (isPendingNurse
+            ? const Color(0xFFfef3c7)
+            : (isMissed
+                ? const Color(0xFFfee2e2)
+                : (isLater ? const Color(0xFFf1f5f9) : Colors.white)));
+
     final borderColor = isDone
         ? const Color(0xFFd1fae5)
-        : (isMissed
-            ? const Color(0xFFfca5a5)
-            : (isLater ? const Color(0xFFede9fe) : const Color(0xFFede9fe)));
-    final badgeText =
-        isDone ? '✓ تم' : (isMissed ? 'فائتة' : (isLater ? 'لاحقاً' : ''));
+        : (isPendingNurse
+            ? const Color(0xFFfde68a)
+            : (isMissed
+                ? const Color(0xFFfca5a5)
+                : (isLater
+                    ? const Color(0xFFede9fe)
+                    : const Color(0xFFede9fe))));
+
+    final badgeText = isDone
+        ? '✓ تم'
+        : (isPendingNurse
+            ? '⏳ في الانتظار'
+            : (isMissed ? 'فائتة' : (isLater ? 'لاحقاً' : '')));
+
     final badgeColor = isDone
         ? const Color(0xFFd1fae5)
-        : (isMissed
-            ? const Color(0xFFfee2e2)
-            : (isLater ? const Color(0xFFf1f5f9) : Colors.white));
+        : (isPendingNurse
+            ? const Color(0xFFfef3c7)
+            : (isMissed
+                ? const Color(0xFFfee2e2)
+                : (isLater ? const Color(0xFFf1f5f9) : Colors.white)));
+
     final badgeTextColor = isDone
         ? const Color(0xFF065f46)
-        : (isMissed
-            ? const Color(0xFF7f1d1d)
-            : (isLater ? const Color(0xFF9ca3af) : Colors.white));
+        : (isPendingNurse
+            ? const Color(0xFF92400e)
+            : (isMissed
+                ? const Color(0xFF7f1d1d)
+                : (isLater ? const Color(0xFF9ca3af) : Colors.white)));
 
     return TweenAnimationBuilder(
       tween: Tween<double>(begin: 0, end: 1),
@@ -422,9 +534,9 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
                 color: hc ? const Color(0xFF333333) : borderColor, width: 1.5),
             boxShadow: [
               BoxShadow(
-                  color: const Color(0xFF6C63FF).withValues(alpha: hc ? 0.2 : 0.06),
-                  blurRadius: 12,
-                  offset: const Offset(0, 2))
+                  color: const Color(0xFF6C63FF).withValues(alpha: hc ? 0.25 : 0.15),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4))
             ]),
         child: Row(
           textDirection: TextDirection.rtl,
@@ -495,7 +607,7 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
                   height: 52,
                   decoration: BoxDecoration(
                       color: bgColor, borderRadius: BorderRadius.circular(16)),
-                  child: Center(child: _buildPillIcon(isDone, isLater)),
+                  child: Center(child: _buildPillIcon(isDone, isLater, isElderlyConfirmed)),
                 ),
                 const SizedBox(height: 8),
                 if (badgeText.isNotEmpty)
@@ -596,16 +708,17 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
                 // Left: Interactive Icon
                 GestureDetector(
                   onTap: () {
-                    provider.takeMedication(med.id);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('تم تسجيل الجرعة بنجاح! +10 نقاط 🌟',
-                            style:
-                                TextStyle(fontSize: 18, fontFamily: 'Cairo')),
-                        backgroundColor: Color(0xFF10b981),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
+                    provider.elderlyConfirmMedication(med.id);
+
+                    // Show central animation instead of SnackBar
+                    setState(() => _showSuccessAnimation = true);
+
+                    // Hide it after 3 seconds
+                    Future.delayed(const Duration(seconds: 3), () {
+                      if (mounted) {
+                        setState(() => _showSuccessAnimation = false);
+                      }
+                    });
                   },
                   child: SizedBox(
                     width: 56,
@@ -623,8 +736,9 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
                                 decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                        color: Colors.white.withValues(alpha: 0.55 -
-                                            (_ringController.value * 0.55)),
+                                        color: Colors.white.withValues(
+                                            alpha: 0.55 -
+                                                (_ringController.value * 0.55)),
                                         width: 2))),
                           ),
                         ),
@@ -640,7 +754,8 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
                                   color: Colors.white,
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.15),
+                                      color:
+                                          Colors.black.withValues(alpha: 0.15),
                                       blurRadius: 8,
                                       offset: const Offset(0, 3),
                                     )
@@ -693,15 +808,17 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
             color: Colors.transparent,
             child: InkWell(
               onTap: () {
-                provider.takeMedication(med.id);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('تم تسجيل الجرعة بنجاح! +10 نقاط 🌟',
-                        style: TextStyle(fontSize: 18, fontFamily: 'Cairo')),
-                    backgroundColor: Color(0xFF10b981),
-                    duration: Duration(seconds: 2),
-                  ),
-                );
+                provider.elderlyConfirmMedication(med.id);
+                
+                // Show central animation
+                setState(() => _showSuccessAnimation = true);
+
+                // Hide it after 3 seconds
+                Future.delayed(const Duration(seconds: 3), () {
+                  if (mounted) {
+                    setState(() => _showSuccessAnimation = false);
+                  }
+                });
               },
               borderRadius: BorderRadius.circular(20),
               child: Padding(
@@ -748,11 +865,13 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
                     color: const Color(0xFFf472b6),
                     borderRadius: BorderRadius.circular(3))),
             const SizedBox(width: 7),
-            const Text('مواعيد وجلسات قادمة 📅',
+            const Text('مواعيد وجلسات قادمة',
                 style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF6C63FF))),
+            const SizedBox(width: 6),
+            Image.asset('assets/icons/calendar.png', width: 22, height: 22),
           ],
         ),
         const SizedBox(height: 12),
@@ -761,16 +880,14 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
               child: Text('لا توجد مواعيد مسجلة حالياً',
                   style: TextStyle(color: Colors.white70, fontSize: 13)))
         else
-          ...provider.medicalSessions
-              .map((s) => _buildAppointmentCard(
-                    s.date == 'اليوم' ? '٢١' : '٢٠',
-                    'أبريل',
-                    s.specialistName,
-                    '${s.type == 'doctor' ? 'كشف طبي' : 'جلسة علاج'} · ${s.time}',
-                    s.type == 'doctor',
-                    0,
-                  ))
-              ,
+          ...provider.medicalSessions.map((s) => _buildAppointmentCard(
+                s.date == 'اليوم' ? '٢١' : '٢٠',
+                'أبريل',
+                s.specialistName,
+                '${s.type == 'doctor' ? 'كشف طبي' : 'جلسة علاج'} · ${s.time}',
+                s.type == 'doctor',
+                0,
+              )),
       ],
     );
   }
@@ -869,15 +986,20 @@ class _MedicationScreenState extends ConsumerState<MedicationScreen>
     );
   }
 
-  Widget _buildPillIcon(bool isDone, bool isLater) {
-    final color = isDone
-        ? const Color(0xFF10b981)
-        : (isLater ? const Color(0xFFcbd5e1) : const Color(0xFF7c3aed));
-
-    return Icon(
-      Icons.medication,
-      color: color,
-      size: 26,
+  Widget _buildPillIcon(bool isDone, bool isLater, [bool isElderlyConfirmed = false]) {
+    // Icon continues to animate if it's pending nurse confirmation (isElderlyConfirmed and not yet isDone)
+    bool shouldAnimate = !isDone || (isElderlyConfirmed && !isDone);
+    
+    return Opacity(
+      opacity: isLater ? 0.5 : 1.0,
+      child: Lottie.asset(
+        'assets/animations/pickups.json',
+        width: 45,
+        height: 45,
+        fit: BoxFit.contain,
+        repeat: shouldAnimate,
+        animate: true,
+      ),
     );
   }
 }

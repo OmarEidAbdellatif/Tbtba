@@ -52,13 +52,18 @@ class _AdminHomeViewState extends ConsumerState<AdminHomeView> {
         // شبكة مربعات مؤشرات الأداء (KPIs) - الآن تفاعلية
         _buildKPIGrid(provider.adminStats, context),
 
+        const SizedBox(height: 25),
+        // قسم مميزات المنشأة المستعرضة
+        if (provider.currentAccount?.amenities != null && provider.currentAccount!.amenities!.isNotEmpty)
+          _buildAmenitiesSection(provider.currentAccount!.amenities!),
+
         const SizedBox(height: 32),
         // عنوان قسم الرسوم البيانية للنمو والصحة
         FadeTransition(
             opacity: widget.fadeAnimations[1],
             child: _buildSectionTitle('منحنى النمو والصحة')),
         const SizedBox(height: 16),
-        _buildLargeChartCard(),
+        _buildLargeChartCard(provider),
 
         const SizedBox(height: 32),
         // قسم التنبيهات مع شريط الفلترة
@@ -90,6 +95,59 @@ class _AdminHomeViewState extends ConsumerState<AdminHomeView> {
               .take(5)
               .map((n) => _buildAlertCard(n, _getAlertColor(n.type), provider)),
       ],
+    );
+  }
+
+  Widget _buildAmenitiesSection(List<String> amenities) {
+    return FadeTransition(
+      opacity: widget.fadeAnimations[1],
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.stars_rounded, color: Color(0xFF6C63FF), size: 24),
+                const SizedBox(width: 10),
+                _buildSectionTitle('مميزات المنشأة'),
+              ],
+            ),
+            const SizedBox(height: 15),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: amenities.map((a) => Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6C63FF).withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFF6C63FF).withValues(alpha: 0.1)),
+                ),
+                child: Text(
+                  a,
+                  style: const TextStyle(
+                    color: Color(0xFF6C63FF),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                ),
+              )).toList(),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -137,7 +195,8 @@ class _AdminHomeViewState extends ConsumerState<AdminHomeView> {
           boxShadow: isSel
               ? [
                   BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05), blurRadius: 4)
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 4)
                 ]
               : null,
         ),
@@ -181,7 +240,8 @@ class _AdminHomeViewState extends ConsumerState<AdminHomeView> {
           boxShadow: isSel
               ? [
                   BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05), blurRadius: 4)
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 4)
                 ]
               : null,
         ),
@@ -352,17 +412,72 @@ class _AdminHomeViewState extends ConsumerState<AdminHomeView> {
                   _buildDrillDownRow(
                       'المتوسط العام', '٨٢٪', Icons.bar_chart_rounded),
                   const SizedBox(height: 24),
-                  // منطقة محاكاة الرسم البياني التفصيلي
+                  // منطقة الرسم البياني التفصيلي المتحرك
                   Container(
                     height: 150,
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                         color: const Color(0xFFf8fafc),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(color: const Color(0xFFf1f5f9))),
-                    child: const Center(
-                        child: Text('جاري تحميل الرسم البياني التفصيلي...',
-                            style: TextStyle(
-                                color: Color(0xFF94a3b8), fontSize: 11))),
+                    child: stat.history.isEmpty
+                        ? const Center(
+                            child: Text('لا توجد بيانات تاريخية',
+                                style: TextStyle(
+                                    color: Color(0xFF94a3b8), fontSize: 11)))
+                        : Stack(
+                            children: [
+                              // Y Axis Labels
+                              Positioned(
+                                left: 0,
+                                top: 0,
+                                child: Text(
+                                    '${stat.history.reduce((a, b) => a > b ? a : b).toStringAsFixed(1)}',
+                                    style: const TextStyle(
+                                        color: Color(0xFF1e293b),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold)),
+                              ),
+                              Positioned(
+                                left: 0,
+                                bottom: 25,
+                                child: Text(
+                                    '${stat.history.reduce((a, b) => a < b ? a : b).toStringAsFixed(1)}',
+                                    style: const TextStyle(
+                                        color: Color(0xFF1e293b),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold)),
+                              ),
+                              // Chart
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                    left: 35, bottom: 25, top: 10, right: 10),
+                                child: CustomPaint(
+                                  size: Size.infinite,
+                                  painter: LineChartPainter(stat.history),
+                                ),
+                              ),
+                              // X Axis Labels
+                              const Positioned(
+                                left: 35,
+                                bottom: 0,
+                                child: Text('البداية',
+                                    style: TextStyle(
+                                        color: Color(0xFF1e293b),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold)),
+                              ),
+                              const Positioned(
+                                right: 0,
+                                bottom: 0,
+                                child: Text('الحالي',
+                                    style: TextStyle(
+                                        color: Color(0xFF1e293b),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold)),
+                              ),
+                            ],
+                          ),
                   ),
                 ],
               ),
@@ -373,24 +488,168 @@ class _AdminHomeViewState extends ConsumerState<AdminHomeView> {
     );
   }
 
+  // إظهار نافذة تفاصيل المؤشر كـ Dialog ينبثق في منتصف الشاشة (نط في وشي)
+  void _showKPIDialog(BuildContext context, CenterOperationalStat stat) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: '',
+      barrierColor: Colors.black.withValues(alpha: 0.5),
+      transitionDuration: const Duration(milliseconds: 400),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return Container(); // Not used
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        return ScaleTransition(
+          scale: CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutBack, // تأثير النط في الوش
+          ),
+          child: AlertDialog(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            backgroundColor: Colors.white,
+            contentPadding: const EdgeInsets.all(24),
+            content: SizedBox(
+              width: MediaQuery.of(context).size.width * 0.85,
+              height: 400, // ارتفاع مناسب
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('تفاصيل ${stat.label}',
+                      style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1e293b))),
+                  const SizedBox(height: 8),
+                  const Text(
+                      'تحليل البيانات التاريخية والنمو في الفترة المختارة',
+                      style: TextStyle(fontSize: 12, color: Color(0xFF64748b))),
+                  const SizedBox(height: 24),
+                  Expanded(
+                    child: ListView(
+                      children: [
+                        _buildDrillDownRow('القيمة الحالية', stat.value,
+                            Icons.analytics_rounded),
+                        _buildDrillDownRow(
+                            'معدل النمو', stat.trend, Icons.show_chart_rounded),
+                        _buildDrillDownRow(
+                            'المتوسط العام', '٨٢٪', Icons.bar_chart_rounded),
+                        const SizedBox(height: 16),
+                        // منطقة الرسم البياني التفصيلي
+                        Container(
+                          height: 150,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                              color: const Color(0xFFf8fafc),
+                              borderRadius: BorderRadius.circular(20),
+                              border:
+                                  Border.all(color: const Color(0xFFf1f5f9))),
+                          child: stat.history.isEmpty
+                              ? const Center(
+                                  child: Text('لا توجد بيانات تاريخية',
+                                      style: TextStyle(
+                                          color: Color(0xFF94a3b8),
+                                          fontSize: 11)))
+                              : Stack(
+                                  children: [
+                                    // Y Axis Labels
+                                    Positioned(
+                                      left: 0,
+                                      top: 0,
+                                      child: Text(
+                                          '${stat.history.reduce((a, b) => a > b ? a : b).toStringAsFixed(1)}',
+                                          style: const TextStyle(
+                                              color: Color(0xFF1e293b),
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold)),
+                                    ),
+                                    Positioned(
+                                      left: 0,
+                                      bottom: 25,
+                                      child: Text(
+                                          '${stat.history.reduce((a, b) => a < b ? a : b).toStringAsFixed(1)}',
+                                          style: const TextStyle(
+                                              color: Color(0xFF1e293b),
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold)),
+                                    ),
+                                    // Chart
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                          left: 35,
+                                          bottom: 25,
+                                          top: 10,
+                                          right: 10),
+                                      child: CustomPaint(
+                                        size: Size.infinite,
+                                        painter: LineChartPainter(stat.history),
+                                      ),
+                                    ),
+                                    // X Axis Labels
+                                    const Positioned(
+                                      left: 35,
+                                      bottom: 0,
+                                      child: Text('البداية',
+                                          style: TextStyle(
+                                              color: Color(0xFF1e293b),
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold)),
+                                    ),
+                                    const Positioned(
+                                      right: 0,
+                                      bottom: 0,
+                                      child: Text('الحالي',
+                                          style: TextStyle(
+                                              color: Color(0xFF1e293b),
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold)),
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   // بناء سطر معلومات داخل نافذة الـ Drill-down
   Widget _buildDrillDownRow(String label, String val, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        children: [
-          Text(val,
-              style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1e293b))),
-          const Spacer(),
-          Text(label,
-              style: const TextStyle(fontSize: 12, color: Color(0xFF64748b))),
-          const SizedBox(width: 12),
-          Icon(icon, color: const Color(0xFF0ea5e9), size: 20),
-        ],
-      ),
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 500),
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 12 * value),
+            child: Row(
+              children: [
+                Icon(icon, color: const Color(0xFF0ea5e9), size: 22),
+                const SizedBox(width: 12),
+                Text(label,
+                    style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1e293b))),
+                const Spacer(),
+                Text(val,
+                    style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1e293b))),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -419,58 +678,78 @@ class _AdminHomeViewState extends ConsumerState<AdminHomeView> {
   }
 
   // بناء كارت الرسم البياني الكبير لمنحنى الصحة
-  Widget _buildLargeChartCard() {
-    return Container(
-      width: double.infinity,
-      height: 180,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-            colors: [Color(0xFF0ea5e9), Color(0xFF0284c7)]),
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: [
-          BoxShadow(
-              color: const Color(0xFF0ea5e9).withValues(alpha: 0.3),
-              blurRadius: 20,
-              offset: const Offset(0, 10))
-        ],
-      ),
-      child: Stack(
-        children: [
-          const Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text('الإيرادات التشغيلية',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold)),
-              Text('مقارنة بالشهر الماضي',
-                  style: TextStyle(color: Colors.white70, fontSize: 11)),
-            ],
-          ),
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: SizedBox(
-              height: 60,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
+  Widget _buildLargeChartCard(AppRiverpod provider) {
+    // جلب بيانات الإيرادات الحقيقية من الـ Provider
+    // الإيرادات هي العنصر الثاني في القائمة (index 1)
+    final revenueStat =
+        provider.adminStats.length > 1 ? provider.adminStats[1] : null;
+    final historyData =
+        revenueStat?.history ?? const [40, 60, 30, 80, 50, 90, 70];
+    final title = revenueStat?.label ?? 'الإيرادات التشغيلية';
+    final valueStr = revenueStat?.value ?? '';
+
+    return GestureDetector(
+      onTap: () {
+        if (revenueStat != null) {
+          _showKPIDialog(context, revenueStat);
+        }
+      },
+      child: Container(
+        width: double.infinity,
+        height: 140, // تقليل الارتفاع ليصبح أكثر رشاقة
+        margin: const EdgeInsets.symmetric(
+            horizontal: 16), // إضافة هوامش جانبية لضبط العرض
+        padding: const EdgeInsets.all(16), // تقليل البادينج لتوفير مساحة
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+              colors: [Color(0xFF0ea5e9), Color(0xFF0284c7)]),
+          borderRadius:
+              BorderRadius.circular(20), // حواف أقل حدة لتناسب التصميم
+          boxShadow: [
+            BoxShadow(
+                color: const Color(0xFF0ea5e9).withValues(alpha: 0.3),
+                blurRadius: 15,
+                offset: const Offset(0, 5))
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // النص في الأعلى
+            Align(
+              alignment: Alignment.topRight,
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  _chartBar(40),
-                  _chartBar(60),
-                  _chartBar(30),
-                  _chartBar(80),
-                  _chartBar(50),
-                  _chartBar(90),
-                  _chartBar(70),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    'مقارنة بالشهر الماضي ($valueStr)',
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 11,
+                    ),
+                  ),
                 ],
               ),
             ),
-          ),
-        ],
+            const Spacer(),
+            // الرسم البياني يملأ العرض
+            SizedBox(
+              height: 50, // تقليل ارتفاع الرسم ليناسب الكارت
+              child: CustomPaint(
+                size: Size.infinite,
+                painter: MiniLineChartPainter(historyData),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -492,13 +771,23 @@ class _AdminHomeViewState extends ConsumerState<AdminHomeView> {
       key: Key(n.id),
       direction: DismissDirection.endToStart, // سحب لليمين في RTL
       onDismissed: (direction) {
-        provider.resolveNotification(n.id);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('تم أرشفة التنبيه'),
-            duration: Duration(seconds: 1),
-          ),
-        );
+        if (_showResolved) {
+          provider.deleteNotification(n.id);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('تم حذف التنبيه نهائياً'),
+              duration: Duration(seconds: 1),
+            ),
+          );
+        } else {
+          provider.markNotificationAsRead(n.id);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('تم أرشفة التنبيه'),
+              duration: Duration(seconds: 1),
+            ),
+          );
+        }
       },
       background: Container(
         margin: const EdgeInsets.only(bottom: 12),
@@ -572,5 +861,118 @@ class _AdminHomeViewState extends ConsumerState<AdminHomeView> {
         ),
       ),
     );
+  }
+}
+
+class LineChartPainter extends CustomPainter {
+  final List<double> data;
+  LineChartPainter(this.data);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (data.isEmpty) return;
+
+    final paint = Paint()
+      ..color = const Color(0xFF0ea5e9)
+      ..strokeWidth = 3
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    final dotPaint = Paint()
+      ..color = const Color(0xFF0ea5e9)
+      ..style = PaintingStyle.fill;
+
+    final axisPaint = Paint()
+      ..color = const Color(0xFFcbd5e1)
+      ..strokeWidth = 1;
+
+    // Draw Axes
+    canvas.drawLine(const Offset(0, 0), Offset(0, size.height), axisPaint); // Y
+    canvas.drawLine(Offset(0, size.height), Offset(size.width, size.height),
+        axisPaint); // X
+
+    final maxVal = data.reduce((a, b) => a > b ? a : b);
+    final minVal = data.reduce((a, b) => a < b ? a : b);
+    final range = maxVal - minVal == 0 ? 1.0 : maxVal - minVal;
+
+    final path = Path();
+    final xStep = data.length > 1 ? size.width / (data.length - 1) : 0.0;
+
+    for (int i = 0; i < data.length; i++) {
+      final x = i * xStep;
+      // Scale Y to fit container height, inverting Y as 0 is top
+      final y =
+          size.height - ((data[i] - minVal) / range) * (size.height - 20) - 10;
+
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+      canvas.drawCircle(Offset(x, y), 4, dotPaint);
+    }
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant LineChartPainter oldDelegate) {
+    return oldDelegate.data != data;
+  }
+}
+
+class MiniLineChartPainter extends CustomPainter {
+  final List<double> data;
+  MiniLineChartPainter(this.data);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (data.isEmpty) return;
+
+    final paint = Paint()
+      ..color = Colors.white
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    final dotPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+
+    final axisPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.3)
+      ..strokeWidth = 1;
+
+    // Draw Axes (minimal)
+    canvas.drawLine(Offset(0, size.height), Offset(size.width, size.height),
+        axisPaint); // X only
+
+    final maxVal = data.reduce((a, b) => a > b ? a : b);
+    final minVal = data.reduce((a, b) => a < b ? a : b);
+    final range = maxVal - minVal == 0 ? 1.0 : maxVal - minVal;
+
+    final path = Path();
+    final xStep = data.length > 1 ? size.width / (data.length - 1) : 0.0;
+
+    for (int i = 0; i < data.length; i++) {
+      final x = i * xStep;
+      // Scale Y to fit container height with more padding (15px top/bottom)
+      final y =
+          size.height - ((data[i] - minVal) / range) * (size.height - 30) - 15;
+
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+      canvas.drawCircle(Offset(x, y), 3, dotPaint);
+    }
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant MiniLineChartPainter oldDelegate) {
+    return oldDelegate.data != data;
   }
 }

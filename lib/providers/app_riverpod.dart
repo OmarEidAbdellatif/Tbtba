@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // للوصول إلى الملفات (مثل الخطوط)
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/app_models.dart'; // نماذج البيانات المستخدمة في التطبيق
 import 'package:permission_handler/permission_handler.dart'; // مكتبة إدارة التصاريح
@@ -8,6 +9,11 @@ import 'package:url_launcher/url_launcher.dart'; // مكتبة تشغيل الر
 import 'package:photo_manager/photo_manager.dart'; // مكتبة إدارة الصور
 import 'package:image_picker/image_picker.dart'; // مكتبة اختيار الصور من المعرض
 import 'dart:io'; // للتعامل مع ملفات الصور المختارة
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+
+import 'package:flutter_tts/flutter_tts.dart'; // مكتبة تحويل النص إلى كلام
 
 import '../services/notification_service.dart';
 
@@ -15,6 +21,8 @@ final appRiverpod = ChangeNotifierProvider((ref) => AppRiverpod());
 
 class AppRiverpod extends ChangeNotifier {
   int selectedIndex = 0;
+  String facilityName = 'دار الأمل لرعاية كبار السن'; // اسم المنشأة
+  String managerName = 'م. إبراهيم الجوهري'; // اسم المدير
 
   void scheduleMedicationReminders(NotificationService service) {
     for (var med in medications) {
@@ -32,9 +40,10 @@ class AppRiverpod extends ChangeNotifier {
     }
   }
 
-  String currentRole = 'مسن'; // الدور الحالي للمستخدم (ممرض، متطوع، مدير، إلخ)
+  String currentRole = 'أخصائي اجتماعي'; // الدور الحالي للمستخدم (مؤقتاً للتجربة)
   bool hasSeenOnboarding = false; // هل شاهد المستخدم شاشات الترحيب؟
   bool isAuthenticated = false; // هل المستخدم مسجل دخوله؟
+  bool isInitialized = false; // هل تم تحميل البيانات من الذاكرة؟
   double fontScaleFactor = 1.0; // حجم الخط المختار لسهولة القراءة
   bool isHighContrast = false; // تفعيل وضع التباين العالي
   bool isDarkMode = false; // تفعيل الوضع الليلي
@@ -44,24 +53,90 @@ class AppRiverpod extends ChangeNotifier {
   String selectedAdminDateFilter = 'اليوم';
   DateTime? _sessionExpiry;
 
+  AppAccount? currentAccount; // الحساب الحالي المسجل دخوله
+
   // --- إدارة الحسابات (Account Management) ---
   List<AppAccount> accounts = [
     AppAccount(
         email: 'admin@admin.com',
         password: '123',
         role: 'إدارة',
-        name: 'م. إبراهيم الجوهري'),
+        name: 'م. إبراهيم الجوهري',
+        facilityName: 'دار الأمل لرعاية كبار السن',
+        facilityAddress: 'القاهرة، المعادي، شارع النصر',
+        facilityPhone: '0223456789',
+        facilityEmail: 'contact@dar-alamal.com',
+        licenseNumber: 'LC-2024-9988',
+        amenities: ['رعاية طبية 24/7', 'حديقة واسعة', 'علاج طبيعي'],
+        phone: '01012345678'),
     AppAccount(
         email: 'nurse@nurse.com',
         password: '123',
         role: 'ممرض',
-        name: 'أ. منى زكي'),
+        name: 'أ. منى زكي',
+        facilityName: 'دار الأمل لرعاية كبار السن',
+        specialty: 'تمريض كبار السن وقياسات حيوية',
+        shift: 'الفترة الصباحية',
+        phone: '01122334455'),
     AppAccount(
         email: 'specialist@specialist.com',
         password: '123',
         role: 'أخصائي اجتماعي',
-        name: 'د. سارة عثمان'),
+        name: 'د. سارة عثمان',
+        facilityName: 'دار الأمل لرعاية كبار السن',
+        specialty: 'دعم نفسي واجتماعي',
+        shift: 'مرن',
+        phone: '01223344556'),
+    AppAccount(
+        email: 'elderly@taptaba.com',
+        password: '123',
+        role: 'مسن',
+        name: 'أ. محمود عبد العزيز',
+        room: 'غرفة 102 - الطابق الأول',
+        bloodType: 'A+',
+        chronicDiseases: ['ضغط دم مرتفع', 'سكري'],
+        mobilityStatus: 'مستقل - مساعدة خفيفة',
+        dietType: 'نظام غذائي قليل الأملاح',
+        facilityName: 'دار الأمل لرعاية كبار السن',
+        phone: '01555666777'),
+    AppAccount(
+        email: 'family@taptaba.com',
+        password: '123',
+        role: 'أسرة',
+        name: 'أ. أحمد الشريف',
+        linkedResidentId: 'res1',
+        facilityName: 'دار الأمل لرعاية كبار السن',
+        phone: '01222333444'),
+    AppAccount(
+        email: 'volunteer@taptaba.com',
+        password: '123',
+        role: 'متطوع',
+        name: 'خالد إبراهيم',
+        specialty: 'أنشطة ترفيهية وموسيقى',
+        phone: '01099887766'),
   ];
+
+  // دالة لتحديث بيانات الحساب الحالي
+  void updateCurrentAccount(AppAccount updatedAccount) {
+    currentAccount = updatedAccount;
+    // تحديث في القائمة العامة أيضاً
+    final idx = accounts.indexWhere((a) => a.email == updatedAccount.email);
+    if (idx != -1) {
+      accounts[idx] = updatedAccount;
+    }
+    notifyListeners();
+  }
+
+  // دالة لاختيار صورة البروفايل
+  Future<void> pickProfileImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    
+    if (image != null && currentAccount != null) {
+      final updatedAccount = currentAccount!.copyWith(imageUrl: image.path);
+      updateCurrentAccount(updatedAccount);
+    }
+  }
 
   // دالة للمدير لإنشاء حسابات جديدة
   void createAccount(
@@ -85,6 +160,38 @@ class AppRiverpod extends ChangeNotifier {
     notifyListeners();
   }
 
+  // دالة تسجيل المدير مع بيانات المنشأة (تمهيداً للربط مع الباك آند)
+  Future<void> registerAdmin({
+    required String name,
+    required String email,
+    required String password,
+    required String facilityName,
+    required String facilityAddress,
+    required List<String> amenities,
+  }) async {
+    // محاكاة تأخير الشبكة
+    await Future.delayed(const Duration(seconds: 1));
+
+    // إضافة الحساب للقائمة المحلية حالياً
+    final newAccount = AppAccount(
+      name: name,
+      email: email,
+      password: password,
+      role: 'إدارة',
+      facilityName: facilityName,
+      facilityAddress: facilityAddress,
+      amenities: amenities,
+    );
+    
+    accounts.add(newAccount);
+    currentAccount = newAccount;
+
+    this.facilityName = facilityName;
+    this.managerName = name;
+
+    notifyListeners();
+  }
+
   // ربط عائلة بمسن
   void linkFamilyToResident(String residentId, String familyEmail) {
     final idx = residentFiles.indexWhere((r) => r.id == residentId);
@@ -103,6 +210,20 @@ class AppRiverpod extends ChangeNotifier {
         age: r.age,
         familyMembers: r.familyMembers,
         familyEmail: familyEmail, // الحقل الجديد للربط
+        bloodType: r.bloodType,
+        chronicDiseases: r.chronicDiseases,
+        allergies: r.allergies,
+        insuranceInfo: r.insuranceInfo,
+        mobilityStatus: r.mobilityStatus,
+        assistiveDevices: r.assistiveDevices,
+        cognitiveStatus: r.cognitiveStatus,
+        dietType: r.dietType,
+        foodRestrictions: r.foodRestrictions,
+        foodPreferences: r.foodPreferences,
+        previousProfession: r.previousProfession,
+        hobbies: r.hobbies,
+        socialStatus: r.socialStatus,
+        uploadedDocuments: r.uploadedDocuments,
       );
       notifyListeners();
     }
@@ -118,16 +239,36 @@ class AppRiverpod extends ChangeNotifier {
     final role = await _storage.read(key: 'currentRole');
     final onboarding = await _storage.read(key: 'hasSeenOnboarding');
     final expiryStr = await _storage.read(key: 'sessionExpiry');
+    final savedEmail = await _storage.read(key: 'userEmail');
 
     if (auth == 'true') {
       isAuthenticated = true;
       if (expiryStr != null) {
         _sessionExpiry = DateTime.parse(expiryStr);
       }
+      
+      if (savedEmail != null) {
+        final idx = accounts.indexWhere((a) => a.email == savedEmail);
+        if (idx != -1) currentAccount = accounts[idx];
+      }
     }
+    
+    // Default fallback if not authenticated
+    if (currentAccount == null && accounts.isNotEmpty) {
+      currentAccount = accounts[0]; // Admin by default for demo
+    }
+
     if (role != null) currentRole = role;
     if (onboarding == 'true') hasSeenOnboarding = true;
 
+    isInitialized = true; // اكتمل التحميل
+    notifyListeners();
+  }
+
+  // حفظ الدور في الذاكرة لتجنب الخروج عند الريلود
+  Future<void> setAndSaveRole(String role) async {
+    currentRole = role;
+    await _storage.write(key: 'currentRole', value: role);
     notifyListeners();
   }
 
@@ -538,13 +679,19 @@ class AppRiverpod extends ChangeNotifier {
         .indexWhere((a) => a.email == identifier && a.password == password);
 
     if (accountIdx != -1) {
-      final acc = accounts[accountIdx];
-      currentRole = acc.role;
+      final account = accounts[accountIdx];
+      currentAccount = account;
       isAuthenticated = true;
+      currentRole = account.role;
+      managerName = account.name;
+      if (account.facilityName != null) {
+        facilityName = account.facilityName!;
+      }
       _sessionExpiry = DateTime.now().add(const Duration(hours: 2));
 
       await _storage.write(key: 'isAuthenticated', value: 'true');
       await _storage.write(key: 'currentRole', value: currentRole);
+      await _storage.write(key: 'userEmail', value: account.email);
       await _storage.write(
           key: 'sessionExpiry', value: _sessionExpiry!.toIso8601String());
 
@@ -567,6 +714,20 @@ class AppRiverpod extends ChangeNotifier {
         role = 'متطوع';
       }
 
+      // محاولة إيجاد الحساب الفعلي لربطه بالـ UI
+      final accountIdx = accounts.indexWhere((a) => a.email == identifier);
+      if (accountIdx != -1) {
+        currentAccount = accounts[accountIdx];
+      } else {
+        // إذا لم يوجد حساب، ننشئ حساباً وهمياً مؤقتاً لتجنب القيم الفارغة
+        currentAccount = AppAccount(
+          email: identifier,
+          name: identifier.split('@')[0],
+          role: role,
+          password: password,
+        );
+      }
+
       currentRole = role;
       isAuthenticated = true;
       _sessionExpiry = DateTime.now().add(const Duration(hours: 2));
@@ -580,11 +741,13 @@ class AppRiverpod extends ChangeNotifier {
   // عملية تسجيل الخروج ومسح البيانات الآمنة تماماً
   Future<void> logout() async {
     isAuthenticated = false;
+    currentAccount = null;
     _sessionExpiry = null;
 
     // مسح التخزين الآمن تماماً
     await _storage.delete(key: 'isAuthenticated');
     await _storage.delete(key: 'currentRole');
+    await _storage.delete(key: 'userEmail');
     await _storage.delete(key: 'sessionExpiry');
 
     notifyListeners(); // العودة لشاشة تسجيل الدخول تلقائياً
@@ -594,6 +757,13 @@ class AppRiverpod extends ChangeNotifier {
   Future<void> completeOnboarding() async {
     hasSeenOnboarding = true;
     await _storage.write(key: 'hasSeenOnboarding', value: 'true');
+    notifyListeners();
+  }
+
+  // إعادة تعيين شاشات الترحيب (للتجربة والاختبار)
+  Future<void> resetOnboarding() async {
+    hasSeenOnboarding = false;
+    await _storage.delete(key: 'hasSeenOnboarding');
     notifyListeners();
   }
 
@@ -609,7 +779,7 @@ class AppRiverpod extends ChangeNotifier {
 
   // --- ELDERLY / RESIDENT STATE (RE-ADDED) ---
   User currentUser = User(
-    name: 'أحمد الشريف',
+    name: 'الحاج محمود سالم',
     points: 1250,
     streakDays: 14,
     completedActivities: 42,
@@ -770,6 +940,7 @@ class AppRiverpod extends ChangeNotifier {
       phoneNumber: '01012345678',
       zoomLink: 'https://zoom.us/j/1234567890',
       isAvailable: true,
+      isPinned: true,
     ),
     FamilyMember(
       id: 'f2',
@@ -780,6 +951,7 @@ class AppRiverpod extends ChangeNotifier {
       phoneNumber: '01122334455',
       zoomLink: 'https://zoom.us/j/0987654321',
       isAvailable: false,
+      isPinned: true,
     ),
     FamilyMember(
       id: 'f3',
@@ -790,6 +962,17 @@ class AppRiverpod extends ChangeNotifier {
       phoneNumber: '01233445566',
       zoomLink: 'https://zoom.us/j/1122334455',
       isAvailable: true,
+      isPinned: true,
+    ),
+    FamilyMember(
+      id: 'f4',
+      name: 'أحمد',
+      relation: 'حفيد',
+      avatarPath: '',
+      initials: 'أ',
+      phoneNumber: '01099887766',
+      isAvailable: false,
+      isPinned: false, // مثال لغير مثبت
     ),
   ];
 
@@ -1167,6 +1350,16 @@ class AppRiverpod extends ChangeNotifier {
         'type': 'choice',
         'options': ['٠', '١', '٢', '٣-٤', '٥-٨', '٩+']
       },
+      {
+        'text': 'كم عدد أفراد العائلة الذين تراهم أو تسمع منهم شهرياً؟',
+        'type': 'choice',
+        'options': ['٠', '١', '٢', '٣-٤', '٥-٨', '٩+']
+      },
+      {
+        'text': 'مع كم من أفراد عائلتك تشعر بالراحة للحديث عن أمورك الخاصة؟',
+        'type': 'choice',
+        'options': ['٠', '١', '٢', '٣-٤', '٥-٨', '٩+']
+      },
     ],
     't3': [
       // Physical (ADL)
@@ -1184,6 +1377,29 @@ class AppRiverpod extends ChangeNotifier {
         'text': 'القدرة على الحركة والانتقال؟',
         'type': 'choice',
         'options': ['بشكل مستقل', 'بمساعدة جزئية', 'بمساعدة كاملة']
+      },
+    ],
+    't4': [
+      // Quality of Life (WHOQOL-BREF)
+      {
+        'text': 'كيف تقيم جودة حياتك بشكل عام؟',
+        'type': 'choice',
+        'options': ['ممتازة', 'جيدة', 'متوسطة', 'سيئة', 'سيئة جداً']
+      },
+      {
+        'text': 'إلى أي مدى أنت راضٍ عن صحتك؟',
+        'type': 'choice',
+        'options': ['راضٍ جداً', 'راضٍ', 'محايد', 'غير راضٍ', 'غير راضٍ تماماً']
+      },
+      {
+        'text': 'إلى أي مدى تشعر أن حياتك لها معنى؟',
+        'type': 'choice',
+        'options': ['بشدة', 'إلى حد ما', 'قليلاً', 'أبداً']
+      },
+      {
+        'text': 'كيف تقيم قدرتك على أداء أنشطتك اليومية؟',
+        'type': 'choice',
+        'options': ['ممتازة', 'جيدة', 'متوسطة', 'سيئة', 'سيئة جداً']
       },
     ],
   };
@@ -1357,6 +1573,7 @@ class AppRiverpod extends ChangeNotifier {
         ComplaintStep(
             text: 'في انتظار موافقة الإدارة', time: 'اليوم', status: 'pending'),
       ],
+      isEscalated: true,
     ),
     SocialSpecialistComplaint(
       id: 'c3',
@@ -1393,32 +1610,69 @@ class AppRiverpod extends ChangeNotifier {
     ),
   ];
 
-  List<SocialSpecialistKPI> socialKPIs = [
-    SocialSpecialistKPI(
-        id: 'k1',
-        label: 'معدل الرضا العام',
-        value: '٨٤٪',
-        trend: '↑ تحسّن ٤٪',
-        isPositive: true),
-    SocialSpecialistKPI(
-        id: 'k2',
-        label: 'مشاركة الأنشطة',
-        value: '٧٦٪',
-        trend: '↑ هذا الأسبوع',
-        isPositive: true),
-    SocialSpecialistKPI(
-        id: 'k3',
-        label: 'حالات حرجة',
-        value: '٢',
-        trend: '↑ تحتاج تدخل',
-        isPositive: false),
-    SocialSpecialistKPI(
-        id: 'k4',
-        label: 'شكاوى مفتوحة',
-        value: '٣',
-        trend: '← نفس الأسبوع',
-        isPositive: true),
-  ];
+  String _toArabicDigits(int value) {
+    return value.toString()
+        .replaceAll('0', '٠')
+        .replaceAll('1', '١')
+        .replaceAll('2', '٢')
+        .replaceAll('3', '٣')
+        .replaceAll('4', '٤')
+        .replaceAll('5', '٥')
+        .replaceAll('6', '٦')
+        .replaceAll('7', '٧')
+        .replaceAll('8', '٨')
+        .replaceAll('9', '٩');
+  }
+
+  List<SocialSpecialistKPI> get socialKPIs {
+    // 1. معدل الرضا العام (متوسط تقييمات المقيمين)
+    double totalSatisfaction = 0;
+    int satisfactionCount = 0;
+    for (var r in socialResidentScores) {
+      if (r.scores.isNotEmpty) {
+        double sum = 0;
+        r.scores.forEach((key, value) => sum += value);
+        totalSatisfaction += (sum / r.scores.length);
+        satisfactionCount++;
+      }
+    }
+    int satisfactionRate = satisfactionCount > 0 
+        ? ((totalSatisfaction / satisfactionCount) * 100).toInt() 
+        : 84;
+
+    // 2. حالات حرجة
+    int criticalCases = socialResidentScores.where((r) => r.healthStatus == 'critical').length;
+
+    // 3. شكاوى مفتوحة
+    int openComplaints = socialComplaints.where((c) => c.status == 'open').length;
+
+    return [
+      SocialSpecialistKPI(
+          id: 'k1',
+          label: 'معدل الرضا العام',
+          value: '${_toArabicDigits(satisfactionRate)}٪',
+          trend: '↑ تحسّن ٤٪',
+          isPositive: true),
+      SocialSpecialistKPI(
+          id: 'k2',
+          label: 'مشاركة الأنشطة',
+          value: '٧٦٪', // هذا المؤشر نتركه ثابت مؤقتاً لعدم وجود بيانات كافية
+          trend: '↑ هذا الأسبوع',
+          isPositive: true),
+      SocialSpecialistKPI(
+          id: 'k3',
+          label: 'حالات حرجة',
+          value: _toArabicDigits(criticalCases),
+          trend: '↑ تحتاج تدخل',
+          isPositive: false),
+      SocialSpecialistKPI(
+          id: 'k4',
+          label: 'شكاوى مفتوحة',
+          value: _toArabicDigits(openComplaints),
+          trend: '← نفس الأسبوع',
+          isPositive: true),
+    ];
+  }
 
   // --- GETTERS ---
   int get totalResidentsCount => residentFiles.length;
@@ -1498,6 +1752,47 @@ class AppRiverpod extends ChangeNotifier {
         }
       }
       notifyListeners();
+    }
+  }
+
+  void toggleFamilyPin(String id) {
+    final idx = familyMembersList.indexWhere((m) => m.id == id);
+    if (idx != -1) {
+      familyMembersList[idx].isPinned = !familyMembersList[idx].isPinned;
+      notifyListeners();
+    }
+  }
+
+  // فتح قائمة جهات اتصال الهاتف واختيار رقم يدوياً
+  Future<void> pickAndAddContact() async {
+    if (await FlutterContacts.requestPermission()) {
+      // فتح واجهة اختيار جهة اتصال من نظام التشغيل
+      final contact = await FlutterContacts.openExternalPick();
+
+      if (contact != null) {
+        // جلب تفاصيل جهة الاتصال المختارة
+        final fullContact = await FlutterContacts.getContact(contact.id);
+
+        if (fullContact != null && fullContact.phones.isNotEmpty) {
+          final phone = fullContact.phones.first.number;
+          final name = fullContact.displayName;
+
+          // التأكد أن الرقم غير موجود مسبقاً
+          if (!familyMembersList.any((m) => m.phoneNumber == phone)) {
+            familyMembersList.add(FamilyMember(
+              id: fullContact.id,
+              name: name,
+              relation: 'قريب',
+              avatarPath: '',
+              initials: name.isNotEmpty ? name.substring(0, 1) : '؟',
+              phoneNumber: phone,
+              isAvailable: true,
+              isPinned: true, // اجعله مختاراً تلقائياً عند إضافته يدوياً
+            ));
+            notifyListeners();
+          }
+        }
+      }
     }
   }
 
@@ -1614,10 +1909,85 @@ class AppRiverpod extends ChangeNotifier {
     }
   }
 
-  void takeMedication(String id) {
+  void addActivity(Activity activity) {
+    activities.insert(0, activity);
+    notifyListeners();
+  }
+
+  void updateStaff(StaffPerformance staff) {
+    final index = staffPerformanceList.indexWhere((s) => s.id == staff.id);
+    if (index != -1) {
+      staffPerformanceList[index] = staff;
+      notifyListeners();
+    }
+  }
+
+  void deleteStaff(String id) {
+    staffPerformanceList.removeWhere((s) => s.id == id);
+    notifyListeners();
+  }
+
+  // --- IMAGE PICKING METHODS ---
+
+  Future<void> pickAndSetResidentImage(String residentId) async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      updateResidentImage(residentId, image.path);
+    }
+  }
+
+  void updateResidentImage(String residentId, String path) {
+    final index = residentFiles.indexWhere((r) => r.id == residentId);
+    if (index != -1) {
+      residentFiles[index] = residentFiles[index].copyWith(imageUrl: path);
+      notifyListeners();
+    }
+  }
+
+  Future<void> pickAndSetStaffImage(String staffId) async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      updateStaffImage(staffId, image.path);
+    }
+  }
+
+  void updateStaffImage(String staffId, String path) {
+    final index = staffPerformanceList.indexWhere((s) => s.id == staffId);
+    if (index != -1) {
+      staffPerformanceList[index] =
+          staffPerformanceList[index].copyWith(imageUrl: path);
+      notifyListeners();
+    }
+  }
+
+  void elderlyConfirmMedication(String id) {
+    final idx = medications.indexWhere((m) => m.id == id);
+    if (idx != -1 &&
+        !medications[idx].isTaken &&
+        !medications[idx].isElderlyConfirmed) {
+      medications[idx].isElderlyConfirmed = true;
+      medications[idx].isSkipped = false;
+
+      // إرسال تنبيه للممرض لتأكيد الدواء
+      triggerNotification(
+        title: 'تأكيد دواء 💊',
+        body:
+            'المقيم أكد تناوله لدواء (${medications[idx].name}). يرجى التأكيد.',
+        type: 'medical',
+        targetRole: 'ممرض',
+      );
+
+      notifyListeners();
+    }
+  }
+
+  void nurseConfirmMedication(String id) {
     final idx = medications.indexWhere((m) => m.id == id);
     if (idx != -1 && !medications[idx].isTaken) {
       medications[idx].isTaken = true;
+      medications[idx].isElderlyConfirmed = true; // For safety
       medications[idx].isSkipped = false;
       addPoints(10); // Reward points for taking medication
 
@@ -1627,7 +1997,8 @@ class AppRiverpod extends ChangeNotifier {
         body:
             'والدك أتم أخذ دوائه (${medications[idx].name}) في الموعد وكسب 10 نقاط!',
         type: 'medical',
-        targetRole: 'أسرة',
+        targetRole:
+            'عائلة', // Changed to match app standards (usually 'عائلة' or 'أسرة')
       );
 
       notifyListeners();
@@ -1667,8 +2038,9 @@ class AppRiverpod extends ChangeNotifier {
     notifyListeners();
   }
 
-  void sendCompanionMessage(String text) {
-    if (text.isEmpty) return;
+  void sendCompanionMessage(String text,
+      {String? mediaPath, String? mediaType}) {
+    if (text.isEmpty && mediaPath == null) return;
 
     // Add user message
     companionChatHistory.add(CompanionMessage(
@@ -1676,6 +2048,8 @@ class AppRiverpod extends ChangeNotifier {
       text: text,
       isFromAI: false,
       timestamp: DateTime.now(),
+      mediaPath: mediaPath,
+      mediaType: mediaType,
     ));
     notifyListeners();
 
@@ -1685,7 +2059,13 @@ class AppRiverpod extends ChangeNotifier {
           'أنا هنا لأسمعك دائماً. يسعدني جداً تواصلك معي! هل هناك شيء آخر تود الحديث عنه؟';
 
       // Basic supportive logic based on keywords
-      if (text.contains('وحيد') || text.contains('وحدة')) {
+      if (mediaType == 'image') {
+        reply =
+            'يا لها من صورة جميلة! شكراً لمشاركتها معي. هل تحب أن نتحدث عن هذه الصورة؟';
+      } else if (mediaType == 'file') {
+        reply =
+            'لقد استلمت الملف، سأقوم بمراجعته والاحتفاظ به لك. هل هناك شيء آخر تود فعله؟';
+      } else if (text.contains('وحيد') || text.contains('وحدة')) {
         reply =
             'لست وحدك أبداً، أنا معك وعائلتك تحبك كثيراً. ما رأيك أن نشاهد بعض الصور من صندوق الذكريات لاحقاً؟';
       } else if (text.contains('تعبان') || text.contains('مرض')) {
@@ -1775,15 +2155,61 @@ class AppRiverpod extends ChangeNotifier {
     notifyListeners();
   }
 
-  void startReading(String text) {
+  // --- TTS (Text-to-Speech) ---
+  final FlutterTts _tts = FlutterTts();
+  bool _ttsInitialized = false;
+
+  Future<void> _initTts() async {
+    if (_ttsInitialized) return;
+
+    try {
+      // محاولة ضبط اللغة العربية (بشكل عام لزيادة التوافق)
+      await _tts.setLanguage('ar');
+      await _tts.setSpeechRate(0.4);
+      await _tts.setVolume(1.0);
+      await _tts.setPitch(1.0);
+
+      // مستمعين لحالة الصوت لتحديث الواجهة بشكل صحيح
+      _tts.setCompletionHandler(() {
+        isReadingAudio = false;
+        notifyListeners();
+      });
+
+      _tts.setErrorHandler((msg) {
+        isReadingAudio = false;
+        debugPrint("TTS Error: $msg");
+        notifyListeners();
+      });
+
+      _ttsInitialized = true;
+    } catch (e) {
+      debugPrint("TTS Initialization failed: $e");
+    }
+  }
+
+  void startReading(String text) async {
+    await _initTts();
+
+    if (text.isEmpty) return;
+
     readingText = text;
     isReadingAudio = true;
     notifyListeners();
-    // Simulate reading end after 3 seconds
-    Future.delayed(const Duration(seconds: 3), () {
+
+    try {
+      await _tts.stop();
+      var result = await _tts.speak(text);
+      if (result == 0) {
+        // إذا فشل النطق (مثلاً المحرك غير جاهز)
+        isReadingAudio = false;
+        notifyListeners();
+        debugPrint("TTS Speak failed result: 0");
+      }
+    } catch (e) {
       isReadingAudio = false;
       notifyListeners();
-    });
+      debugPrint("TTS Speak error: $e");
+    }
   }
 
   void toggleVoiceMessage(String id) {
@@ -1821,10 +2247,25 @@ class AppRiverpod extends ChangeNotifier {
   }
 
   String selectedComplaintStatus = 'الكل';
+  String complaintSearchQuery = '';
 
   void setSelectedComplaintStatus(String status) {
     selectedComplaintStatus = status;
     notifyListeners();
+  }
+
+  void setComplaintSearchQuery(String query) {
+    complaintSearchQuery = query;
+    notifyListeners();
+  }
+
+  void escalateComplaint(String id) {
+    final index = socialComplaints.indexWhere((c) => c.id == id);
+    if (index != -1) {
+      socialComplaints[index] =
+          socialComplaints[index].copyWith(isEscalated: true);
+      notifyListeners();
+    }
   }
 
   List<SocialSpecialistNeed> get filteredSocialNeeds {
@@ -1836,19 +2277,36 @@ class AppRiverpod extends ChangeNotifier {
 
   // --- تتبع الشكاوى والمتابعة الاجتماعية (US-07-04) ---
 
-  // فلترة الشكاوى بناءً على حالتها (جديدة، قيد المعالجة، مكتملة)
+  // فلترة الشكاوى بناءً على حالتها والبحث والدور
   List<SocialSpecialistComplaint> get filteredSocialComplaints {
-    if (selectedComplaintStatus.contains('الكل')) return socialComplaints;
-    if (selectedComplaintStatus.contains('مفتوحة')) {
-      return socialComplaints.where((c) => c.status == 'open').toList();
+    List<SocialSpecialistComplaint> list = socialComplaints;
+
+    // التصفية بناءً على الدور (الإدارة ترى فقط الشكاوى المصعدة)
+    if (currentRole == 'مدير') {
+      list = list.where((c) => c.isEscalated).toList();
     }
-    if (selectedComplaintStatus.contains('جاري')) {
-      return socialComplaints.where((c) => c.status == 'progress').toList();
+
+    // الفلترة بالحالة
+    if (!selectedComplaintStatus.contains('الكل')) {
+      if (selectedComplaintStatus.contains('مفتوحة')) {
+        list = list.where((c) => c.status == 'open').toList();
+      } else if (selectedComplaintStatus.contains('جاري')) {
+        list = list.where((c) => c.status == 'progress').toList();
+      } else if (selectedComplaintStatus.contains('مُغلقة')) {
+        list = list.where((c) => c.status == 'done').toList();
+      }
     }
-    if (selectedComplaintStatus.contains('مُغلقة')) {
-      return socialComplaints.where((c) => c.status == 'done').toList();
+
+    // الفلترة بالبحث
+    if (complaintSearchQuery.isNotEmpty) {
+      list = list
+          .where((c) =>
+              c.title.contains(complaintSearchQuery) ||
+              c.residentName.contains(complaintSearchQuery))
+          .toList();
     }
-    return socialComplaints;
+
+    return list;
   }
 
   List<dynamic> getMemoriesByCategory(String category) {
@@ -1880,16 +2338,46 @@ class AppRiverpod extends ChangeNotifier {
   // --- FAMILY STATE ---
   List<FamilyHealthMetric> familyHealthMetrics = [
     FamilyHealthMetric(
-        label: 'المزاج العام', value: 0.85, status: 'good', trend: 'up'),
+        label: 'المزاج العام', value: 0.85, status: 'good', trend: 'up', history: [0.85, 0.80, 0.75]),
     FamilyHealthMetric(
-        label: 'النشاط البدني', value: 0.60, status: 'medium', trend: 'stable'),
+        label: 'النشاط البدني', value: 0.60, status: 'medium', trend: 'stable', history: [0.60, 0.65, 0.50]),
     FamilyHealthMetric(
-        label: 'جودة النوم', value: 0.75, status: 'good', trend: 'up'),
+        label: 'جودة النوم', value: 0.75, status: 'good', trend: 'up', history: [0.75, 0.70, 0.80]),
     FamilyHealthMetric(
-        label: 'الشهية', value: 0.45, status: 'medium', trend: 'down'),
+        label: 'الشهية', value: 0.45, status: 'medium', trend: 'down', history: [0.45, 0.50, 0.40]),
   ];
+  
+  void updateFamilyHealthMetric(String label, double value) {
+    final index = familyHealthMetrics.indexWhere((m) => m.label == label);
+    if (index != -1) {
+      final oldVal = familyHealthMetrics[index].value;
+      final history = familyHealthMetrics[index].history;
+      familyHealthMetrics[index] = FamilyHealthMetric(
+        label: label,
+        value: value,
+        status: value >= 0.7 ? 'good' : (value >= 0.5 ? 'medium' : 'low'),
+        trend: value > oldVal ? 'up' : (value < oldVal ? 'down' : 'stable'),
+        history: [...history, value],
+      );
+      notifyListeners();
+    }
+  }
 
   List<FamilyVisit> familyVisits = [
+    FamilyVisit(
+        id: 'v4',
+        date: '٢٠ مايو',
+        time: '٠٢:٠٠ م',
+        visitorName: 'خالد عبد الرحمن',
+        status: 'pending',
+        type: 'physical'),
+    FamilyVisit(
+        id: 'v5',
+        date: '٢٢ مايو',
+        time: '٠٥:٠٠ م',
+        visitorName: 'منى أحمد',
+        status: 'pending',
+        type: 'video'),
     FamilyVisit(
         id: 'v1',
         date: '٢٤ أبريل',
@@ -1995,7 +2483,8 @@ class AppRiverpod extends ChangeNotifier {
         status: 'updated',
         lastUpdate: '١٨ أبريل',
         initials: 'إب',
-        categories: ['medical', 'psychological']),
+        categories: ['medical', 'psychological'],
+        familyMembers: []),
     SpecialistResidentFile(
         id: 'rf4',
         name: 'سامي حسن',
@@ -2004,7 +2493,8 @@ class AppRiverpod extends ChangeNotifier {
         status: 'critical',
         lastUpdate: 'اليوم ٠٨:١٥ ص',
         initials: 'اس',
-        categories: ['social', 'psychological']),
+        categories: ['social', 'psychological'],
+        familyMembers: []),
     SpecialistResidentFile(
         id: 'rf5',
         name: 'فاطمة الزهراء',
@@ -2013,7 +2503,8 @@ class AppRiverpod extends ChangeNotifier {
         status: 'updated',
         lastUpdate: '١٥ أبريل',
         initials: 'فا',
-        categories: ['admin']),
+        categories: ['admin'],
+        familyMembers: []),
     SpecialistResidentFile(
         id: 'rf6',
         name: 'عمر المختار',
@@ -2022,7 +2513,8 @@ class AppRiverpod extends ChangeNotifier {
         status: 'pending',
         lastUpdate: '١٤ أبريل',
         initials: 'عم',
-        categories: ['social']),
+        categories: ['social'],
+        familyMembers: []),
   ];
 
   String residentFilesSearchQuery = '';
@@ -2109,6 +2601,32 @@ class AppRiverpod extends ChangeNotifier {
         residentName: 'الحاج محمود'),
   ];
 
+  List<Review> reviews = [];
+
+  List<SentReport> sentReports = [
+    SentReport(
+        id: 'r1',
+        icon: '📋',
+        title: 'تقرير يومي — السبت ٥ أبريل',
+        meta: 'أُرسل تلقائياً لـ ٣ جهات · ٨:٠٢ ص',
+        status: 'أُرسل',
+        date: '٢٠٢٦-٠٥-٠٥'),
+    SentReport(
+        id: 'r2',
+        icon: '🚨',
+        title: 'تنبيه حرج — الحاج محمود',
+        meta: 'أُرسل يدوياً للطبيب · أمس ٤:١٥ م',
+        status: 'أُرسل',
+        date: '٢٠٢٦-٠٥-١٦'),
+    SentReport(
+        id: 'r3',
+        icon: '📊',
+        title: 'تقرير أسبوعي — أبريل',
+        meta: 'مجدول للجمعة القادمة',
+        status: 'مجدول',
+        date: '٢٠٢٦-٠٥-٢٠'),
+  ];
+
   void addMedication(String residentName, Medication med) {
     medications.insert(0, med);
 
@@ -2145,33 +2663,64 @@ class AppRiverpod extends ChangeNotifier {
   }
 
   // --- ADMIN STATE ---
-  List<CenterOperationalStat> get adminStats => [
-        CenterOperationalStat(
-            label: 'نسبة الإشغال',
-            value: '٩٢٪',
-            trend: '↑ ٢٪ عن الشهر الماضي',
-            isPositive: true,
-            history: [0.8, 0.82, 0.85, 0.88, 0.9, 0.92]),
-        CenterOperationalStat(
-            label: 'إيرادات الشهر',
-            value: '٤٢٠,٠٠٠ ج.م',
-            trend: '↑ ٥٪ هذا الربع',
-            isPositive: true,
-            history: [350.0, 380.0, 400.0, 410.0, 420.0, 420.0]),
-        CenterOperationalStat(
-            label: 'الحالات الحرجة',
-            value: '$criticalResidentsCount',
-            trend:
-                criticalResidentsCount > 2 ? '↑ تحتاج متابعة' : '↓ مستقر وئام',
-            isPositive: criticalResidentsCount <= 2,
-            history: [5.0, 4.0, 3.0, criticalResidentsCount.toDouble()]),
-        CenterOperationalStat(
-            label: 'رضا الأهالي',
-            value: '٤.٨ / ٥',
-            trend: '↑ مستقر عند مستوى عالٍ',
-            isPositive: true,
-            history: [4.5, 4.6, 4.7, 4.8]),
-      ];
+  List<CenterOperationalStat> get adminStats {
+    final occupancy = (residentFiles.length / 10.0) * 100;
+
+    double revenueValue = residentFiles.length * 70000.0;
+    if (selectedAdminDateFilter == 'اليوم') {
+      revenueValue = revenueValue / 30;
+    } else if (selectedAdminDateFilter == 'أسبوع') {
+      revenueValue = revenueValue / 4;
+    }
+
+    final revenueStr = revenueValue.toStringAsFixed(0).replaceAllMapped(
+        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},');
+
+    double satisfactionValue = 4.8;
+    if (volunteerRatings.isNotEmpty) {
+      satisfactionValue =
+          volunteerRatings.map((r) => r.score).reduce((a, b) => a + b) /
+              volunteerRatings.length;
+    }
+
+    return [
+      CenterOperationalStat(
+          label: 'نسبة الإشغال',
+          value: '${occupancy.toInt()}٪',
+          trend: '↑ ٢٪ عن الشهر الماضي',
+          isPositive: true,
+          history: [0.8, 0.82, 0.85, 0.88, 0.9, occupancy / 100]),
+      CenterOperationalStat(
+          label: selectedAdminDateFilter == 'اليوم'
+              ? 'إيرادات اليوم'
+              : (selectedAdminDateFilter == 'أسبوع'
+                  ? 'إيرادات الأسبوع'
+                  : 'إيرادات الشهر'),
+          value: '$revenueStr ج.م',
+          trend: '↑ ٥٪ هذا الربع',
+          isPositive: true,
+          history: [
+            (revenueValue / 1000) * 0.8,
+            (revenueValue / 1000) * 0.85,
+            (revenueValue / 1000) * 0.9,
+            (revenueValue / 1000) * 0.95,
+            (revenueValue / 1000) * 0.98,
+            revenueValue / 1000
+          ]),
+      CenterOperationalStat(
+          label: 'الحالات الحرجة',
+          value: '$criticalResidentsCount',
+          trend: criticalResidentsCount > 2 ? '↑ تحتاج متابعة' : '↓ مستقر وئام',
+          isPositive: criticalResidentsCount <= 2,
+          history: [5.0, 4.0, 3.0, criticalResidentsCount.toDouble()]),
+      CenterOperationalStat(
+          label: 'رضا الأهالي',
+          value: '${satisfactionValue.toStringAsFixed(1)} / ٥',
+          trend: '↑ مستقر عند مستوى عالٍ',
+          isPositive: true,
+          history: [4.5, 4.6, 4.7, satisfactionValue]),
+    ];
+  }
 
   List<StaffPerformance> staffPerformanceList = [
     StaffPerformance(
@@ -2507,14 +3056,21 @@ class AppRiverpod extends ChangeNotifier {
     }
   }
 
+  int totalCapacity = 50; // السعة الإجمالية للدار
+
+  double get occupancyRate {
+    if (totalCapacity == 0) return 0.0;
+    return residentFiles.length / totalCapacity;
+  }
+
   String generatePerformanceSummary() {
     final compliance = (medicationComplianceRate * 100).toInt();
-    const occupancy = 94; // Mocked for now
+    final occupancy = (occupancyRate * 100).toInt();
     return '''
 ملخص أداء دار طبطبة للرعاية
 التاريخ: ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}
 
-1. الإشغال: $occupancy% (مستوى ممتاز)
+1. الإشغال: $occupancy%
 2. الالتزام الدوائي: $compliance%
 3. الشكاوى المفتوحة: $unresolvedComplaintsCount شكاوى
 4. الطاقم النشط: $activeStaffCount من أصل $totalStaffCount موظف
@@ -2526,12 +3082,198 @@ class AppRiverpod extends ChangeNotifier {
   }
 
   Future<String> exportReport(String format) async {
-    // Simulate processing time
-    await Future.delayed(const Duration(seconds: 2));
-    final dateStr =
+    // محاكاة وقت المعالجة
+    await Future.delayed(const Duration(seconds: 1));
+
+    if (format == 'pdf') {
+      final pdf = pw.Document();
+      final now = DateTime.now();
+      final timeStr = "${now.hour}:${now.minute.toString().padLeft(2, '0')}";
+      final dateStr = "${now.day}/${now.month}/${now.year}";
+
+      // تحميل الخط العربي لضمان ظهوره بشكل صحيح
+      final fontData = await rootBundle.load("assets/fonts/Cairo-Regular.ttf");
+      final ttf = pw.Font.ttf(fontData);
+      final boldFontData = await rootBundle.load("assets/fonts/Cairo-Bold.ttf");
+      final ttfBold = pw.Font.ttf(boldFontData);
+
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          theme: pw.ThemeData.withFont(base: ttf, bold: ttfBold),
+          textDirection: pw.TextDirection.rtl,
+          build: (pw.Context context) {
+            return [
+              pw.Header(
+                level: 0,
+                child: pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text(facilityName,
+                            style: pw.TextStyle(
+                                fontSize: 22,
+                                fontWeight: pw.FontWeight.bold,
+                                color: PdfColors.blue900)),
+                        pw.Text('تقرير الأداء الإداري والتشغيلي',
+                            style: const pw.TextStyle(
+                                fontSize: 12, color: PdfColors.grey700)),
+                      ],
+                    ),
+                    pw.PdfLogo(),
+                  ],
+                ),
+              ),
+              pw.SizedBox(height: 25),
+
+              // بيانات التقرير الأساسية
+              pw.Container(
+                padding: const pw.EdgeInsets.all(10),
+                decoration: const pw.BoxDecoration(color: PdfColors.grey100),
+                child: pw.Column(
+                  children: [
+                    _pdfInfoRow('اسم الدار:', facilityName),
+                    _pdfInfoRow('اسم المدير المسئول:', managerName),
+                    _pdfInfoRow('تاريخ التقرير:', dateStr),
+                    _pdfInfoRow('وقت الاستخراج:', timeStr),
+                  ],
+                ),
+              ),
+
+              pw.SizedBox(height: 30),
+              pw.Text('ملخص مؤشرات الأداء:',
+                  style: pw.TextStyle(
+                      fontSize: 16, fontWeight: pw.FontWeight.bold)),
+              pw.Divider(thickness: 1.5, color: PdfColors.blue100),
+              pw.SizedBox(height: 15),
+
+              pw.TableHelper.fromTextArray(
+                context: context,
+                headerStyle: pw.TextStyle(
+                    color: PdfColors.white, fontWeight: pw.FontWeight.bold),
+                headerDecoration:
+                    const pw.BoxDecoration(color: PdfColors.blue800),
+                cellAlignment: pw.Alignment.centerRight,
+                // في RTL بمكتبة PDF، العمود الأول يكون هو اللي على اليمين
+                // لذا سنضع المؤشر أولاً ثم القيمة
+                data: <List<String>>[
+                  <String>['المؤشر الإحصائي', 'القيمة'],
+                  <String>[
+                    'نسبة إشغال الأسرة',
+                    '${(occupancyRate * 100).toInt()}%'
+                  ],
+                  <String>[
+                    'معدل الالتزام الدوائي',
+                    '${(medicationComplianceRate * 100).toInt()}%'
+                  ],
+                  <String>[
+                    'عدد الشكاوى قيد المعالجة',
+                    unresolvedComplaintsCount.toString()
+                  ],
+                  <String>['عدد الموظفين المتواجدين', '$activeStaffCount موظف'],
+                ],
+              ),
+              pw.SizedBox(height: 40),
+              pw.Text('التوصيات والإجراءات المطلوبة:',
+                  style: pw.TextStyle(
+                      fontSize: 15, fontWeight: pw.FontWeight.bold)),
+              pw.SizedBox(height: 10),
+              _pdfBullet(ttf, 'ضرورة متابعة تحديث بيانات المقيمين الجدد.'),
+              _pdfBullet(ttf, 'التأكد من جاهزية مخزون الأدوية للأسبوع القادم.'),
+              _pdfBullet(ttf,
+                  'مراجعة ملاحظات الأخصائي الاجتماعي بخصوص الحالات الحرجة.'),
+
+              pw.Spacer(), // دفع التوقيع للأسفل
+
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.start,
+                children: [
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.center,
+                    children: [
+                      pw.Text('يعتمد من مدير المنشأة',
+                          style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                      pw.SizedBox(height: 10),
+                      pw.Text(managerName),
+                      pw.SizedBox(height: 30),
+                      pw.Container(
+                        width: 150,
+                        decoration: const pw.BoxDecoration(
+                          border: pw.Border(
+                              bottom: pw.BorderSide(
+                                  width: 1, style: pw.BorderStyle.dashed)),
+                        ),
+                      ),
+                      pw.SizedBox(height: 5),
+                      pw.Text('التوقيع والختم الرسمي',
+                          style: const pw.TextStyle(
+                              fontSize: 10, color: PdfColors.grey)),
+                    ],
+                  ),
+                ],
+              ),
+            ];
+          },
+        ),
+      );
+
+      await Printing.sharePdf(
+          bytes: await pdf.save(), filename: 'Taptaba_Report.pdf');
+    } else if (format == 'csv' || format == 'excel') {
+      // إنشاء محتوى CSV الاحترافي
+      final csvBuffer = StringBuffer();
+      // إضافة BOM لدعم اللغة العربية في Excel
+      csvBuffer.write('\uFEFF');
+      csvBuffer.writeln('تقرير أداء المنشأة: $facilityName');
+      csvBuffer.writeln('المدير المسئول: $managerName');
+      csvBuffer.writeln(
+          'التاريخ: ${DateTime.now().toLocal().toString().split(' ')[0]}');
+      csvBuffer.writeln('');
+      csvBuffer.writeln('المؤشر الإحصائي,القيمة');
+      csvBuffer.writeln('نسبة الإشغال,${(occupancyRate * 100).toInt()}%');
+      csvBuffer.writeln(
+          'الالتزام الدوائي,${(medicationComplianceRate * 100).toInt()}%');
+      csvBuffer.writeln('الشكاوى المفتوحة,$unresolvedComplaintsCount');
+      csvBuffer.writeln('الطاقم النشط,$activeStaffCount');
+
+      // محاكاة حفظ الملف وتصديره
+      final encodedCsv = Uri.encodeComponent(csvBuffer.toString());
+      final url = 'data:text/csv;charset=utf-8,$encodedCsv';
+
+      try {
+        final uri = Uri.parse(url);
+        // نستخدم launchUrl مباشرة لأن بعض المتصفحات تمنع canLaunchUrl مع البيانات الطويلة
+        await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
+      } catch (e) {
+        // إذا فشل كل شيء، ننتظر قليلاً لمحاكاة العملية
+        await Future.delayed(const Duration(seconds: 1));
+      }
+    }
+
+    final dateStrFile =
         "${DateTime.now().year}-${DateTime.now().month}-${DateTime.now().day}";
-    final fileName = "Taptaba_Report_$dateStr.$format";
+    final fileName = "Taptaba_Report_$dateStrFile.$format";
     return fileName;
+  }
+
+  pw.Widget _pdfInfoRow(String label, String value) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.symmetric(vertical: 2),
+      child: pw.Row(
+        children: [
+          pw.Text(label,
+              style:
+                  pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
+          pw.SizedBox(width: 5),
+          pw.Text(value, style: const pw.TextStyle(fontSize: 10)),
+        ],
+      ),
+    );
   }
 
   // --- MEMORY WALL ---
@@ -2562,7 +3304,7 @@ class AppRiverpod extends ChangeNotifier {
   void addMemoryMoment(MemoryMoment moment) {
     memoryMoments.insert(0, moment);
 
-    // Notify the target family
+    // إرسال إشعار للعائلة
     triggerNotification(
       title: 'لحظة سعادة جديدة 📸',
       body:
@@ -2571,6 +3313,22 @@ class AppRiverpod extends ChangeNotifier {
       targetRole: 'أهل',
     );
 
+    // إضافة الذكرى لشاشة ذكريات المسن
+    final newItem = MemoryItem(
+      id: 'mem_custom_${DateTime.now().millisecondsSinceEpoch}',
+      category: 'أسرة',
+      title: moment.activityTitle,
+      date: 'اليوم',
+      type: 'image',
+      assetPath: moment.imageUrl,
+    );
+    memoriesList.insert(0, newItem);
+
+    notifyListeners();
+  }
+
+  void deleteMemoryMoment(String id) {
+    memoryMoments.removeWhere((m) => m.id == id);
     notifyListeners();
   }
 
@@ -2840,6 +3598,81 @@ class AppRiverpod extends ChangeNotifier {
     }
   }
 
+  void addCareTask(CareTask task) {
+    careTasks.add(task);
+    notifyListeners();
+  }
+
+  void deleteCareTask(String id) {
+    careTasks.removeWhere((t) => t.id == id);
+    notifyListeners();
+  }
+
+  void addInventoryItem(InventoryItem item) {
+    inventoryItems.add(item);
+    notifyListeners();
+  }
+
+  void deleteInventoryItem(String id) {
+    inventoryItems.removeWhere((i) => i.id == id);
+    notifyListeners();
+  }
+
+  void addDoctorVisit(DoctorVisit visit) {
+    doctorVisits.add(visit);
+    notifyListeners();
+  }
+
+  void deleteDoctorVisit(String id) {
+    doctorVisits.removeWhere((v) => v.id == id);
+    notifyListeners();
+  }
+
+  void addMealPlan(MealPlan plan) {
+    mealPlans.add(plan);
+    notifyListeners();
+  }
+
+  void deleteMealPlan(String residentName) {
+    mealPlans.removeWhere((p) => p.residentName == residentName);
+    notifyListeners();
+  }
+
+  void addActivitySession(ActivitySession session) {
+    activitySessions.add(session);
+    notifyListeners();
+  }
+
+  void deleteActivitySession(String id) {
+    activitySessions.removeWhere((s) => s.id == id);
+    notifyListeners();
+  }
+
+  void deleteMedicalSession(String id) {
+    medicalSessions.removeWhere((s) => s.id == id);
+    notifyListeners();
+  }
+
+  void deletePrescription(String id) {
+    medicalPrescriptions.removeWhere((p) => p.id == id);
+    notifyListeners();
+  }
+
+  void addSentReport(SentReport report) {
+    sentReports.insert(0, report);
+    notifyListeners();
+  }
+
+  void addReview(Review review) {
+    reviews.insert(0, review);
+    notifyListeners();
+  }
+
+  void addHandoff(ShiftHandoff handoff) {
+    handoffs.insert(0, handoff);
+    notifyListeners();
+  }
+
   void updateInventoryStock(String id, int change) {
     final idx = inventoryItems.indexWhere((i) => i.id == id);
     if (idx != -1) {
@@ -2984,30 +3817,44 @@ class AppRiverpod extends ChangeNotifier {
   }
 
   // --- MEMORIES METHODS ---
-  Future<void> pickMemoryImage() async {
-    // 1. طلب إذن الوصول للصور
-    final PermissionStatus status = await Permission.photos.request();
+  Future<void> fetchGalleryImages() async {
+    try {
+      final PermissionState ps = await PhotoManager.requestPermissionExtend();
+      if (ps.isAuth || ps.hasAccess) {
+        final List<AssetPathEntity> paths = await PhotoManager.getAssetPathList(
+          type: RequestType.image,
+        );
+        if (paths.isNotEmpty) {
+          final List<AssetEntity> entities =
+              await paths[0].getAssetListRange(start: 0, end: 50);
+          deviceGalleryImages = entities;
+          notifyListeners();
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching gallery: $e');
+    }
+  }
 
-    if (status.isGranted || status.isLimited) {
+  Future<void> pickMemoryImage() async {
+    try {
+      // استخدام ImagePicker مباشرة فهو يتعامل مع الصلاحيات بشكل أفضل في النسخ الحديثة
       final ImagePicker picker = ImagePicker();
-      // 2. فتح معرض الصور لاختيار صورة
       final XFile? image = await picker.pickImage(
         source: ImageSource.gallery,
-        imageQuality: 85, // تقليل الجودة قليلاً لتوفير المساحة
+        imageQuality: 85,
       );
 
       if (image != null) {
-        // 3. إنشاء عنصر ذكرى جديد بالصورة المختارة
         final newItem = MemoryItem(
           id: 'mem_custom_${DateTime.now().millisecondsSinceEpoch}',
           category: 'الاستوديو',
           title: 'ذكرى من الاستوديو',
           date: 'اليوم',
           type: 'image',
-          assetPath: image.path, // تخزين المسار المحلي للملف
+          assetPath: image.path,
         );
 
-        // 4. إضافتها إلى القائمة وتنبيه الواجهات
         memoriesList.insert(0, newItem);
         notifyListeners();
 
@@ -3018,9 +3865,8 @@ class AppRiverpod extends ChangeNotifier {
           targetRole: 'مسن',
         );
       }
-    } else {
-      // التعامل مع حالة رفض الإذن
-      debugPrint('Permission denied for photos');
+    } catch (e) {
+      debugPrint('Error picking image: $e');
     }
   }
 
@@ -3080,12 +3926,32 @@ class AppRiverpod extends ChangeNotifier {
     notifyListeners();
   }
 
-  void rateVolunteerSession(String volunteerId, int ratingScore) {
+  void updateVolunteerOpportunity(VolunteerOpportunity opp) {
+    final index = volunteerOpportunities.indexWhere((o) => o.id == opp.id);
+    if (index != -1) {
+      volunteerOpportunities[index] = opp;
+      notifyListeners();
+    }
+  }
+
+  void rateVolunteerSession(String volunteerId, int ratingScore, {String comment = ''}) {
     // تقييم المتطوع من قِبل المسن (ratingScore: 1 لغير سعيد، 2 لعادي، 3 لسعيد)
     int pointsEarned = 0;
     if (ratingScore == 3) {
       pointsEarned = 15;
     } else if (ratingScore == 2) pointsEarned = 5;
+
+    // إضافة التقييم لقائمة التقييمات العامة لربطها بشاشة المتطوع
+    final review = Review(
+      id: 'rev_${DateTime.now().millisecondsSinceEpoch}',
+      fromRole: 'elderly',
+      fromName: currentUser.name,
+      toRole: 'volunteer',
+      rating: ratingScore.toDouble(),
+      comment: comment,
+      date: DateTime.now().toString(),
+    );
+    reviews.insert(0, review);
 
     // إشعار للمسن بشكره على التقييم
     triggerNotification(
@@ -3095,17 +3961,14 @@ class AppRiverpod extends ChangeNotifier {
       targetRole: 'مسن',
     );
 
-    // تحديث نقاط المتطوع إذا أردنا (للمحاكاة فقط نعرض إشعار للمتطوع لو كان مسجلاً)
     notifyListeners();
   }
 
-  void sendEncouragementMessage(String messageType) {
-    // إرسال رسالة تشجيعية من الأسرة إلى المسن (صوتية أو هدية افتراضية)
-    String title =
-        messageType == 'voice' ? 'رسالة صوتية جديدة 🎤' : 'هدية جديدة 🎁';
+  void sendEncouragementMessage(String messageType, {String? text}) {
+    String title = messageType == 'voice' ? 'رسالة صوتية جديدة 🎤' : 'رسالة من العائلة ✉️';
     String body = messageType == 'voice'
         ? 'عائلتك أرسلت لك رسالة صوتية تشجيعية لسماعها!'
-        : 'عائلتك أرسلت لك باقة ورد افتراضية تقديراً لالتزامك 🌸';
+        : (text ?? 'عائلتك أرسلت لك رسالة تشجيعية!');
 
     triggerNotification(
       title: title,
@@ -3113,7 +3976,56 @@ class AppRiverpod extends ChangeNotifier {
       type: 'family',
       targetRole: 'مسن',
     );
+
+    // إضافة الذكرى لشاشة الذكريات
+    final newItem = MemoryItem(
+      id: 'mem_custom_${DateTime.now().millisecondsSinceEpoch}',
+      category: 'أسرة',
+      title: title,
+      date: 'اليوم',
+      type: messageType == 'voice' ? 'voice' : 'text',
+      assetPath: '',
+      content: body,
+    );
+
+    memoriesList.insert(0, newItem);
     notifyListeners();
+  }
+
+  void sendMedicationReminder(String medName) {
+    String title = 'تذكير بموعد الدواء 💊';
+    String body = 'عائلتك تذكرك بموعد أخذ $medName. نتمنى لك دوام الصحة والعافية!';
+
+    triggerNotification(
+      title: title,
+      body: body,
+      type: 'medical',
+      targetRole: 'مسن',
+    );
+
+    // إضافة الذكرى لشاشة الذكريات
+    final newItem = MemoryItem(
+      id: 'mem_med_${DateTime.now().millisecondsSinceEpoch}',
+      category: 'صحة',
+      title: title,
+      date: 'اليوم',
+      type: 'text',
+      assetPath: '',
+      content: body,
+    );
+
+    memoriesList.insert(0, newItem);
+    notifyListeners();
+  }
+
+  void toggleMedicationTaken(String id) {
+    final index = medications.indexWhere((m) => m.id == id);
+    if (index != -1) {
+      bool newState = !medications[index].isTaken;
+      medications[index].isTaken = newState;
+      medications[index].isElderlyConfirmed = newState;
+      notifyListeners();
+    }
   }
 
   // --- Specialist Recommendations ---
@@ -3128,5 +4040,78 @@ class AppRiverpod extends ChangeNotifier {
       targetRole: 'ممرض',
     );
     notifyListeners();
+  }
+
+  // --- Care Reports ---
+  List<CareReport> careReports = [
+    CareReport(
+      id: 'rep_1',
+      title: 'تقييم ربع سنوي — أخصائي اجتماعي',
+      date: '١٧ مايو ٢٠٢٦',
+      summary: 'يُظهر المقيم تحسناً ملحوظاً في التفاعل مع الأنشطة الجماعية وخاصة جلسات القراءة. الروح المعنوية مرتفعة والشهية للطعام منتظمة.',
+      socialNotes: 'شارك في مسابقة الذاكرة وحصل على المركز الثاني. أبدى رغبة في التحدث عن ذكريات الطفولة مع زملائه في الغرفة.',
+      recommendations: 'يُنصح بزيادة التفاعل العائلي عبر مكالمات الفيديو خلال عطلة نهاية الأسبوع لتعزيز الشعور بالانتماء.',
+      authorName: 'أ. نور الدين',
+      authorRole: 'أخصائي اجتماعي أول',
+      interactionLevel: 'ممتاز',
+      moodStatus: 'مستقر',
+    ),
+  ];
+
+  void addCareReport(CareReport report) {
+    careReports.insert(0, report);
+    triggerNotification(
+      title: 'تقرير رعاية جديد 📄',
+      body: 'تم إضافة تقرير جديد: ${report.title}',
+      type: 'medical',
+      targetRole: 'عائلة',
+    );
+    notifyListeners();
+  }
+
+  // --- Specialist Chat ---
+  List<ChatMessage> specialistChatHistory = [
+    ChatMessage(
+      id: 'msg_1',
+      text: 'مرحباً بكم. أنا هنا للإجابة على أي استفسار بخصوص التقرير.',
+      isFromMe: false,
+      timestamp: DateTime.now().subtract(const Duration(hours: 1)),
+    ),
+  ];
+
+  void sendSpecialistMessage(String text, {String? mediaPath, String? mediaType}) {
+    specialistChatHistory.add(ChatMessage(
+      id: 'msg_${DateTime.now().millisecondsSinceEpoch}',
+      text: text,
+      isFromMe: true,
+      timestamp: DateTime.now(),
+      mediaPath: mediaPath,
+      mediaType: mediaType,
+    ));
+    notifyListeners();
+  }
+
+  pw.Widget _pdfBullet(pw.Font font, String text) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.symmetric(vertical: 2),
+      child: pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.start,
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Container(
+            width: 4,
+            height: 4,
+            margin: const pw.EdgeInsets.only(top: 6, left: 8),
+            decoration: const pw.BoxDecoration(
+                color: PdfColors.black, shape: pw.BoxShape.circle),
+          ),
+          pw.Expanded(
+            child: pw.Text(text,
+                style: pw.TextStyle(font: font, fontSize: 11),
+                textDirection: pw.TextDirection.rtl),
+          ),
+        ],
+      ),
+    );
   }
 }

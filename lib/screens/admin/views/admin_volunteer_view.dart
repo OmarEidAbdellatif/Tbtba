@@ -56,7 +56,11 @@ class AdminVolunteerView extends StatelessWidget {
                       final opp = entry.value;
                       return FadeTransition(
                         opacity: fadeAnimations[index % fadeAnimations.length],
-                        child: _buildOpportunityCard(opp),
+                        child: GestureDetector(
+                          onTap: () =>
+                              _showEditOpportunitySheet(context, provider, opp),
+                          child: _buildOpportunityCard(opp),
+                        ),
                       );
                     }),
                 ],
@@ -68,6 +72,7 @@ class AdminVolunteerView extends StatelessWidget {
               child: FloatingActionButton.extended(
                 onPressed: () => _showAddOpportunitySheet(context, provider),
                 backgroundColor: const Color(0xFF0ea5e9),
+                elevation: 4,
                 icon: const Icon(Icons.add_circle_outline_rounded,
                     color: Colors.white),
                 label: const Text('إنشاء فرصة',
@@ -100,67 +105,220 @@ class AdminVolunteerView extends StatelessWidget {
   }
 
   Widget _buildOpportunityCard(VolunteerOpportunity opp) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xFFf1f5f9))),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(opp.title,
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              )
+            ],
+            border: Border.all(color: const Color(0xFFf1f5f9))),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(opp.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF0f172a))),
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(Icons.edit_note_rounded,
+                          size: 18, color: Color(0xFF64748b)),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                      color: opp.status == 'متاحة'
+                          ? const Color(0xFFdcfce7)
+                          : const Color(0xFFf1f5f9),
+                      borderRadius: BorderRadius.circular(10)),
+                  child: Text(opp.status,
+                      style: TextStyle(
+                          color: opp.status == 'متاحة'
+                              ? const Color(0xFF15803d)
+                              : const Color(0xFF64748b),
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(opp.description,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                    fontSize: 13, height: 1.5, color: Color(0xFF475569))),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                const Icon(Icons.star_rounded,
+                    color: Color(0xFFf59e0b), size: 20),
+                const SizedBox(width: 6),
+                Text('${opp.points} نقطة مكافأة',
                     style: const TextStyle(
-                        fontSize: 14,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF1e293b))),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                    color: opp.status == 'متاحة'
-                        ? const Color(0xFFdcfce7)
-                        : const Color(0xFFf1f5f9),
-                    borderRadius: BorderRadius.circular(8)),
-                child: Text(opp.status,
-                    style: TextStyle(
-                        color: opp.status == 'متاحة'
-                            ? const Color(0xFF166534)
-                            : const Color(0xFF94a3b8),
-                        fontSize: 9,
-                        fontWeight: FontWeight.bold)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(opp.description,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 11, color: Color(0xFF64748b))),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              const Icon(Icons.star_rounded,
-                  color: Color(0xFFf59e0b), size: 16),
-              const SizedBox(width: 4),
-              Text('${opp.points} نقطة',
-                  style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1e293b))),
-              const Spacer(),
-              Text(opp.date,
-                  style:
-                      const TextStyle(fontSize: 10, color: Color(0xFF94a3b8))),
-            ],
-          )
-        ],
+                        color: Color(0xFF0ea5e9))),
+                const Spacer(),
+                Text(opp.date,
+                    style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF94a3b8))),
+              ],
+            )
+          ],
+        ),
       ),
+    );
+  }
+
+  void _showEditOpportunitySheet(
+      BuildContext context, AppRiverpod provider, VolunteerOpportunity opp) {
+    final titleController = TextEditingController(text: opp.title);
+    final descController = TextEditingController(text: opp.description);
+    int selectedPoints = opp.points;
+
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: '',
+      transitionDuration: const Duration(milliseconds: 400),
+      pageBuilder: (context, anim1, anim2) => const SizedBox(),
+      transitionBuilder: (context, anim1, anim2, child) {
+        return ScaleTransition(
+          scale: CurvedAnimation(parent: anim1, curve: Curves.elasticOut),
+          child: AlertDialog(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+            contentPadding: EdgeInsets.zero,
+            content: Directionality(
+              textDirection: TextDirection.rtl,
+              child: Container(
+                width: MediaQuery.of(context).size.width * 0.9,
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('تعديل الفرصة 📝',
+                            style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1e293b))),
+                        IconButton(
+                          onPressed: () {
+                            // Delete logic
+                            provider.volunteerOpportunities
+                                .removeWhere((o) => o.id == opp.id);
+                            provider.notifyListeners();
+                            Navigator.pop(context);
+                          },
+                          icon: const Icon(Icons.delete_outline_rounded,
+                              color: Colors.red),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    _buildField(titleController, 'عنوان الفرصة'),
+                    const SizedBox(height: 12),
+                    _buildField(descController, 'وصف المهمة', maxLines: 3),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('النقاط',
+                            style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF334155))),
+                        Text('$selectedPoints نقطة',
+                            style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF0ea5e9))),
+                      ],
+                    ),
+                    StatefulBuilder(builder: (context, setModalState) {
+                      return Slider(
+                        value: selectedPoints.toDouble(),
+                        min: 10,
+                        max: 200,
+                        divisions: 19,
+                        activeColor: const Color(0xFF0ea5e9),
+                        onChanged: (val) =>
+                            setModalState(() => selectedPoints = val.toInt()),
+                      );
+                    }),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (titleController.text.isNotEmpty &&
+                              descController.text.isNotEmpty) {
+                            final updatedOpp = VolunteerOpportunity(
+                              id: opp.id,
+                              title: titleController.text,
+                              org: opp.org,
+                              dateInfo: opp.dateInfo,
+                              icon: opp.icon,
+                              tags: opp.tags,
+                              hours: opp.hours,
+                              isNew: opp.isNew,
+                              description: descController.text,
+                              totalSlots: opp.totalSlots,
+                              filledSlots: opp.filledSlots,
+                              points: selectedPoints,
+                            );
+                            provider.updateVolunteerOpportunity(updatedOpp);
+                            Navigator.pop(context);
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0ea5e9),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14)),
+                        ),
+                        child: const Text('حفظ التغييرات',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 

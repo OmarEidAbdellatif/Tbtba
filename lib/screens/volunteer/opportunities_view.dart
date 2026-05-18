@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/app_riverpod.dart';
 import '../../models/app_models.dart';
+import 'widgets/volunteer_background.dart';
 
 class VolunteerOpportunitiesView extends ConsumerStatefulWidget {
   final List<Animation<double>> fadeAnimations;
@@ -70,58 +71,60 @@ class _VolunteerOpportunitiesViewState
     final featured = filteredOpp.isNotEmpty ? filteredOpp.first : null;
     final others = filteredOpp.length > 1 ? filteredOpp.skip(1).toList() : [];
 
-    return Column(
-      children: [
-        _buildSearchFilter(),
-        _buildSkillFilters(),
-        _buildSortRow(),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (featured != null) ...[
-                _buildSectionLabel(
-                    'مثالي لمهاراتك ✨', const Color(0xFF10b981), 0),
-                const SizedBox(height: 12),
-                _buildFeaturedOpportunity(featured),
-                const SizedBox(height: 24),
-              ],
-              if (others.isNotEmpty) ...[
-                _buildSectionLabel(
-                    'فرص مناسبة لك', const Color(0xFF6366f1), 1),
-                const SizedBox(height: 12),
-                ...others
-                    .map((o) => _buildOpportunityCard(o, provider))
-                    ,
-                const SizedBox(height: 24),
-              ],
-              if (filteredOpp.isEmpty)
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 40),
-                    child: Column(
-                      children: [
-                        const Text('🔍', style: TextStyle(fontSize: 40)),
-                        const SizedBox(height: 12),
-                        Text('لم يتم العثور على فرص تطابق بحثك',
-                            style: TextStyle(
-                                color: Colors.grey.shade500,
-                                fontFamily: 'Cairo')),
-                      ],
+    return VolunteerAnimatedBackground(
+      child: Column(
+        children: [
+          _buildSearchFilter(),
+          _buildSkillFilters(),
+          _buildSortRow(),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (featured != null) ...[
+                  _buildSectionLabel(
+                      'مثالي لمهاراتك ✨', const Color(0xFF10b981), 0),
+                  const SizedBox(height: 12),
+                  _buildFeaturedOpportunity(featured),
+                  const SizedBox(height: 24),
+                ],
+                if (others.isNotEmpty) ...[
+                  _buildSectionLabel(
+                      'فرص مناسبة لك', const Color(0xFF6366f1), 1),
+                  const SizedBox(height: 12),
+                  ...others
+                      .map((o) => _buildOpportunityCard(o, provider))
+                      ,
+                  const SizedBox(height: 24),
+                ],
+                if (filteredOpp.isEmpty)
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 40),
+                      child: Column(
+                        children: [
+                          const Text('🔍', style: TextStyle(fontSize: 40)),
+                          const SizedBox(height: 12),
+                          Text('لم يتم العثور على فرص تطابق بحثك',
+                              style: TextStyle(
+                                  color: Colors.grey.shade500,
+                                  fontFamily: 'Cairo')),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              _buildSectionLabel('فرص أخرى', const Color(0xFF94a3b8), 2),
-              const SizedBox(height: 12),
-              _buildOtherOpportunity(provider),
-              const SizedBox(height: 24),
-              _buildImpactTracker(provider.volunteerImpact),
-              const SizedBox(height: 40),
-            ],
+                _buildSectionLabel('فرص أخرى', const Color(0xFF94a3b8), 2),
+                const SizedBox(height: 12),
+                _buildOtherOpportunity(provider),
+                const SizedBox(height: 24),
+                _buildImpactTracker(provider.volunteerImpact),
+                const SizedBox(height: 40),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -538,14 +541,15 @@ class _VolunteerOpportunitiesViewState
                               color: Color(0xFF0f172a))),
                       Text(opp.org,
                           style: const TextStyle(
-                              color: Color(0xFF64748b), fontSize: 10)),
+                              color: Color(0xFF475569), fontSize: 11, fontWeight: FontWeight.w500)),
                       const SizedBox(height: 6),
                       Text(opp.description,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                              color: Color(0xFF374151),
-                              fontSize: 10,
+                              color: Color(0xFF334155),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
                               height: 1.5),
                           textAlign: TextAlign.right),
                     ],
@@ -869,7 +873,7 @@ class _VolunteerOpportunitiesViewState
                     Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        _buildDetailChip(opp.dateInfo, Icons.calendar_today),
+                        _buildDetailChip(opp.dateInfo, 'assets/icons/calendar.png'),
                         const SizedBox(width: 12),
                         _buildDetailChip(
                             'المقاعد: ${opp.filledSlots}/${opp.totalSlots}',
@@ -974,7 +978,7 @@ class _VolunteerOpportunitiesViewState
     );
   }
 
-  Widget _buildDetailChip(String label, IconData icon) {
+  Widget _buildDetailChip(String label, dynamic icon) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
@@ -990,7 +994,10 @@ class _VolunteerOpportunitiesViewState
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF475569))),
           const SizedBox(width: 8),
-          Icon(icon, size: 16, color: const Color(0xFF059669)),
+          if (icon is IconData)
+            Icon(icon, size: 16, color: const Color(0xFF059669))
+          else if (icon is String)
+            Image.asset(icon, width: 16, height: 16, color: const Color(0xFF059669)),
         ],
       ),
     );

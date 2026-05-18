@@ -21,7 +21,7 @@ class AdminReportsView extends ConsumerWidget {
             children: [
               _buildHeader(),
               const SizedBox(height: 24),
-              _buildFinancialReportCard(provider),
+              _buildFinancialReportCard(context, provider),
               const SizedBox(height: 20),
               _buildSafetyReportCard(provider),
               const SizedBox(height: 20),
@@ -34,45 +34,142 @@ class AdminReportsView extends ConsumerWidget {
   }
 
   Widget _buildHeader() {
+    final now = DateTime.now();
+    final timeStr = "${now.hour}:${now.minute.toString().padLeft(2, '0')}";
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('تقارير الأداء المركزية', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF0f172a))),
+        const Text('تقارير الأداء المركزية',
+            style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF0f172a))),
         const SizedBox(height: 4),
-        Text('محدث بتاريخ الآن', style: TextStyle(fontSize: 12, color: const Color(0xFF64748b).withValues(alpha: 0.8))),
+        Text('محدث بتاريخ اليوم الساعة $timeStr',
+            style: TextStyle(
+                fontSize: 12,
+                color: const Color(0xFF64748b).withValues(alpha: 0.8))),
       ],
     );
   }
 
-  Widget _buildFinancialReportCard(AppRiverpod provider) {
+  Widget _buildFinancialReportCard(BuildContext context, AppRiverpod provider) {
     final compliance = (provider.medicationComplianceRate * 100).toInt();
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), border: Border.all(color: const Color(0xFFf1f5f9))),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return GestureDetector(
+      onTap: () => _showDetailedFinancialReport(context, provider),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: const Color(0xFFf1f5f9))),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('الأداء التشغيلي والمالي',
+                    style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1e293b))),
+                // Icon(Icons.more_horiz, color: Color(0xFF94a3b8)), // Removed as requested
+              ],
+            ),
+            const SizedBox(height: 24),
+            _buildChartMockup(Colors.blue),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _statMini('$compliance%', 'التزام دوائي'),
+                _statMini(
+                    '${(provider.occupancyRate * 100).toInt()}%', 'نسبة الإشغال'),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showDetailedFinancialReport(BuildContext context, AppRiverpod provider) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: '',
+      transitionDuration: const Duration(milliseconds: 400),
+      pageBuilder: (context, anim1, anim2) => const SizedBox(),
+      transitionBuilder: (context, anim1, anim2, child) {
+        return ScaleTransition(
+          scale: CurvedAnimation(parent: anim1, curve: Curves.elasticOut),
+          child: AlertDialog(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+            content: Directionality(
+              textDirection: TextDirection.rtl,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                        color: Colors.blue.withValues(alpha: 0.1),
+                        shape: BoxShape.circle),
+                    child: const Icon(Icons.analytics_rounded,
+                        color: Colors.blue, size: 40),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text('تفاصيل الأداء المالي والتشغيلي',
+                      textAlign: TextAlign.center,
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  _detailRow('صافي الإيرادات', '٤٥,٠٠٠ ج.م', Colors.green),
+                  _detailRow('مصروفات التشغيل', '١٢,٥٠٠ ج.م', Colors.red),
+                  _detailRow('الأرباح المتوقعة', '٣٢,٥٠٠ ج.م', Colors.blue),
+                  const Divider(height: 32),
+                  const Text(
+                    'ملاحظة: هذا التقرير مبني على البيانات المسجلة خلال الشهر الحالي فقط.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 11, color: Color(0xFF64748b)),
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text('إغلاق',
+                          style: TextStyle(color: Colors.white)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _detailRow(String label, String value, Color color) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('الأداء التشغيلي والمالي',
-                  style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1e293b))),
-              Icon(Icons.more_horiz, color: Color(0xFF94a3b8)),
-            ],
-          ),
-          const SizedBox(height: 24),
-          _buildChartMockup(Colors.blue),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _statMini('$compliance%', 'التزام دوائي'),
-              _statMini('٩٤٪', 'نسبة الإشغال'),
-            ],
-          ),
+          Text(label, style: const TextStyle(color: Color(0xFF64748b))),
+          Text(value,
+              style: TextStyle(
+                  color: color, fontWeight: FontWeight.bold, fontSize: 16)),
         ],
       ),
     );
@@ -130,17 +227,31 @@ class AdminReportsView extends ConsumerWidget {
   }
 
   Widget _buildChartMockup(Color color) {
-    return SizedBox(
-      height: 80,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: List.generate(6, (index) => Container(
-          width: 25,
-          height: (20 + (index * 10)).toDouble(),
-          decoration: BoxDecoration(color: color.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(6)),
-        )),
-      ),
+    return Column(
+      children: [
+        const SizedBox(height: 10),
+        Container(
+          height: 160, // Increased height to accommodate labels
+          width: double.infinity,
+          padding: const EdgeInsets.only(left: 30, right: 30, bottom: 40, top: 10),
+          child: CustomPaint(
+            painter: LineChartPainter(color),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.trending_up_rounded, color: color, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              'مؤشر النمو التشغيلي (آخر ٦ أشهر)',
+              style: TextStyle(
+                  fontSize: 12, fontWeight: FontWeight.bold, color: color),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -191,51 +302,225 @@ class AdminReportsView extends ConsumerWidget {
     );
   }
 
-  void _showExportDialog(BuildContext context, AppRiverpod provider, String format) {
+  void _showExportDialog(
+      BuildContext context, AppRiverpod provider, String format) {
     final summary = provider.generatePerformanceSummary();
-    showDialog(
+    showGeneralDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text('تصدير تقرير $format', textAlign: TextAlign.right, style: const TextStyle(fontWeight: FontWeight.bold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(summary, textAlign: TextAlign.right, style: const TextStyle(fontSize: 12, height: 1.5, color: Color(0xFF64748b))),
-            const SizedBox(height: 16),
-            const Text('هل تريد تأكيد تصدير هذا التقرير؟', textAlign: TextAlign.right, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('إلغاء', style: TextStyle(color: Color(0xFF64748b))),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              // Show loading
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('جاري تجهيز تقرير $format...'), backgroundColor: const Color(0xFF0369a1)),
-              );
-              
-              final fileName = await provider.exportReport(format.toLowerCase() == 'excel' ? 'csv' : 'pdf');
-              
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('تم تصدير الملف بنجاح: $fileName'),
-                    backgroundColor: Colors.green,
-                    duration: const Duration(seconds: 4),
+      barrierDismissible: true,
+      barrierLabel: '',
+      transitionDuration: const Duration(milliseconds: 500),
+      pageBuilder: (context, anim1, anim2) => const SizedBox(),
+      transitionBuilder: (context, anim1, anim2, child) {
+        return ScaleTransition(
+          scale: CurvedAnimation(parent: anim1, curve: Curves.elasticOut),
+          child: AlertDialog(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Text('تصدير تقرير $format',
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(width: 8),
+                Icon(
+                    format == 'Excel'
+                        ? Icons.table_chart_rounded
+                        : Icons.picture_as_pdf_rounded,
+                    color: format == 'Excel' ? Colors.green : Colors.red),
+              ],
+            ),
+            content: Directionality(
+              textDirection: TextDirection.rtl,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                        color: const Color(0xFFf8fafc),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFe2e8f0))),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('معاينة البيانات:',
+                            style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF64748b))),
+                        const SizedBox(height: 8),
+                        Text(summary,
+                            style: const TextStyle(
+                                fontSize: 11, height: 1.6, color: Color(0xFF1e293b))),
+                      ],
+                    ),
                   ),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0369a1), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-            child: const Text('تأكيد التصدير', style: TextStyle(color: Colors.white)),
+                  const SizedBox(height: 20),
+                  const Text('سيتم إنشاء الملف بتصميم احترافي يشمل شعار المنشأة.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF0369a1))),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('إلغاء',
+                    style: TextStyle(color: Color(0xFF64748b))),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Row(
+                          children: [
+                            const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2, color: Colors.white)),
+                            const SizedBox(width: 12),
+                            Text('جاري تجهيز تقرير $format...'),
+                          ],
+                        ),
+                        backgroundColor: const Color(0xFF0369a1)),
+                  );
+
+                  final fileName = await provider.exportReport(
+                      format.toLowerCase() == 'excel' ? 'csv' : 'pdf');
+
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('تم تصدير الملف بنجاح: $fileName'),
+                        backgroundColor: Colors.green,
+                        duration: const Duration(seconds: 4),
+                      ),
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0369a1),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12))),
+                child: const Text('تأكيد وتحميل',
+                    style: TextStyle(color: Colors.white)),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
+}
+
+class LineChartPainter extends CustomPainter {
+  final Color color;
+  LineChartPainter(this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF94a3b8).withValues(alpha: 0.8)
+      ..strokeWidth = 2.5
+      ..style = PaintingStyle.stroke;
+
+    final arrowSize = 7.0;
+
+    // Draw Y Axis
+    canvas.drawLine(Offset(0, size.height), const Offset(0, 0), paint);
+    // Y Arrow
+    final yArrowPath = Path()
+      ..moveTo(-arrowSize, arrowSize)
+      ..lineTo(0, 0)
+      ..lineTo(arrowSize, arrowSize);
+    canvas.drawPath(yArrowPath, paint);
+
+    // Draw X Axis
+    canvas.drawLine(
+        Offset(0, size.height), Offset(size.width, size.height), paint);
+    // X Arrow
+    final xArrowPath = Path()
+      ..moveTo(size.width - arrowSize, size.height - arrowSize)
+      ..lineTo(size.width, size.height)
+      ..lineTo(size.width - arrowSize, size.height + arrowSize);
+    canvas.drawPath(xArrowPath, paint);
+
+    // Labels X
+    final textPainter = TextPainter(textDirection: TextDirection.rtl);
+    final months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'];
+    final segmentWidth = size.width / (months.length - 1);
+    
+    for (int i = 0; i < months.length; i++) {
+      textPainter.text = TextSpan(
+        text: months[i],
+        style: const TextStyle(
+            color: Color(0xFF64748b),
+            fontSize: 9,
+            fontWeight: FontWeight.bold),
+      );
+      textPainter.layout();
+      // Center the text under the point
+      textPainter.paint(
+          canvas, Offset((segmentWidth * i) - (textPainter.width / 2), size.height + 12));
+    }
+
+    // Draw Shadow Line (Glow)
+    final shadowPaint = Paint()
+      ..color = color.withValues(alpha: 0.2)
+      ..strokeWidth = 8
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+
+    final path = Path();
+    final points = [
+      Offset(0, size.height * 0.8),
+      Offset(size.width * 0.2, size.height * 0.7),
+      Offset(size.width * 0.4, size.height * 0.75),
+      Offset(size.width * 0.6, size.height * 0.4),
+      Offset(size.width * 0.8, size.height * 0.3),
+      Offset(size.width, size.height * 0.2),
+    ];
+
+    path.moveTo(points[0].dx, points[0].dy);
+    for (int i = 1; i < points.length; i++) {
+      path.lineTo(points[i].dx, points[i].dy);
+    }
+
+    canvas.drawPath(path, shadowPaint);
+
+    // Draw Data Line (Bolder)
+    final linePaint = Paint()
+      ..color = color
+      ..strokeWidth = 4.5
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    canvas.drawPath(path, linePaint);
+
+    // Draw dots
+    final dotPaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    for (var p in points) {
+      canvas.drawCircle(p, 4, dotPaint);
+      canvas.drawCircle(
+          p,
+          6,
+          Paint()
+            ..color = color.withValues(alpha: 0.2)
+            ..style = PaintingStyle.fill);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

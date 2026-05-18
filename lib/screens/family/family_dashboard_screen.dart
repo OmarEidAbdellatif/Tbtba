@@ -1,6 +1,9 @@
 import 'dart:math';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lottie/lottie.dart';
+import 'package:file_picker/file_picker.dart' as file_picker_lib;
 import '../../providers/app_riverpod.dart';
 import '../../models/app_models.dart';
 import 'visit_booking_screen.dart';
@@ -20,6 +23,7 @@ class FamilyDashboardScreen extends ConsumerStatefulWidget {
 class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
     with TickerProviderStateMixin {
   int _selectedIndex = 0;
+  bool _showMedicationDoneAnimation = false; // هل نعرض أنيميشن التذكير؟
   late AnimationController _fadeController;
   late AnimationController _pulseController;
   late AnimationController _rotationController;
@@ -73,13 +77,19 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
       useNestedScrollView: true,
       sliverHeader: _buildHero(provider),
       bottomNavigationBar: _buildBottomNav(),
-      body: _selectedIndex == 0
-          ? _buildHomeView(provider)
-          : _selectedIndex == 1
-              ? _buildCareView(provider)
-              : _selectedIndex == 2
-                  ? _buildVisitsView(provider)
-                  : _buildBillingView(provider),
+      body: Stack(
+        children: [
+          Positioned.fill(child: _buildBodyAnimatedBackground()),
+          _selectedIndex == 0
+              ? _buildHomeView(provider)
+              : _selectedIndex == 1
+                  ? _buildCareView(provider)
+                  : _selectedIndex == 2
+                      ? _buildVisitsView(provider)
+                      : _buildBillingView(provider),
+          if (_showMedicationDoneAnimation) _buildMedicationDoneOverlay(), // أنيميشن التذكير
+        ],
+      ),
     );
   }
 
@@ -102,22 +112,24 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
               padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
               child: Column(
                 children: [
-                  const Row(
+                  Row(
                     children: [
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('مرحباً سارة 👋',
-                              style: TextStyle(
+                          Text('مرحباً ${provider.currentAccount?.name ?? 'سارة'} 👋',
+                              style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold)),
-                          Text('الابنة · آخر زيارة: منذ ٣ أيام',
+                          const Text('آخر زيارة: اليوم',
                               style: TextStyle(
-                                  color: Colors.white70, fontSize: 11)),
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500)),
                         ],
                       ),
-                      Spacer(),
+                      const Spacer(),
                     ],
                   ),
                   const SizedBox(height: 24),
@@ -192,6 +204,76 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
               right: 40 + (60 * _floatController.value),
               child: _buildRealisticOrb(85, [
                 const Color(0xFFfdba74).withValues(alpha: 0.12),
+                Colors.transparent,
+              ]),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildBodyAnimatedBackground() {
+    return AnimatedBuilder(
+      animation: Listenable.merge([_floatController, _rotationController]),
+      builder: (context, child) {
+        return Stack(
+          children: [
+            Positioned(
+              top: MediaQuery.of(context).size.height * 0.05 + (50 * _floatController.value),
+              left: -50 + (30 * _floatController.value),
+              child: _buildRealisticOrb(300, [
+                const Color(0xFFea580c).withValues(alpha: 0.25),
+                const Color(0xFFfdba74).withValues(alpha: 0.15),
+                Colors.transparent,
+              ]),
+            ),
+            Positioned(
+              top: MediaQuery.of(context).size.height * 0.7 + (50 * (1 - _floatController.value)),
+              right: -50 + (30 * _floatController.value),
+              child: _buildRealisticOrb(250, [
+                const Color(0xFFf97316).withValues(alpha: 0.25),
+                const Color(0xFFfed7aa).withValues(alpha: 0.15),
+                Colors.transparent,
+              ]),
+            ),
+            Positioned(
+              top: MediaQuery.of(context).size.height * 0.4 + (40 * sin(_floatController.value * pi)),
+              left: MediaQuery.of(context).size.width * 0.05 + (40 * cos(_floatController.value * pi)),
+              child: _buildRealisticOrb(150, [
+                const Color(0xFFea580c).withValues(alpha: 0.20),
+                Colors.transparent,
+              ]),
+            ),
+            Positioned(
+              top: MediaQuery.of(context).size.height * 0.2 + (30 * _floatController.value),
+              right: MediaQuery.of(context).size.width * 0.05 + (40 * (1 - _floatController.value)),
+              child: _buildRealisticOrb(180, [
+                const Color(0xFFf97316).withValues(alpha: 0.20),
+                Colors.transparent,
+              ]),
+            ),
+            Positioned(
+              top: MediaQuery.of(context).size.height * 0.8 + (60 * _floatController.value),
+              left: MediaQuery.of(context).size.width * 0.1 + (30 * _floatController.value),
+              child: _buildRealisticOrb(200, [
+                const Color(0xFFfdba74).withValues(alpha: 0.18),
+                Colors.transparent,
+              ]),
+            ),
+            Positioned(
+              top: MediaQuery.of(context).size.height * 0.3 + (40 * _floatController.value),
+              right: MediaQuery.of(context).size.width * 0.2 + (30 * (1 - _floatController.value)),
+              child: _buildRealisticOrb(140, [
+                const Color(0xFFea580c).withValues(alpha: 0.15),
+                Colors.transparent,
+              ]),
+            ),
+            Positioned(
+              top: MediaQuery.of(context).size.height * 0.6 + (50 * sin(_floatController.value * pi)),
+              left: MediaQuery.of(context).size.width * 0.3 + (40 * cos(_floatController.value * pi)),
+              child: _buildRealisticOrb(160, [
+                const Color(0xFFf97316).withValues(alpha: 0.15),
                 Colors.transparent,
               ]),
             ),
@@ -300,10 +382,10 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('نبض العافية — الحاج محمود',
-                      style: TextStyle(
+                  Text('نبض العافية — ${provider.currentAccount?.linkedResidentId == 'res1' ? 'الحاج محمود' : 'المقيم'}',
+                      style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 13,
+                          fontSize: 16,
                           fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
                   Row(
@@ -320,7 +402,9 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
                                           ? 'نشيط وحيوي 🔥'
                                           : 'مستقر ومطمئن',
                           style: const TextStyle(
-                              color: Colors.white70, fontSize: 10)),
+                              color: Colors.white,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500)),
                       const SizedBox(width: 6),
                       AnimatedBuilder(
                         animation: _pulseController,
@@ -370,10 +454,11 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-          color: bg.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
+          color: bg.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(8)),
       child: Text(text,
           style: const TextStyle(
-              color: Colors.white, fontSize: 9, fontWeight: FontWeight.w500)),
+              color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
     );
   }
 
@@ -381,7 +466,7 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
     final tabs = [
       {'lbl': 'نظرة عامة', 'icon': Icons.dashboard_outlined},
       {'lbl': 'الرعاية', 'icon': Icons.favorite_border_rounded},
-      {'lbl': 'الزيارات', 'icon': Icons.calendar_month_outlined},
+      {'lbl': 'الزيارات', 'icon': 'assets/icons/calendar.png'},
       {'lbl': 'الفواتير', 'icon': Icons.account_balance_wallet_outlined},
     ];
 
@@ -446,15 +531,150 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
           const SizedBox(height: 24),
           _buildGamificationCard(provider, context),
           const SizedBox(height: 24),
-          _buildVirtualVisitSection(),
-          const SizedBox(height: 24),
           _buildMemoryWall(provider),
           const SizedBox(height: 24),
           _buildNextmedCard(provider),
           const SizedBox(height: 20),
           _buildUpcomingVisit(provider),
+          const SizedBox(height: 24),
+          _buildReviewsCard(provider),
           const SizedBox(height: 40),
         ],
+      ),
+    );
+  }
+
+  Widget _buildReviewsCard(AppRiverpod provider) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFFED7AA), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+              color: const Color(0xFFEA580C).withValues(alpha: 0.05),
+              blurRadius: 15,
+              offset: const Offset(0, 5))
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFFEDD5),
+                  shape: BoxShape.circle,
+                ),
+                child: const Text('⭐', style: TextStyle(fontSize: 18)),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('تقييم الخدمات',
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF0F172A))),
+                    SizedBox(height: 2),
+                    Text('رأيك يهمنا لتحسين جودة الرعاية لوالدك.',
+                        style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(child: _reviewButton('الأخصائي', () => _showReviewDialog('specialist'))),
+              const SizedBox(width: 8),
+              Expanded(child: _reviewButton('الممرض', () => _showReviewDialog('nurse'))),
+              const SizedBox(width: 8),
+              Expanded(child: _reviewButton('الدار', () => _showReviewDialog('home'))),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _reviewButton(String label, VoidCallback onTap) {
+    return ElevatedButton(
+      onPressed: onTap,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFFEA580C),
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        elevation: 0,
+      ),
+      child: Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+    );
+  }
+
+  void _showReviewDialog(String toRole) {
+    double rating = 5;
+    final commentController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          backgroundColor: Colors.white,
+          title: Text('تقييم ${toRole == 'specialist' ? 'الأخصائي' : toRole == 'nurse' ? 'الممرض' : 'الدار'}', textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'Cairo')),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (index) {
+                  return IconButton(
+                    icon: Icon(index < rating ? Icons.star : Icons.star_border, color: const Color(0xFFEAB308)),
+                    onPressed: () => setState(() => rating = index + 1.0),
+                  );
+                }),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: commentController,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  hintText: 'اكتب رأيك هنا...',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('إلغاء')),
+            ElevatedButton(
+              onPressed: () {
+                final provider = ref.read(appRiverpod);
+                provider.addReview(Review(
+                  id: DateTime.now().millisecondsSinceEpoch.toString(),
+                  fromRole: 'family',
+                  fromName: 'سارة أحمد',
+                  toRole: toRole,
+                  rating: rating,
+                  comment: commentController.text,
+                  date: DateTime.now().toString(),
+                ));
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('تم إرسال تقييمك بنجاح! ⭐'), backgroundColor: Color(0xFFEA580C)),
+                );
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEA580C)),
+              child: const Text('إرسال', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -476,7 +696,7 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
                     color: const Color(0xFF0ea5e9),
                     borderRadius: BorderRadius.circular(2))),
             const SizedBox(width: 8),
-            const Text('حائط الذكريات ✨',
+            const Text('حائط الذكريات',
                 style: TextStyle(
                     color: Color(0xFF1f2937),
                     fontSize: 14,
@@ -590,93 +810,6 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
     );
   }
 
-  Widget _buildVirtualVisitSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Container(
-                width: 4,
-                height: 16,
-                decoration: BoxDecoration(
-                    color: const Color(0xFFa855f7),
-                    borderRadius: BorderRadius.circular(2))),
-            const SizedBox(width: 8),
-            const Text('الزيارة الافتراضية (AR) 🕶️',
-                style: TextStyle(
-                    color: Color(0xFF1f2937),
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold)),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Container(
-          height: 180,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            image: const DecorationImage(
-              image: NetworkImage(
-                  'https://images.unsplash.com/photo-1513161455079-7dc1de15ef3e?q=80&w=1000'),
-              fit: BoxFit.cover,
-            ),
-          ),
-          child: Stack(
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
-                  gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.black.withValues(alpha: 0.1),
-                        Colors.black.withValues(alpha: 0.6)
-                      ]),
-                ),
-              ),
-              const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.view_in_ar_rounded,
-                        color: Colors.white, size: 48),
-                    SizedBox(height: 8),
-                    Text('ابدأ جولة ٣٦٠ درجة في الغرفة',
-                        style: TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.bold)),
-                  ],
-                ),
-              ),
-              Positioned(
-                bottom: 15,
-                right: 15,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                      color: Colors.white24,
-                      borderRadius: BorderRadius.circular(10)),
-                  child: const Row(
-                    children: [
-                      Text('مباشر الآن',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold)),
-                      SizedBox(width: 5),
-                      Icon(Icons.circle, color: Colors.red, size: 8),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget _buildGamificationCard(AppRiverpod provider, BuildContext context) {
     return Container(
@@ -785,14 +918,8 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
                 Expanded(
                   child: GestureDetector(
                     onTap: () {
-                      provider.sendEncouragementMessage('voice');
                       Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content:
-                                Text('تم إرسال رسالتك الصوتية بنجاح 🎤✨'),
-                            backgroundColor: Color(0xFF0EA5E9)),
-                      );
+                      _showVoiceRecordDialog(context, provider);
                     },
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 20),
@@ -819,14 +946,8 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
                 Expanded(
                   child: GestureDetector(
                     onTap: () {
-                      provider.sendEncouragementMessage('gift');
                       Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content:
-                                Text('تم إرسال الهدية الافتراضية بنجاح 🎁✨'),
-                            backgroundColor: Color(0xFFEAB308)),
-                      );
+                      _showTextMessageDialog(context, provider);
                     },
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 20),
@@ -837,10 +958,10 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
                       ),
                       child: const Column(
                         children: [
-                          Icon(Icons.local_florist_rounded,
+                          Icon(Icons.chat_bubble_outline_rounded,
                               color: Color(0xFFEAB308), size: 36),
                           SizedBox(height: 8),
-                          Text('باقة ورد افتراضية',
+                          Text('رسالة نصية',
                               style: TextStyle(
                                   color: Color(0xFFA16207),
                                   fontWeight: FontWeight.bold)),
@@ -854,6 +975,108 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
             const SizedBox(height: 32),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showVoiceRecordDialog(BuildContext context, AppRiverpod provider) {
+    bool isRecording = false;
+    int seconds = 0;
+    Timer? timer;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('تسجيل رسالة صوتية', textAlign: TextAlign.center),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isRecording ? Icons.mic : Icons.mic_none,
+                size: 64,
+                color: isRecording ? Colors.red : Colors.blue,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                isRecording ? 'جارٍ التسجيل... $secondsث' : 'اضغط للبدء بالتسجيل',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                timer?.cancel();
+                Navigator.pop(context);
+              },
+              child: const Text('إلغاء'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (!isRecording) {
+                  setState(() {
+                    isRecording = true;
+                  });
+                  timer = Timer.periodic(const Duration(seconds: 1), (t) {
+                    setState(() {
+                      seconds++;
+                    });
+                  });
+                } else {
+                  timer?.cancel();
+                  Navigator.pop(context);
+                  provider.sendEncouragementMessage('voice');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('تم إرسال رسالتك الصوتية بنجاح 🎤✨'),
+                        backgroundColor: Color(0xFF0EA5E9)),
+                  );
+                }
+              },
+              child: Text(isRecording ? 'إيقاف وإرسال' : 'بدء التسجيل'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showTextMessageDialog(BuildContext context, AppRiverpod provider) {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('إرسال رسالة تشجيعية', textAlign: TextAlign.center),
+        content: TextField(
+          controller: controller,
+          maxLines: 3,
+          decoration: const InputDecoration(
+            hintText: 'اكتب رسالتك هنا...',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFea580c)),
+            onPressed: () {
+              if (controller.text.isNotEmpty) {
+                provider.sendEncouragementMessage('text', text: controller.text);
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content: Text('تم إرسال رسالتك بنجاح ✉️✨'),
+                      backgroundColor: Color(0xFFEAB308)),
+                );
+              }
+            },
+            child: const Text('إرسال', style: TextStyle(color: Colors.white)),
+          ),
+        ],
       ),
     );
   }
@@ -890,60 +1113,120 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
           itemCount: provider.familyHealthMetrics.length,
           itemBuilder: (context, i) {
             final m = provider.familyHealthMetrics[i];
-            return Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFFf1f5f9)),
-                boxShadow: [
-                  BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(m.label,
-                            textAlign: TextAlign.right,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                color: Color(0xFF000000),
-                                fontSize: 13,
-                                fontWeight: FontWeight.w900)),
-                      ),
-                      const SizedBox(width: 4),
-                      _buildTrendIcon(m.trend),
-                    ],
-                  ),
-                  const Spacer(),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Expanded(
-                        child: Text('${(m.value * 100).toInt()}%',
-                            textAlign: TextAlign.right,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                color: Color(0xFF000000),
-                                fontSize: 22,
-                                fontWeight: FontWeight.w900)),
-                      ),
-                      const SizedBox(width: 4),
-                      _buildMetricBadge(m.status),
-                    ],
-                  ),
-                ],
+            return GestureDetector(
+              onTap: () => _showMetricDetailsSheet(context, m),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFFf1f5f9)),
+                  boxShadow: [
+                    BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.02),
+                        blurRadius: 10)
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(m.label,
+                              textAlign: TextAlign.right,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  color: Color(0xFF000000),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w900)),
+                        ),
+                        const SizedBox(width: 4),
+                        _buildTrendIcon(m.trend),
+                      ],
+                    ),
+                    const Spacer(),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Expanded(
+                          child: Text('${(m.value * 100).toInt()}%',
+                              textAlign: TextAlign.right,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  color: Color(0xFF000000),
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w900)),
+                        ),
+                        const SizedBox(width: 4),
+                        _buildMetricBadge(m.status),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             );
           },
         ),
       ],
+    );
+  }
+
+  void _showMetricDetailsSheet(BuildContext context, dynamic m) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text('تفاصيل ${m.label}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            _buildHistoryItem('اليوم', '${(((m.history as List).isNotEmpty ? m.history[0] : m.value) * 100).toInt()}%', m.status),
+            _buildHistoryItem('أمس', '${(((m.history as List).length > 1 ? m.history[1] : m.value) * 100).toInt()}%', m.status),
+            _buildHistoryItem('قبل يومين', '${(((m.history as List).length > 2 ? m.history[2] : m.value) * 100).toInt()}%', m.status),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHistoryItem(String day, String value, String status) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(day, style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+          Row(
+            children: [
+              Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(width: 8),
+              _buildMetricBadge(status),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -979,7 +1262,7 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
   }
 
   Widget _buildTrendIcon(String trend) {
-    IconData icon = Icons.trending_flat_rounded;
+    dynamic icon = Icons.trending_flat_rounded;
     Color color = const Color(0xFF64748b);
 
     if (trend == 'up') {
@@ -1028,20 +1311,23 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
           ),
           const SizedBox(width: 12),
           GestureDetector(
-            onTap: () {
-              final medName = ref.read(appRiverpod).nextMedication?.name ?? 'الدواء';
-              ref.read(appRiverpod).triggerNotification(
-                    title: 'تذكير بموعد الدواء 💊',
-                    body: 'عائلتك تذكرك بموعد أخذ $medName. نتمنى لك دوام الصحة والعافية!',
-                    type: 'medical',
-                    targetRole: 'مسن',
-                  );
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('تم إرسال تذكير الدواء بنجاح 💊'),
-                  backgroundColor: Color(0xFF3b82f6),
-                ),
-              );
+            onTap: () async {
+              final medName =
+                  ref.read(appRiverpod).nextMedication?.name ?? 'الدواء';
+              ref.read(appRiverpod).sendMedicationReminder(medName);
+              
+              setState(() {
+                _showMedicationDoneAnimation = true;
+              });
+              
+              await Future.delayed(const Duration(seconds: 2));
+              
+              if (mounted) {
+                setState(() {
+                  _showMedicationDoneAnimation = false;
+                });
+              }
+              
             },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
@@ -1103,7 +1389,7 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
           const SizedBox(height: 16),
           Row(
             children: [
-              _buildVisitInfo(Icons.calendar_today_rounded, visit.date),
+              _buildVisitInfo('assets/icons/calendar.png', visit.date),
               const SizedBox(width: 20),
               _buildVisitInfo(Icons.access_time_filled, visit.time),
               const Spacer(),
@@ -1141,7 +1427,7 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
     );
   }
 
-  Widget _buildVisitInfo(IconData icon, String text) {
+  Widget _buildVisitInfo(dynamic icon, String text) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -1151,7 +1437,9 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
                 fontSize: 12,
                 fontWeight: FontWeight.w900)),
         const SizedBox(width: 4),
-        Icon(icon, size: 14, color: const Color(0xFF334155)),
+        icon is IconData
+            ? Icon(icon as IconData, size: 14, color: const Color(0xFF334155))
+            : Image.asset(icon as String, width: 14, height: 14, color: const Color(0xFF334155)),
       ],
     );
   }
@@ -1166,11 +1454,12 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
         const SizedBox(height: 32),
         _buildSectionHeader('آخر التقارير الطبية'),
         const SizedBox(height: 16),
-        _buildReportCard(
-            'تقييم ربع سنوي — أخصائي اجتماعي',
-            '١٨ أبريل ٢٠٢٤',
-            'تحسن ملحوظ في مستوى المشاركة الاجتماعية والمزاج العام رغبة في الأنشطة الجماعية.',
-            const Color(0xFF6366f1)),
+        ...provider.careReports.map((r) => _buildReportCard(
+            r.title,
+            r.date,
+            r.summary,
+            const Color(0xFF6366f1),
+            r)),
       ],
     );
   }
@@ -1231,7 +1520,7 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
   }
 
   Widget _buildReportCard(
-      String title, String date, String excerpt, Color col) {
+      String title, String date, String excerpt, Color col, CareReport report) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1279,12 +1568,11 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
                 context,
                 MaterialPageRoute(
                     builder: (_) =>
-                        CareReportDetailScreen(title: title, date: date))),
+                        CareReportDetailScreen(report: report))),
             child: const Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                Icon(Icons.arrow_back_ios,
-                    size: 12, color: Color(0xFFea580c)),
+                Icon(Icons.arrow_back_ios, size: 12, color: Color(0xFFea580c)),
                 SizedBox(width: 4),
                 Text('عرض التقرير الكامل',
                     style: TextStyle(
@@ -1321,8 +1609,7 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
                                 const TextStyle(fontWeight: FontWeight.bold))),
                     const Tab(
                         child: Text('السجل السابق',
-                            style:
-                                TextStyle(fontWeight: FontWeight.bold))),
+                            style: TextStyle(fontWeight: FontWeight.bold))),
                   ],
                 ),
                 Expanded(
@@ -1370,9 +1657,8 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
           ),
           child: const Row(
             children: [
-              Icon(Icons.add_circle_outline_rounded,
-                  color: Colors.white, size: 40),
-              SizedBox(width: 16),
+              Icon(Icons.chevron_left_rounded, color: Colors.white, size: 28),
+              Spacer(),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -1385,9 +1671,9 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
                       style: TextStyle(color: Colors.white70, fontSize: 12)),
                 ],
               ),
-              Spacer(),
-              Icon(Icons.chevron_left_rounded,
-                  color: Colors.white, size: 28),
+              SizedBox(width: 16),
+              Icon(Icons.add_circle_outline_rounded,
+                  color: Colors.white, size: 40),
             ],
           ),
         ),
@@ -1397,14 +1683,14 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
 
   Widget _buildVisitsList(List<FamilyVisit> visits) {
     if (visits.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.calendar_today_outlined,
-                size: 64, color: Color(0xFFcbd5e1)),
-            SizedBox(height: 16),
-            Text('لا توجد زيارات حالياً',
+            Image.asset('assets/icons/calendar.png',
+                width: 64, height: 64),
+            const SizedBox(height: 16),
+            const Text('لا توجد زيارات حالياً',
                 style: TextStyle(color: Color(0xFF94a3b8), fontSize: 16)),
           ],
         ),
@@ -1462,7 +1748,7 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        _buildVisitInfo(Icons.calendar_month_rounded, v.date),
+                        _buildVisitInfo('assets/icons/calendar.png', v.date),
                         const SizedBox(width: 12),
                         _buildVisitInfo(Icons.access_time_rounded, v.time),
                       ],
@@ -1565,10 +1851,6 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
         _buildSectionHeaderWithAction('الفواتير المتاحة', 'رؤية الكل'),
         const SizedBox(height: 16),
         ...provider.familyBills.map((b) => _buildBillCard(b)),
-        const SizedBox(height: 32),
-        _buildSectionHeader('طرق الدفع'),
-        const SizedBox(height: 16),
-        _buildPaymentMethodCard(),
         const SizedBox(height: 40),
       ],
     );
@@ -1586,7 +1868,6 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
               blurRadius: 20,
               offset: const Offset(0, 10))
         ],
-
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1698,9 +1979,16 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
             const SizedBox(height: 12),
             const Align(
               alignment: Alignment.centerRight,
-              child: Text('سيتم خصم المبلغ من بطاقتك المسجلة المنتهية بـ 4242',
+              child: Text('يرجى التحويل إلى أحد الحسابات التالية لإتمام عملية الدفع أو التبرع:',
                   textAlign: TextAlign.right,
-                  style: TextStyle(color: Color(0xFF64748b), fontSize: 16)),
+                  style: TextStyle(color: Color(0xFF64748b), fontSize: 16, fontWeight: FontWeight.bold)),
+            ),
+            const SizedBox(height: 8),
+            const Align(
+              alignment: Alignment.centerRight,
+              child: Text('رقم الحساب البنكي (بنك مصر): 1234 5678 9012 3456\nأو عبر محفظة إلكترونية (فودافون كاش): 01012345678',
+                  textAlign: TextAlign.right,
+                  style: TextStyle(color: Color(0xFF1e293b), fontSize: 15, height: 1.5)),
             ),
             const SizedBox(height: 32),
             Container(
@@ -1717,12 +2005,52 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF1e293b))),
-                  const Text('إجمالي المبلغ',
+                  const Text('إجمالي المبلغ المراد دفعه',
                       style: TextStyle(
                           color: Color(0xFF64748b),
                           fontSize: 14,
                           fontWeight: FontWeight.bold)),
                 ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Align(
+              alignment: Alignment.centerRight,
+              child: Text('إرفاق صورة التحويل:',
+                  textAlign: TextAlign.right,
+                  style: TextStyle(color: Color(0xFF64748b), fontSize: 14, fontWeight: FontWeight.bold)),
+            ),
+            const SizedBox(height: 8),
+            GestureDetector(
+              onTap: () async {
+                try {
+                  final result = await file_picker_lib.FilePicker.platform.pickFiles(type: file_picker_lib.FileType.image);
+                  if (result != null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('تم إرفاق الصورة بنجاح!')),
+                    );
+                  }
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('حدث خطأ أثناء اختيار الملف')),
+                  );
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFf8fafc),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFcbd5e1), style: BorderStyle.solid),
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.upload_file_rounded, color: Color(0xFFea580c)),
+                    SizedBox(width: 8),
+                    Text('اختر صورة الإيصال أو الإسكرين', style: TextStyle(color: Color(0xFFea580c), fontWeight: FontWeight.bold)),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 32),
@@ -1736,9 +2064,14 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
                         borderRadius: BorderRadius.circular(20))),
                 onPressed: () async {
                   Navigator.pop(context); // Close sheet
-                  _processPayment(provider);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('تم إرسال إثبات الدفع للإدارة للمراجعة!'),
+                      backgroundColor: Color(0xFF16a34a),
+                    ),
+                  );
                 },
-                child: const Text('تأكيد وإتمام الدفع',
+                child: const Text('إرسال إثبات الدفع',
                     style: TextStyle(
                         color: Colors.white,
                         fontSize: 18,
@@ -1981,7 +2314,7 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
         children: [
           _buildNavItem(Icons.dashboard_outlined, 'الرئيسية', 0),
           _buildNavItem(Icons.favorite_border_rounded, 'الرعاية', 1),
-          _buildNavItem(Icons.calendar_month_outlined, 'الزيارات', 2),
+          _buildNavItem('assets/icons/calendar.png', 'الزيارات', 2),
           _buildNavItem(Icons.account_balance_wallet_outlined, 'الفواتير', 3),
           _buildNavItem(Icons.qr_code_scanner_rounded, 'الهوية', 4),
         ],
@@ -1989,7 +2322,7 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
     );
   }
 
-  Widget _buildNavItem(IconData icon, String label, int index) {
+  Widget _buildNavItem(dynamic icon, String label, int index) {
     final isAct = _selectedIndex == index;
     return GestureDetector(
       onTap: () {
@@ -2003,9 +2336,14 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon,
-              color: isAct ? const Color(0xFFea580c) : const Color(0xFF475569),
-              size: 26),
+          icon is IconData
+              ? Icon(icon as IconData,
+                  color: isAct ? const Color(0xFFea580c) : const Color(0xFF475569),
+                  size: 26)
+              : Image.asset(icon as String,
+                  color: isAct ? const Color(0xFFea580c) : const Color(0xFF475569),
+                  width: 26,
+                  height: 26),
           const SizedBox(height: 4),
           Text(label,
               style: TextStyle(
@@ -2016,5 +2354,64 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen>
         ],
       ),
     );
+  }
+
+  Widget _buildMedicationDoneOverlay() {
+    return Container(
+      color: Colors.black.withValues(alpha: 0.5),
+      width: double.infinity,
+      height: double.infinity,
+      child: Center(
+        child: TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.0, end: 1.0),
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.elasticOut,
+          builder: (context, value, child) {
+            return Transform.scale(
+              scale: value,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 200,
+                    height: 200,
+                    child: Lottie.asset('assets/animations/Meddone.json'),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'تم التذكير!',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  String _getFormattedCurrentDate() {
+    final now = DateTime.now();
+    final months = [
+      'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+      'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+    ];
+    String day = _toArabicNumbers(now.day.toString());
+    String year = _toArabicNumbers(now.year.toString());
+    return '$day ${months[now.month - 1]} $year';
+  }
+
+  String _toArabicNumbers(String input) {
+    const english = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    const arabic = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    String result = input;
+    for (int i = 0; i < english.length; i++) {
+      result = result.replaceAll(english[i], arabic[i]);
+    }
+    return result;
   }
 }

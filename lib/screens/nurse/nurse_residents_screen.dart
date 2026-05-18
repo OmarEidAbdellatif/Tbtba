@@ -4,6 +4,7 @@ import '../../providers/app_riverpod.dart';
 import '../../models/app_models.dart';
 import 'nurse_resident_detail_screen.dart';
 import 'widgets/healing_particles.dart';
+import 'dart:math';
 
 class NurseResidentsScreen extends ConsumerStatefulWidget {
   const NurseResidentsScreen({super.key});
@@ -23,6 +24,7 @@ class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
 
   String _searchQuery = '';
   String _selectedFilter = 'الكل (٢٤)';
+  bool _loadMore = false;
 
   @override
   void initState() {
@@ -76,22 +78,24 @@ class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
     return Scaffold(
       backgroundColor:
           isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Column(
-                children: [
-                  _buildHero(),
-                  _buildSearchAndFilter(isDark),
-                  _buildBody(isDark),
-                  const SizedBox(height: 100), // Space for parent's bottom nav
-                ],
+      body: AnimatedBackground(
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  children: [
+                    _buildHero(),
+                    _buildSearchAndFilter(isDark),
+                    _buildBody(isDark),
+                    const SizedBox(height: 100), // Space for parent's bottom nav
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -323,6 +327,11 @@ class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
             _buildStableSection(
               getLatestNote('الحاج أحمد كمال'),
               getLatestNote('الحاجة سمية إبراهيم'),
+            ),
+          if (_loadMore && (_selectedFilter == 'الكل (٢٤)' || _selectedFilter == 'مستقرة ✅'))
+            _buildStableSection(
+              'متابعة الضغط: مستقر منذ الصباح',
+              'تناول الدواء: تم أخذ جرعة الضغط',
             ),
           const SizedBox(height: 12),
           _buildMoreIndicator(),
@@ -626,6 +635,12 @@ class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: cardBorder, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+              color: cardBorder.withValues(alpha: 0.15),
+              blurRadius: 10,
+              offset: const Offset(0, 4))
+        ],
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -675,72 +690,46 @@ class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
                     ),
                   ],
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start, // محاذاة لليمين في الـ RTL
                     children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: statusBg,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          statusLabel,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: statusColor,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
                       Text(
                         name,
                         style: const TextStyle(
-                            fontSize: 13,
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF0F172A)),
                       ),
                       const SizedBox(height: 2),
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: [
-                            Text(age,
-                                style: const TextStyle(
-                                    fontSize: 10, color: Color(0xFF64748B))),
-                            const Text(' · ',
-                                style: TextStyle(
-                                    fontSize: 10, color: Color(0xFF64748B))),
-                            Text(room,
-                                style: const TextStyle(
-                                    fontSize: 10, color: Color(0xFF64748B))),
-                            const SizedBox(width: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 7, vertical: 1),
-                              decoration: BoxDecoration(
-                                  color: statusBg,
-                                  borderRadius: BorderRadius.circular(7)),
-                              child: Text(diagnoses,
-                                  style: TextStyle(
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.bold,
-                                      color: statusColor)),
-                            ),
-                          ],
-                        ),
+                      Text(
+                        '$room · $age',
+                        style: const TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFF64748B),
+                            fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 9, vertical: 3),
-                      decoration: BoxDecoration(
-                          color: statusBg,
-                          borderRadius: BorderRadius.circular(9)),
-                      child: Text(statusLabel,
-                          style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: statusColor)),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text('منذ ٢٣ د',
-                        style:
-                            TextStyle(fontSize: 9, color: Color(0xFF94A3B8))),
-                  ],
-                ),
+                const SizedBox(width: 20), // لتبعد عن أقصى الشمال
               ],
             ),
           ),
@@ -750,19 +739,19 @@ class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
               padding: const EdgeInsets.all(13),
               child: Row(
                 children: [
+                  const Text(
+                    'أدوية اليوم 💊',
+                    style: TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(width: 8),
+                  ...meds,
+                  const Spacer(),
                   Text(
                     medPercentage!,
                     style: const TextStyle(
-                        fontSize: 11,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF0369A1)),
-                  ),
-                  const Spacer(),
-                  ...meds,
-                  const SizedBox(width: 8),
-                  const Text(
-                    'أدوية اليوم 💊',
-                    style: TextStyle(fontSize: 10, color: Color(0xFF64748B)),
                   ),
                 ],
               ),
@@ -783,7 +772,7 @@ class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
                       note,
                       textAlign: TextAlign.right,
                       style: const TextStyle(
-                          fontSize: 10, color: Color(0xFF475569)),
+                          fontSize: 12, color: Color(0xFF475569), fontWeight: FontWeight.bold),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -1018,25 +1007,191 @@ class _NurseResidentsScreenState extends ConsumerState<NurseResidentsScreen>
     );
   }
 
+  void _loadMoreResidents() {
+    // تحميل الكروت فوراً بدون شاشة انتظار
+    setState(() {
+      _loadMore = true;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('تم تحميل جميع المقيمين بنجاح ✅'),
+      backgroundColor: Color(0xFF10B981),
+      behavior: SnackBarBehavior.floating,
+    ));
+  }
+
   Widget _buildMoreIndicator() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-            color: const Color(0xFFBAE6FD),
-            width: 1.5,
-            style: BorderStyle.solid),
+    final provider = ref.watch(appRiverpod);
+    final total = provider.totalResidentsCount;
+    final shown = 4; // عدد الكروت المعروضة حالياً في الواجهة
+    final remaining = total - shown;
+
+    if (remaining <= 0 || _loadMore) {
+      return const SizedBox.shrink(); // إخفاء العنصر إذا لم يكن هناك مقيمون إضافيون أو تم تحميلهم
+    }
+
+    return GestureDetector(
+      onTap: _loadMoreResidents,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+              color: const Color(0xFFBAE6FD),
+              width: 1.5,
+              style: BorderStyle.solid),
+        ),
+        child: Text(
+          '+ $remaining مقيم آخر — اضغط لتحميل المزيد',
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+              fontSize: 11,
+              color: Color(0xFF0369A1),
+              fontWeight: FontWeight.bold),
+        ),
       ),
-      child: const Text(
-        '+ ٢٠ مقيم آخر — اضغط لتحميل المزيد',
-        textAlign: TextAlign.center,
-        style: TextStyle(
-            fontSize: 11,
-            color: Color(0xFF0369A1),
-            fontWeight: FontWeight.bold),
+    );
+  }
+}
+
+class AnimatedBackground extends StatefulWidget {
+  final Widget child;
+  const AnimatedBackground({super.key, required this.child});
+
+  @override
+  State<AnimatedBackground> createState() => _AnimatedBackgroundState();
+}
+
+class _AnimatedBackgroundState extends State<AnimatedBackground> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 20),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            return CustomPaint(
+              painter: BackgroundPainter(_controller.value),
+              child: Container(),
+            );
+          },
+        ),
+        const SodaBubblesBackground(), // إضافة فقاعات المياه الغازية (+)
+        widget.child,
+      ],
+    );
+  }
+}
+
+class BackgroundPainter extends CustomPainter {
+  final double progress;
+  BackgroundPainter(this.progress);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint1 = Paint()
+      ..color = const Color(0xFFBAE6FD).withValues(alpha: 0.15)
+      ..style = PaintingStyle.fill;
+
+    // Draw some circles that move based on progress!
+    final center1 = Offset(size.width * 0.2, size.height * (0.2 + 0.1 * sin(progress * 2 * pi)));
+    canvas.drawCircle(center1, 150, paint1);
+
+    final paint2 = Paint()
+      ..color = const Color(0xFFD1FAE5).withValues(alpha: 0.15)
+      ..style = PaintingStyle.fill;
+    final center2 = Offset(size.width * 0.8, size.height * (0.8 - 0.1 * cos(progress * 2 * pi)));
+    canvas.drawCircle(center2, 200, paint2);
+
+    final paint3 = Paint()
+      ..color = const Color(0xFFFEF08A).withValues(alpha: 0.1)
+      ..style = PaintingStyle.fill;
+    final center3 = Offset(size.width * 0.5, size.height * (0.5 + 0.05 * sin(progress * 4 * pi)));
+    canvas.drawCircle(center3, 100, paint3);
+  }
+
+  @override
+  bool shouldRepaint(covariant BackgroundPainter oldDelegate) {
+    return oldDelegate.progress != progress;
+  }
+}
+
+class SodaBubblesBackground extends StatefulWidget {
+  const SodaBubblesBackground({super.key});
+
+  @override
+  State<SodaBubblesBackground> createState() => _SodaBubblesBackgroundState();
+}
+
+class _SodaBubblesBackgroundState extends State<SodaBubblesBackground> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this, 
+      duration: const Duration(seconds: 15)
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          final size = MediaQuery.of(context).size;
+          return Stack(
+            children: List.generate(30, (index) { // كثرها (30 particles)
+              final speed = 0.5 + (index * 0.15); // سرعات متفاوتة
+              final progress = (_controller.value * speed + (index * 0.05)) % 1.0;
+              
+              // توزيع أفقي عشوائي بناءً على الـ index
+              final left = (index * 17.0) % size.width;
+              
+              return Positioned(
+                left: left,
+                bottom: progress * size.height, // تتصاعد من الأسفل للأعلى بكامل طول الشاشة
+                child: Opacity(
+                  opacity: (1.0 - progress) * 0.7, // جعلها باينة أكثر
+                  child: RotationTransition(
+                    turns: AlwaysStoppedAnimation(progress * 2), // دوران مستمر
+                    child: Icon(
+                      Icons.add_rounded,
+                      size: 12.0 + (index * 6) % 30, // تكبير الحجم قليلاً
+                      color: const Color(0xFF0EA5E9).withValues(alpha: 0.6), // توضيح اللون أكثر
+                    ),
+                  ),
+                ),
+              );
+            }),
+          );
+        },
       ),
     );
   }

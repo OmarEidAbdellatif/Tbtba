@@ -60,6 +60,11 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
     _shimmerController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 2400))
       ..repeat();
+
+    // تحميل صور الجهاز عند الدخول
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(appRiverpod).fetchGalleryImages();
+    });
   }
 
   @override
@@ -161,8 +166,9 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
                           const SizedBox(height: 4),
                           Text('من الأسرة بكل الحب 💜',
                               style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.85),
-                                  fontSize: 18)),
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ),
@@ -173,9 +179,9 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
                         children: [
                           _buildHeroChip('$photoCount', 'صورة', 0),
                           const SizedBox(width: 8),
-                          _buildHeroChip('🎬 $videoCount', 'فيديو', 1),
+                          _buildHeroChip(' $videoCount', 'فيديو', 1),
                           const SizedBox(width: 8),
-                          _buildHeroChip('🎙️ $voiceCount', 'رسالة', 2),
+                          _buildHeroChip(' $voiceCount', 'رسالة', 2),
                         ],
                       ),
                     ),
@@ -212,6 +218,27 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
   }
 
   Widget _buildHeroChip(String value, String label, int index) {
+    Color chipColor;
+    Color borderColor;
+    
+    switch (index) {
+      case 0: // صورة
+        chipColor = const Color(0xFFF472B6).withValues(alpha: 0.15); // وردي خفيف
+        borderColor = const Color(0xFFF472B6).withValues(alpha: 0.3);
+        break;
+      case 1: // فيديو
+        chipColor = const Color(0xFF8B5CF6).withValues(alpha: 0.15); // بنفسجي فاتح
+        borderColor = const Color(0xFF8B5CF6).withValues(alpha: 0.3);
+        break;
+      case 2: // رسالة
+        chipColor = const Color(0xFF3B82F6).withValues(alpha: 0.15); // أزرق
+        borderColor = const Color(0xFF3B82F6).withValues(alpha: 0.3);
+        break;
+      default:
+        chipColor = Colors.white.withValues(alpha: 0.14);
+        borderColor = Colors.white.withValues(alpha: 0.12);
+    }
+
     return Expanded(
       child: TweenAnimationBuilder(
         tween: Tween<double>(begin: 0.6, end: 1),
@@ -222,9 +249,22 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.13),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.1))),
+            color: chipColor,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: borderColor, width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+              BoxShadow(
+                color: borderColor.withValues(alpha: 0.2),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
           child: Column(children: [
             FittedBox(
               fit: BoxFit.scaleDown,
@@ -239,7 +279,9 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
               fit: BoxFit.scaleDown,
               child: Text(label,
                   style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.9), fontSize: 16)),
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold)),
             ),
           ]),
         ),
@@ -257,7 +299,12 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
         itemBuilder: (context, index) {
           final isActive = selectedCategory == index;
           return GestureDetector(
-            onTap: () => setState(() => selectedCategory = index),
+            onTap: () {
+              setState(() => selectedCategory = index);
+              if (categories[index] == '🖼️ الاستوديو') {
+                ref.read(appRiverpod).fetchGalleryImages();
+              }
+            },
             child: Container(
               margin: const EdgeInsets.only(left: 10),
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
@@ -312,13 +359,14 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
                   width: 2),
               boxShadow: [
                 BoxShadow(
-                    color:
-                        const Color(0xFF6C63FF).withValues(alpha: hc ? 0.25 : 0.15),
+                    color: const Color(0xFF6C63FF)
+                        .withValues(alpha: hc ? 0.25 : 0.15),
                     blurRadius: 24,
                     offset: const Offset(0, 6)),
                 BoxShadow(
-                    color: const Color(0xFFa78bfa).withValues(alpha: 
-                        hc ? 0.2 : (0.35 + (_glowController.value * 0.45))),
+                    color: const Color(0xFFa78bfa).withValues(
+                        alpha:
+                            hc ? 0.2 : (0.35 + (_glowController.value * 0.45))),
                     blurRadius: 12 + (_glowController.value * 12),
                     spreadRadius: _glowController.value * 6),
               ],
@@ -345,8 +393,8 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 3),
                             decoration: BoxDecoration(
-                                color:
-                                    const Color(0xFF6C63FF).withValues(alpha: 0.85),
+                                color: const Color(0xFF6C63FF)
+                                    .withValues(alpha: 0.85),
                                 borderRadius: BorderRadius.circular(10)),
                             child: const Text('🌟 ذكرى اليوم',
                                 style: TextStyle(
@@ -495,7 +543,8 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
                                       : 'استمع لرسائل أحبائك',
                                   textAlign: TextAlign.right,
                                   style: TextStyle(
-                                      color: Colors.white.withValues(alpha: 0.85),
+                                      color:
+                                          Colors.white.withValues(alpha: 0.85),
                                       fontSize: 14)),
                             ],
                           ),
@@ -693,8 +742,8 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
               ),
             Container(
                 decoration: BoxDecoration(
-                    color: Colors.black
-                        .withValues(alpha: url != null || asset != null ? 0.2 : 0.08),
+                    color: Colors.black.withValues(
+                        alpha: url != null || asset != null ? 0.2 : 0.08),
                     borderRadius: BorderRadius.circular(14))),
             Center(
               child: type == 'video'
@@ -778,6 +827,12 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen>
           border: Border.all(
               color: hc ? const Color(0xFFd97706) : const Color(0xFFfde68a),
               width: 1.5),
+          boxShadow: [
+            BoxShadow(
+                color: const Color(0xFFd97706).withValues(alpha: hc ? 0.2 : 0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4))
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

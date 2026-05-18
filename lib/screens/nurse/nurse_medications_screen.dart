@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/app_riverpod.dart';
 import '../../models/app_models.dart';
 import 'nurse_resident_detail_screen.dart';
+import 'nurse_residents_screen.dart';
+import 'package:lottie/lottie.dart';
 
 // شاشة جدول الأدوية للممرض - المحرك الأساسي لمتابعة الحالة الدوائية للمقيمين
 class NurseMedicationsScreen extends ConsumerStatefulWidget {
@@ -19,6 +21,7 @@ class _NurseMedicationsScreenState extends ConsumerState<NurseMedicationsScreen>
       _blinkController; // متحكم حركات التنبيه (للحالات الفائتة)
   late AnimationController _pulseController; // متحكم حركات النبض البصرية
   late AnimationController _shimmerController; // متحكم حركات التحميل للعناصر
+  String _selectedPeriod = 'الظهر'; // الفترة الزمنية المحددة
 
   @override
   void initState() {
@@ -44,13 +47,69 @@ class _NurseMedicationsScreenState extends ConsumerState<NurseMedicationsScreen>
     super.dispose();
   }
 
+  void _showDoneAnimation(String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        Future.delayed(const Duration(seconds: 2), () {
+          if (Navigator.canPop(context)) {
+            Navigator.pop(context);
+          }
+        });
+        return Center(
+          child: Container(
+            width: 220,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: 100,
+                  height: 100,
+                  child: Lottie.asset(
+                    'assets/animations/Done.json',
+                    repeat: false,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0F172A),
+                    fontFamily: 'Cairo',
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       child: Column(
         children: [
-          _buildPeriodTabs(), // التبويبات الزمنية (الصباح، الظهر، إلخ)
           _buildSearchFilter(), // شريط البحث والفرز المتقدم
+          _buildPeriodTabs(), // التبويبات الزمنية (الصباح، الظهر، إلخ)
           const SizedBox(height: 10),
           _buildOverallProgress(), // عرض نسبة التقدم العامة للوردية
           const SizedBox(height: 10),
@@ -70,14 +129,14 @@ class _NurseMedicationsScreenState extends ConsumerState<NurseMedicationsScreen>
           border: Border(bottom: BorderSide(color: Color(0xFFE0F2FE)))),
       child: Row(
         children: [
-          _periodTab('الصباح', '٨/٨ ✓', const Color(0xFFD1FAE5),
-              const Color(0xFF065F46), false),
+          _periodTab('الصباح', '٨/٨', const Color(0xFFD1FAE5),
+              const Color(0xFF065F46), _selectedPeriod == 'الصباح'),
           _periodTab('الظهر', '٢ فائت', const Color(0xFFFEE2E2),
-              const Color(0xFF7F1D1D), true),
+              const Color(0xFF7F1D1D), _selectedPeriod == 'الظهر'),
           _periodTab('المساء', '٧ قادم', const Color(0xFFFEF3C7),
-              const Color(0xFF92400E), false),
+              const Color(0xFF92400E), _selectedPeriod == 'المساء'),
           _periodTab('الليل', '١٢ قادم', const Color(0xFFFEF3C7),
-              const Color(0xFF92400E), false),
+              const Color(0xFF92400E), _selectedPeriod == 'الليل'),
         ],
       ),
     );
@@ -86,34 +145,43 @@ class _NurseMedicationsScreenState extends ConsumerState<NurseMedicationsScreen>
   Widget _periodTab(
       String label, String count, Color bg, Color textC, bool active) {
     return Expanded(
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-                color: active ? const Color(0xFF0EA5E9) : Colors.transparent,
-                width: 2.5),
-          ),
-        ),
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-        child: Column(
-          children: [
-            Text(label,
-                style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.bold,
-                    color: active
-                        ? const Color(0xFF0369A1)
-                        : const Color(0xFF64748B))),
-            const SizedBox(height: 2),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-              decoration: BoxDecoration(
-                  color: bg, borderRadius: BorderRadius.circular(8)),
-              child: Text(count,
-                  style: TextStyle(
-                      fontSize: 9, fontWeight: FontWeight.bold, color: textC)),
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            _selectedPeriod = label;
+          });
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                  color: active ? const Color(0xFF0EA5E9) : Colors.transparent,
+                  width: 2.5),
             ),
-          ],
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+          child: Column(
+            children: [
+              Text(label,
+                  style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: active
+                          ? const Color(0xFF0369A1)
+                          : const Color(0xFF475569))),
+              const SizedBox(height: 2),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                    color: bg, borderRadius: BorderRadius.circular(8)),
+                child: Text(count,
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: textC)),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -140,54 +208,13 @@ class _NurseMedicationsScreenState extends ConsumerState<NurseMedicationsScreen>
                       border: Border.all(color: const Color(0xFFBAE6FD)),
                       borderRadius: BorderRadius.circular(10)),
                   child: const Text('ابحث باسم المقيم أو الدواء...',
-                      style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
+                      style: TextStyle(fontSize: 13, color: Color(0xFF64748B))),
                 ),
               ),
             ],
           ),
-        ),
-        Container(
-          height: 48,
-          color: const Color(0xFFF8FAFC),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Row(
-              children: [
-                _filterChip('الكل (٢٤)', true),
-                _filterChip('فائت', false),
-                _filterChip('قادم', false),
-                _filterChip('مكتمل', false),
-                _filterChip('الغرفة', false),
-              ],
-            ),
-          ),
         )
       ],
-    );
-  }
-
-  Widget _filterChip(String text, bool act) {
-    return Container(
-      margin: const EdgeInsets.only(left: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 4),
-      decoration: BoxDecoration(
-        color: act ? null : Colors.white,
-        gradient: act
-            ? const LinearGradient(
-                colors: [Color(0xFF0369A1), Color(0xFF0EA5E9)])
-            : null,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-            color: act ? Colors.transparent : const Color(0xFFBAE6FD)),
-      ),
-      child: Center(
-        child: Text(text,
-            style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                color: act ? Colors.white : const Color(0xFF0369A1))),
-      ),
     );
   }
 
@@ -205,11 +232,18 @@ class _NurseMedicationsScreenState extends ConsumerState<NurseMedicationsScreen>
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(24),
           border: Border.all(color: const Color(0xFFE0F2FE), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -231,12 +265,12 @@ class _NurseMedicationsScreenState extends ConsumerState<NurseMedicationsScreen>
                     children: [
                       Text('${(percentage * 100).toInt()}%',
                           style: const TextStyle(
-                              fontSize: 11,
+                              fontSize: 14,
                               fontWeight: FontWeight.bold,
                               color: Color(0xFF0369A1))),
                       const Text('اليوم',
-                          style:
-                              TextStyle(fontSize: 7, color: Color(0xFF94A3B8))),
+                          style: TextStyle(
+                              fontSize: 10, color: Color(0xFF475569))),
                     ],
                   )
                 ],
@@ -265,15 +299,24 @@ class _NurseMedicationsScreenState extends ConsumerState<NurseMedicationsScreen>
 
   Widget _statRow(String lbl, String val, Color valColor) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: valColor,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 8),
           Text(lbl,
-              style: const TextStyle(fontSize: 10, color: Color(0xFF64748B))),
+              style: const TextStyle(fontSize: 13, color: Color(0xFF475569))),
+          const Spacer(),
           Text(val,
               style: TextStyle(
-                  fontSize: 10, fontWeight: FontWeight.bold, color: valColor)),
+                  fontSize: 13, fontWeight: FontWeight.bold, color: valColor)),
         ],
       ),
     );
@@ -283,6 +326,9 @@ class _NurseMedicationsScreenState extends ConsumerState<NurseMedicationsScreen>
     final provider = ref.watch(appRiverpod);
     final groupedMeds = <String, List<Medication>>{};
     for (var med in provider.medications) {
+      // فلترة الأدوية حسب الفترة الزمنية المحددة (الصباح، الظهر، إلخ)
+      if (!med.timeOfDay.contains(_selectedPeriod)) continue;
+
       final name = med.residentName ?? 'غير محدد';
       if (!groupedMeds.containsKey(name)) groupedMeds[name] = [];
       groupedMeds[name]!.add(med);
@@ -300,21 +346,31 @@ class _NurseMedicationsScreenState extends ConsumerState<NurseMedicationsScreen>
             return _buildResidentCard(name, meds, isCritical);
           }),
           const SizedBox(height: 10),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFBAE6FD)),
-            ),
-            child: const Text(
-              '+ ٢١ مقيم آخر — اضغط لعرض الكل',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF0369A1)),
+          InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NurseResidentsScreen(),
+                ),
+              );
+            },
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFBAE6FD)),
+              ),
+              child: const Text(
+                '+ ٢١ مقيم آخر — اضغط لعرض الكل',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0369A1)),
+              ),
             ),
           )
         ],
@@ -332,11 +388,18 @@ class _NurseMedicationsScreenState extends ConsumerState<NurseMedicationsScreen>
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
             color:
                 isCritical ? const Color(0xFFFCA5A5) : const Color(0xFFE2E8F0),
             width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -358,8 +421,8 @@ class _NurseMedicationsScreenState extends ConsumerState<NurseMedicationsScreen>
                       ? const Color(0xFFFFF5F5)
                       : const Color(0xFFF8FAFC),
                   borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(16),
-                      topRight: Radius.circular(16))),
+                      topLeft: Radius.circular(24),
+                      topRight: Radius.circular(24))),
               child: Row(
                 children: [
                   CircleAvatar(
@@ -369,7 +432,7 @@ class _NurseMedicationsScreenState extends ConsumerState<NurseMedicationsScreen>
                           : const Color(0xFFE0F2FE),
                       child: Text(name.substring(0, 2),
                           style: TextStyle(
-                              fontSize: 13,
+                              fontSize: 15,
                               fontWeight: FontWeight.bold,
                               color: isCritical
                                   ? const Color(0xFF9F1239)
@@ -381,12 +444,12 @@ class _NurseMedicationsScreenState extends ConsumerState<NurseMedicationsScreen>
                       children: [
                         Text('$name — غرفة ${isCritical ? '١٠٣' : '١١٢'}',
                             style: const TextStyle(
-                                fontSize: 12,
+                                fontSize: 15,
                                 fontWeight: FontWeight.bold,
                                 color: Color(0xFF0F172A))),
                         Text('$total أدوية مسجلة اليوم',
                             style: const TextStyle(
-                                fontSize: 10, color: Color(0xFF64748B))),
+                                fontSize: 12, color: Color(0xFF475569))),
                       ],
                     ),
                   ),
@@ -402,21 +465,17 @@ class _NurseMedicationsScreenState extends ConsumerState<NurseMedicationsScreen>
             child: Column(
               children: [
                 _gridHeader(),
-                ...meds
-                    .map((m) => _drugRow(
-                        m.name,
-                        m.dosage,
-                        m.timeOfDay.contains('الصباح')
-                            ? _getStatusWidget(m)
-                            : _na(),
-                        m.timeOfDay.contains('الظهر')
-                            ? _getStatusWidget(m)
-                            : _na(),
-                        m.timeOfDay.contains('المساء')
-                            ? _getStatusWidget(m)
-                            : _na(),
-                        _na()))
-                    ,
+                ...meds.map((m) => _drugRow(
+                    m.name,
+                    m.dosage,
+                    m.timeOfDay.contains('الصباح')
+                        ? _getStatusWidget(m)
+                        : _na(),
+                    m.timeOfDay.contains('الظهر') ? _getStatusWidget(m) : _na(),
+                    m.timeOfDay.contains('المساء')
+                        ? _getStatusWidget(m)
+                        : _na(),
+                    _na())),
               ],
             ),
           ),
@@ -429,8 +488,8 @@ class _NurseMedicationsScreenState extends ConsumerState<NurseMedicationsScreen>
 
   Widget _getStatusWidget(Medication m) {
     if (m.isTaken) return _done();
-    if (m.isMissed || m.isSkipped) return _miss();
-    return _pend();
+    // عرض زر التأكيد للممرض دائماً طالما لم يتم أخذ الدواء بعد (التأكيد المزدوج)
+    return _pendingNurse(m);
   }
 
   Widget _circ(String txt, Color bg, Color textC, {bool blink = false}) {
@@ -441,7 +500,7 @@ class _NurseMedicationsScreenState extends ConsumerState<NurseMedicationsScreen>
       child: Center(
         child: Text(txt,
             style: TextStyle(
-                fontSize: 11, fontWeight: FontWeight.bold, color: textC)),
+                fontSize: 13, fontWeight: FontWeight.bold, color: textC)),
       ),
     );
     if (blink) {
@@ -459,8 +518,31 @@ class _NurseMedicationsScreenState extends ConsumerState<NurseMedicationsScreen>
       _circ('!', const Color(0xFFFEE2E2), const Color(0xFFEF4444), blink: true);
   Widget _pend() =>
       _circ('○', const Color(0xFFF1F5F9), const Color(0xFF94A3B8));
+
+  Widget _pendingNurse(Medication m) {
+    return GestureDetector(
+      onTap: () {
+        _showDoneAnimation('تم تأكيد الدواء وإشعار الأسرة ✅');
+        ref.read(appRiverpod).nurseConfirmMedication(m.id);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFEF3C7),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: const Color(0xFFD97706)),
+        ),
+        child: const Text('تأكيد',
+            style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFFD97706))),
+      ),
+    );
+  }
+
   Widget _na() =>
-      const Text('—', style: TextStyle(fontSize: 9, color: Color(0xFFE2E8F0)));
+      const Text('—', style: TextStyle(fontSize: 12, color: Color(0xFFCBD5E1)));
   Widget _now() {
     return Container(
       width: 30,
@@ -485,10 +567,10 @@ class _NurseMedicationsScreenState extends ConsumerState<NurseMedicationsScreen>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text('الالتزام اليومي',
-                  style: TextStyle(fontSize: 9, color: Color(0xFF64748B))),
+                  style: TextStyle(fontSize: 11, color: Color(0xFF475569))),
               Text(txt,
                   style: TextStyle(
-                      fontSize: 9, fontWeight: FontWeight.bold, color: color)),
+                      fontSize: 11, fontWeight: FontWeight.bold, color: color)),
             ],
           ),
           const SizedBox(height: 4),
@@ -543,7 +625,7 @@ class _NurseMedicationsScreenState extends ConsumerState<NurseMedicationsScreen>
       child: Center(
         child: Text(txt,
             style: TextStyle(
-                fontSize: 10, fontWeight: FontWeight.bold, color: fg)),
+                fontSize: 12, fontWeight: FontWeight.bold, color: fg)),
       ),
     );
   }
@@ -568,9 +650,9 @@ class _NurseMedicationsScreenState extends ConsumerState<NurseMedicationsScreen>
       child: Center(
           child: Text(t,
               style: const TextStyle(
-                  fontSize: 10,
+                  fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF94A3B8)))));
+                  color: Color(0xFF64748B)))));
 
   Widget _drugRow(
       String n, String d, Widget c1, Widget c2, Widget c3, Widget c4,
@@ -589,20 +671,24 @@ class _NurseMedicationsScreenState extends ConsumerState<NurseMedicationsScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(n,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                        fontSize: 11,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF0F172A))),
                 Text(d,
-                    style:
-                        const TextStyle(fontSize: 9, color: Color(0xFF64748B))),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontSize: 11, color: Color(0xFF475569))),
               ],
             ),
           ),
-          SizedBox(width: 48, child: Center(child: c1)),
-          SizedBox(width: 48, child: Center(child: c2)),
-          SizedBox(width: 48, child: Center(child: c3)),
-          SizedBox(width: 48, child: Center(child: c4)),
+          Flexible(child: SizedBox(width: 48, child: Center(child: c1))),
+          Flexible(child: SizedBox(width: 48, child: Center(child: c2))),
+          Flexible(child: SizedBox(width: 48, child: Center(child: c3))),
+          Flexible(child: SizedBox(width: 48, child: Center(child: c4))),
         ],
       ),
     );
@@ -611,41 +697,31 @@ class _NurseMedicationsScreenState extends ConsumerState<NurseMedicationsScreen>
   Widget _buildGlobalActions() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 9),
-              decoration: BoxDecoration(
-                  color: const Color(0xFFF0F9FF),
-                  border:
-                      Border.all(color: const Color(0xFFBAE6FD), width: 1.5),
-                  borderRadius: BorderRadius.circular(12)),
-              child: const Center(
-                  child: Text('إرسال تقرير',
-                      style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF0369A1)))),
+      child: InkWell(
+        onTap: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('تم إرسال التقرير بنجاح إلى الإدارة والأسرة',
+                  style: TextStyle(fontFamily: 'Cairo')),
+              backgroundColor: Color(0xFF10b981),
+              duration: Duration(seconds: 2),
             ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 9),
-              decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                      colors: [Color(0xFF0369A1), Color(0xFF0EA5E9)]),
-                  borderRadius: BorderRadius.circular(12)),
-              child: const Center(
-                  child: Text('تأكيد جماعي',
-                      style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white))),
-            ),
-          ),
-        ],
+          );
+        },
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+              color: const Color(0xFFF0F9FF),
+              border: Border.all(color: const Color(0xFFBAE6FD), width: 1.5),
+              borderRadius: BorderRadius.circular(12)),
+          child: const Center(
+              child: Text('إرسال تقرير',
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF0369A1)))),
+        ),
       ),
     );
   }

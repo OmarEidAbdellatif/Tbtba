@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/app_riverpod.dart';
 import '../../models/app_models.dart';
+import 'widgets/volunteer_background.dart';
 
 class VolunteerBookingsView extends ConsumerStatefulWidget {
   final List<Animation<double>> fadeAnimations;
@@ -66,53 +67,55 @@ class _VolunteerBookingsViewState extends ConsumerState<VolunteerBookingsView> {
   Widget build(BuildContext context) {
     final provider = ref.watch(appRiverpod);
 
-    return Column(
-      children: [
-        _buildSummaryStrip(provider),
-        _buildTabFilter(),
-        Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (provider.volunteerBookings
-                      .any((b) => b.isRatingRequired)) ...[
-                    _buildRatingPrompt(provider.volunteerBookings
-                        .firstWhere((b) => b.isRatingRequired)),
-                    const SizedBox(height: 16),
+    return VolunteerAnimatedBackground(
+      child: Column(
+        children: [
+          _buildSummaryStrip(provider),
+          _buildTabFilter(),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (provider.volunteerBookings
+                        .any((b) => b.isRatingRequired)) ...[
+                      _buildRatingPrompt(provider.volunteerBookings
+                          .firstWhere((b) => b.isRatingRequired)),
+                      const SizedBox(height: 16),
+                    ],
+                    _buildSectionLabel(
+                        'الجلسة القادمة', const Color(0xFF10b981), 0),
+                    const SizedBox(height: 12),
+                    _buildNextSessionCard(provider.volunteerBookings
+                        .firstWhere((b) => b.status == 'confirmed')),
+                    const SizedBox(height: 24),
+                    _buildSectionLabel(
+                        'حجوزاتي القادمة', const Color(0xFF6366f1), 1),
+                    const SizedBox(height: 12),
+                    ...provider.volunteerBookings
+                        .where((b) => b.status == 'confirmed')
+                        .skip(1)
+                        .map((b) => _buildBookingCard(b))
+                        ,
+                    const SizedBox(height: 24),
+                    _buildSectionLabel(
+                        'آخر جلسة مكتملة', const Color(0xFF6366f1), 2),
+                    const SizedBox(height: 12),
+                    _buildCompletedSessionCard(provider.volunteerBookings
+                        .firstWhere((b) => b.status == 'done')),
+                    const SizedBox(height: 24),
+                    _buildMonthlyStats(provider),
+                    const SizedBox(height: 40),
                   ],
-                  _buildSectionLabel(
-                      'الجلسة القادمة', const Color(0xFF10b981), 0),
-                  const SizedBox(height: 12),
-                  _buildNextSessionCard(provider.volunteerBookings
-                      .firstWhere((b) => b.status == 'confirmed')),
-                  const SizedBox(height: 24),
-                  _buildSectionLabel(
-                      'حجوزاتي القادمة', const Color(0xFF6366f1), 1),
-                  const SizedBox(height: 12),
-                  ...provider.volunteerBookings
-                      .where((b) => b.status == 'confirmed')
-                      .skip(1)
-                      .map((b) => _buildBookingCard(b))
-                      ,
-                  const SizedBox(height: 24),
-                  _buildSectionLabel(
-                      'آخر جلسة مكتملة', const Color(0xFF6366f1), 2),
-                  const SizedBox(height: 12),
-                  _buildCompletedSessionCard(provider.volunteerBookings
-                      .firstWhere((b) => b.status == 'done')),
-                  const SizedBox(height: 24),
-                  _buildMonthlyStats(provider),
-                  const SizedBox(height: 40),
-                ],
+                ),
               ),
-            ),
-          ],
-        ),
-      ],
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -485,7 +488,7 @@ class _VolunteerBookingsViewState extends ConsumerState<VolunteerBookingsView> {
                                 color: Color(0xFF0f172a))),
                         Text(booking.timeInfo,
                             style: const TextStyle(
-                                color: Color(0xFF64748b), fontSize: 10)),
+                                color: Color(0xFF475569), fontSize: 11, fontWeight: FontWeight.w500)),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
@@ -497,7 +500,7 @@ class _VolunteerBookingsViewState extends ConsumerState<VolunteerBookingsView> {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
-                                      color: Color(0xFF94a3b8), fontSize: 10)),
+                                      color: Color(0xFF64748b), fontSize: 11, fontWeight: FontWeight.w500)),
                             ),
                           ],
                         ),
@@ -995,7 +998,7 @@ class _VolunteerBookingsViewState extends ConsumerState<VolunteerBookingsView> {
                     _buildBookingDetailRow(
                         'التاريخ',
                         '${booking.day} ${booking.month}',
-                        Icons.calendar_today_outlined),
+                        'assets/icons/calendar.png'),
                     const SizedBox(height: 32),
                     const Text('وصف الجلسة',
                         textAlign: TextAlign.right,
@@ -1068,7 +1071,7 @@ class _VolunteerBookingsViewState extends ConsumerState<VolunteerBookingsView> {
     );
   }
 
-  Widget _buildBookingDetailRow(String label, String value, IconData icon) {
+  Widget _buildBookingDetailRow(String label, String value, dynamic icon) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
       child: Row(

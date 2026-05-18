@@ -104,8 +104,8 @@ class VisitApprovalView extends ConsumerWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.calendar_month_rounded,
-                  size: 14, color: Color(0xFF94a3b8)),
+              Image.asset('assets/icons/calendar.png',
+                  width: 14, height: 14),
               const SizedBox(width: 8),
               Text(v.date,
                   style: const TextStyle(

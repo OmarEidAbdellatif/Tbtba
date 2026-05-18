@@ -131,25 +131,28 @@ class _ResidentIdScreenState extends State<ResidentIdScreen>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Image.network(
-                    'https://cdn-icons-png.flaticon.com/512/3665/3665922.png',
-                    width: 30,
-                    height: 30,
-                    color: Colors.white),
                 const Column(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('طبطبـة',
                         style: TextStyle(
                             color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w900,
                             letterSpacing: 1.2)),
                     Text('تصريح دخول الأقارب',
-                        style: TextStyle(color: Colors.white70, fontSize: 8)),
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold)),
                   ],
                 ),
+                Image.network(
+                    'https://cdn-icons-png.flaticon.com/512/3665/3665922.png',
+                    width: 35,
+                    height: 35,
+                    color: Colors.white),
               ],
             ),
           ),

@@ -6,43 +6,54 @@ import 'dart:ui'; // مكتبة لواجهات المستخدم المتقدمة
 import '../../providers/app_riverpod.dart'; // استيراد مزود الحالة الخاص بالتطبيق
 import 'register_screen.dart'; // استيراد شاشة التسجيل الجديدة
 
-class LoginScreen extends ConsumerStatefulWidget { // شاشة تسجيل الدخول كمكون تفاعلي مع ريفربود
+class LoginScreen extends ConsumerStatefulWidget {
+  // شاشة تسجيل الدخول كمكون تفاعلي مع ريفربود
   const LoginScreen({super.key}); // مشيد الفئة
 
   @override
-  ConsumerState<LoginScreen> createState() => _LoginScreenState(); // إنشاء حالة المكون
+  ConsumerState<LoginScreen> createState() =>
+      _LoginScreenState(); // إنشاء حالة المكون
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen>
-    with TickerProviderStateMixin { // حالة الشاشة مع دعم الأنيميشن
+    with TickerProviderStateMixin {
+  // حالة الشاشة مع دعم الأنيميشن
   late AnimationController _bgController; // متحكم أنيميشن الخلفية المتحركة
   late AnimationController _fadeController; // متحكم أنيميشن الظهور التدريجي
   late List<Animation<double>> _fadeAnimations; // قائمة حركات الظهور للعناصر
-  late TextEditingController _identifierController; // متحكم حقل المعرف (هاتف أو إيميل)
+  late TextEditingController
+      _identifierController; // متحكم حقل المعرف (هاتف أو إيميل)
   late TextEditingController _passwordController; // متحكم حقل كلمة المرور
 
   @override
-  void initState() { // دالة تهيئة الحالة عند بدء الشاشة
+  void initState() {
+    // دالة تهيئة الحالة عند بدء الشاشة
     super.initState(); // استدعاء دالة التهيئة الأصلية
     _identifierController = TextEditingController(); // تهيئة متحكم المعرف
     _passwordController = TextEditingController(); // تهيئة متحكم كلمة المرور
 
-    _bgController = AnimationController( // إعداد متحكم الخلفية
+    _bgController = AnimationController(
+      // إعداد متحكم الخلفية
       vsync: this, // المزامنة مع الشاشة
       duration: const Duration(seconds: 15), // مدة الحركة 15 ثانية
     )..repeat(); // تكرار الحركة باستمرار
 
-    _fadeController = AnimationController( // إعداد متحكم الظهور التدريجي
+    _fadeController = AnimationController(
+      // إعداد متحكم الظهور التدريجي
       vsync: this, // المزامنة مع الشاشة
       duration: const Duration(seconds: 1), // مدة الظهور ثانية واحدة
     );
 
-    _fadeAnimations = List.generate( // توليد حركات الظهور للعناصر بشكل متتابع
+    _fadeAnimations = List.generate(
+      // توليد حركات الظهور للعناصر بشكل متتابع
       6, // عدد العناصر التي ستتحرك
-      (index) => Tween<double>(begin: 0, end: 1).animate( // الحركة من اختفاء إلى ظهور
-        CurvedAnimation( // نوع منحنى الحركة
+      (index) => Tween<double>(begin: 0, end: 1).animate(
+        // الحركة من اختفاء إلى ظهور
+        CurvedAnimation(
+          // نوع منحنى الحركة
           parent: _fadeController, // المتحكم الأب
-          curve: Interval(index * 0.1, 1.0, curve: Curves.easeOut), // توقيت كل عنصر
+          curve: Interval(index * 0.1, 1.0,
+              curve: Curves.easeOut), // توقيت كل عنصر
         ),
       ),
     );
@@ -50,7 +61,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   @override
-  void dispose() { // دالة تنظيف الموارد عند إغلاق الشاشة
+  void dispose() {
+    // دالة تنظيف الموارد عند إغلاق الشاشة
     _bgController.dispose(); // إغلاق متحكم الخلفية
     _fadeController.dispose(); // إغلاق متحكم الظهور
     _identifierController.dispose(); // إغلاق متحكم المعرف
@@ -59,20 +71,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   @override
-  Widget build(BuildContext context) { // دالة بناء واجهة الشاشة
+  Widget build(BuildContext context) {
+    // دالة بناء واجهة الشاشة
     final size = MediaQuery.of(context).size; // الحصول على حجم الشاشة الحالي
-    return Scaffold( // الهيكل الأساسي للصفحة
-      body: Stack( // تكديس العناصر فوق بعضها (الخلفية ثم المحتوى)
+    return Scaffold(
+      // الهيكل الأساسي للصفحة
+      body: Stack(
+        // تكديس العناصر فوق بعضها (الخلفية ثم المحتوى)
         children: [
           // Animated Background - الخلفية المتحركة
-          AnimatedBuilder( // باني واجهات يعتمد على الأنيميشن
+          AnimatedBuilder(
+            // باني واجهات يعتمد على الأنيميشن
             animation: _bgController, // ربط الباني بمتحكم الخلفية
-            builder: (context, child) { // دالة بناء عناصر الخلفية
-              return Stack( // تكديس الطبقات اللونية
+            builder: (context, child) {
+              // دالة بناء عناصر الخلفية
+              return Stack(
+                // تكديس الطبقات اللونية
                 children: [
-                  Container( // وعاء الطبقة الأساسية للتدرج اللوني
+                  Container(
+                    // وعاء الطبقة الأساسية للتدرج اللوني
                     decoration: const BoxDecoration(
-                      gradient: LinearGradient( // تدرج لوني خطي
+                      gradient: LinearGradient(
+                        // تدرج لوني خطي
                         begin: Alignment.topLeft, // البداية من أعلى اليسار
                         end: Alignment.bottomRight, // النهاية في أسفل اليمين
                         colors: [
@@ -83,34 +103,50 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       ),
                     ),
                   ),
-                  Positioned( // تحديد موقع الدائرة الأولى المتحركة
-                    top: -100 + sin(_bgController.value * 2 * pi) * 50, // حركة رأسية جيبية
-                    left: -50 + cos(_bgController.value * 2 * pi) * 50, // حركة أفقية جيبية
-                    child: Container( // وعاء الدائرة الأولى
+                  Positioned(
+                    // تحديد موقع الدائرة الأولى المتحركة
+                    top: -100 +
+                        sin(_bgController.value * 2 * pi) *
+                            50, // حركة رأسية جيبية
+                    left: -50 +
+                        cos(_bgController.value * 2 * pi) *
+                            50, // حركة أفقية جيبية
+                    child: Container(
+                      // وعاء الدائرة الأولى
                       width: size.width * 0.8, // عرض الدائرة 80% من الشاشة
                       height: size.width * 0.8, // ارتفاع الدائرة
                       decoration: BoxDecoration(
                         shape: BoxShape.circle, // شكل دائري
-                        gradient: RadialGradient( // تدرج لوني دائري
+                        gradient: RadialGradient(
+                          // تدرج لوني دائري
                           colors: [
-                            const Color(0xFF818cf8).withValues(alpha: 0.4), // لون الدائرة مع شفافية
+                            const Color(0xFF818cf8).withValues(
+                                alpha: 0.4), // لون الدائرة مع شفافية
                             Colors.transparent, // تلاشي إلى الشفافية
                           ],
                         ),
                       ),
                     ),
                   ),
-                  Positioned( // تحديد موقع الدائرة الثانية المتحركة
-                    bottom: -150 + cos(_bgController.value * 2 * pi) * 70, // حركة أسفل الشاشة
-                    right: -100 + sin(_bgController.value * 2 * pi) * 70, // حركة يمين الشاشة
-                    child: Container( // وعاء الدائرة الثانية
+                  Positioned(
+                    // تحديد موقع الدائرة الثانية المتحركة
+                    bottom: -150 +
+                        cos(_bgController.value * 2 * pi) *
+                            70, // حركة أسفل الشاشة
+                    right: -100 +
+                        sin(_bgController.value * 2 * pi) *
+                            70, // حركة يمين الشاشة
+                    child: Container(
+                      // وعاء الدائرة الثانية
                       width: size.width * 0.9, // عرض أكبر قليلاً
                       height: size.width * 0.9, // ارتفاع الدائرة
                       decoration: BoxDecoration(
                         shape: BoxShape.circle, // شكل دائري
-                        gradient: RadialGradient( // تدرج لوني دائري
+                        gradient: RadialGradient(
+                          // تدرج لوني دائري
                           colors: [
-                            const Color(0xFFc084fc).withValues(alpha: 0.4), // لون بنفسجي مع شفافية
+                            const Color(0xFFc084fc)
+                                .withValues(alpha: 0.4), // لون بنفسجي مع شفافية
                             Colors.transparent, // تلاشي إلى الشفافية
                           ],
                         ),
@@ -121,49 +157,68 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               );
             },
           ),
-          
+
           // Blur Effect - تأثير الضبابية للزجاج
-          Positioned.fill( // تغطية كامل الشاشة
-            child: BackdropFilter( // فلتر لخلفية العناصر
-              filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30), // شدة الضبابية 30
-              child: Container(color: Colors.white.withValues(alpha: 0.1)), // لون أبيض خفيف جداً
+          Positioned.fill(
+            // تغطية كامل الشاشة
+            child: BackdropFilter(
+              // فلتر لخلفية العناصر
+              filter:
+                  ImageFilter.blur(sigmaX: 30, sigmaY: 30), // شدة الضبابية 30
+              child: Container(
+                  color: Colors.white
+                      .withValues(alpha: 0.1)), // لون أبيض خفيف جداً
             ),
           ),
 
           // Content - المحتوى الأساسي
-          SafeArea( // التأكد من عدم تداخل المحتوى مع حواف الهاتف (النوتش)
-            child: Center( // توسيط المحتوى في الشاشة
-              child: SingleChildScrollView( // السماح بالتمرير عند صغر الشاشة
-                padding: const EdgeInsets.symmetric(horizontal: 24), // حواف جانبية 24
-                child: Column( // ترتيب العناصر رأسياً
+          SafeArea(
+            // التأكد من عدم تداخل المحتوى مع حواف الهاتف (النوتش)
+            child: Center(
+              // توسيط المحتوى في الشاشة
+              child: SingleChildScrollView(
+                // السماح بالتمرير عند صغر الشاشة
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 24), // حواف جانبية 24
+                child: Column(
+                  // ترتيب العناصر رأسياً
                   mainAxisAlignment: MainAxisAlignment.center, // توسيط رأسي
-                  crossAxisAlignment: CrossAxisAlignment.stretch, // تمديد العناصر أفقياً
+                  crossAxisAlignment:
+                      CrossAxisAlignment.stretch, // تمديد العناصر أفقياً
                   children: [
-                    FadeTransition( // أنيميشن ظهور الشعار
+                    FadeTransition(
+                      // أنيميشن ظهور الشعار
                       opacity: _fadeAnimations[0], // استخدام أول حركة ظهور
-                      child: Column( // عمود للشعار والاسم
+                      child: Column(
+                        // عمود للشعار والاسم
                         children: [
-                          Container( // وعاء أيقونة التطبيق
-                            padding: const EdgeInsets.all(16), // حواف داخلية للأيقونة
+                          Container(
+                            // وعاء أيقونة التطبيق
+                            padding: const EdgeInsets.all(
+                                16), // حواف داخلية للأيقونة
                             decoration: BoxDecoration(
                               color: Colors.white, // خلفية بيضاء للأيقونة
                               shape: BoxShape.circle, // شكل دائري
-                              boxShadow: [ // ظل خفيف للأيقونة
+                              boxShadow: [
+                                // ظل خفيف للأيقونة
                                 BoxShadow(
-                                  color: const Color(0xFF6C63FF).withValues(alpha: 0.2), // لون الظل
+                                  color: const Color(0xFF6C63FF)
+                                      .withValues(alpha: 0.2), // لون الظل
                                   blurRadius: 24, // مدى الظل
                                   offset: const Offset(0, 8), // موقع الظل
                                 ),
                               ],
                             ),
-                            child: const Icon( // أيقونة الصحة والأمان
+                            child: const Icon(
+                              // أيقونة الصحة والأمان
                               Icons.health_and_safety,
                               size: 56, // حجم الأيقونة
                               color: Color(0xFF6C63FF), // لون الأيقونة
                             ),
                           ),
                           const SizedBox(height: 24), // مسافة فارغة
-                          const Text( // نص اسم التطبيق "طبطبة"
+                          const Text(
+                            // نص اسم التطبيق "طبطبة"
                             'طبطبـة',
                             textAlign: TextAlign.center, // توسيط النص
                             style: TextStyle(
@@ -174,7 +229,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                             ),
                           ),
                           const SizedBox(height: 8), // مسافة فارغة
-                          const Text( // نص وصفي للتطبيق
+                          const Text(
+                            // نص وصفي للتطبيق
                             'نظام طبطبة للمسنين الذكي',
                             textAlign: TextAlign.center, // توسيط النص
                             style: TextStyle(
@@ -189,24 +245,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     const SizedBox(height: 48), // مسافة قبل الكارت الأساسي
 
                     // Glassmorphic Card - كارت إدخال البيانات الزجاجي
-                    FadeTransition( // أنيميشن ظهور الكارت
+                    FadeTransition(
+                      // أنيميشن ظهور الكارت
                       opacity: _fadeAnimations[1], // ثاني حركة ظهور
-                      child: Container( // وعاء محتوى تسجيل الدخول
+                      child: Container(
+                        // وعاء محتوى تسجيل الدخول
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.7), // أبيض شفاف (تأثير الزجاج)
-                          borderRadius: BorderRadius.circular(32), // حواف دائرية كبيرة
-                          border: Border.all(color: Colors.white, width: 2), // إطار أبيض ناصع
-                          boxShadow: [ // ظل عميق للكارت
+                          color: Colors.white.withValues(
+                              alpha: 0.7), // أبيض شفاف (تأثير الزجاج)
+                          borderRadius:
+                              BorderRadius.circular(32), // حواف دائرية كبيرة
+                          border: Border.all(
+                              color: Colors.white, width: 2), // إطار أبيض ناصع
+                          boxShadow: [
+                            // ظل عميق للكارت
                             BoxShadow(
-                              color: const Color(0xFF312e81).withValues(alpha: 0.08), // لون ظل نيلي خفيف
+                              color: const Color(0xFF312e81)
+                                  .withValues(alpha: 0.08), // لون ظل نيلي خفيف
                               blurRadius: 32, // مدى تلاشي الظل
                               offset: const Offset(0, 16), // إزاحة الظل للأسفل
                             ),
                           ],
                         ),
                         padding: const EdgeInsets.all(24), // حواف داخلية للكارت
-                        child: Column( // عناصر الكارت الداخلية
-                          crossAxisAlignment: CrossAxisAlignment.end, // محاذاة لليمين (عربي)
+                        child: Column(
+                          // عناصر الكارت الداخلية
+                          crossAxisAlignment:
+                              CrossAxisAlignment.end, // محاذاة لليمين (عربي)
                           children: [
                             const Align(
                               alignment: Alignment.centerRight,
@@ -221,41 +286,54 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                             ),
                             const SizedBox(height: 24), // مسافة فارغة
 
-                            const SizedBox(height: 8), // مسافة بسيطة بدلاً من اختيار الأدوار
+                            const SizedBox(
+                                height:
+                                    8), // مسافة بسيطة بدلاً من اختيار الأدوار
 
                             // Inputs - حقول الإدخال
-                            FadeTransition( // أنيميشن ظهور حقل المعرف
+                            FadeTransition(
+                              // أنيميشن ظهور حقل المعرف
                               opacity: _fadeAnimations[3], // رابع حركة ظهور
-                              child: _buildInput( // بناء حقل إدخال مخصص
-                                controller: _identifierController, // ربط متحكم المعرف
-                                label: 'البريد الإلكتروني أو رقم الهاتف', // نص تلميحي
-                                icon: Icons.person_outline_rounded, // أيقونة الشخص
+                              child: _buildInput(
+                                // بناء حقل إدخال مخصص
+                                controller:
+                                    _identifierController, // ربط متحكم المعرف
+                                label:
+                                    'البريد الإلكتروني أو رقم الهاتف', // نص تلميحي
+                                icon: Icons
+                                    .person_outline_rounded, // أيقونة الشخص
                               ),
                             ),
                             const SizedBox(height: 16), // مسافة بين الحقول
 
-                            FadeTransition( // أنيميشن ظهور حقل كلمة المرور
-                              opacity: _fadeAnimations[3], // نفس توقيت ظهور الحقل السابق
-                              child: _buildInput( // بناء حقل إدخال مخصص
-                                controller: _passwordController, // ربط متحكم كلمة المرور
+                            FadeTransition(
+                              // أنيميشن ظهور حقل كلمة المرور
+                              opacity: _fadeAnimations[
+                                  3], // نفس توقيت ظهور الحقل السابق
+                              child: _buildInput(
+                                // بناء حقل إدخال مخصص
+                                controller:
+                                    _passwordController, // ربط متحكم كلمة المرور
                                 label: 'كلمة المرور', // نص تلميحي
-                                icon: Icons.lock_outline_rounded, // أيقونة القفل
+                                icon:
+                                    Icons.lock_outline_rounded, // أيقونة القفل
                                 isPassword: true, // تفعيل خاصية إخفاء النص
                               ),
                             ),
                             const SizedBox(height: 32), // مسافة قبل زر الدخول
 
                             // Login Button - زر تسجيل الدخول
-                            FadeTransition( // أنيميشن ظهور زر الدخول
+                            FadeTransition(
+                              // أنيميشن ظهور زر الدخول
                               opacity: _fadeAnimations[4], // خامس حركة ظهور
-                              child: GestureDetector( // كاشف للمسات المستخدم
+                              child: GestureDetector(
+                                // كاشف للمسات المستخدم
                                 onTap: () async {
-                                  final success = await ref
-                                      .read(appRiverpod)
-                                      .login(
-                                        _identifierController.text,
-                                        _passwordController.text,
-                                      );
+                                  final success =
+                                      await ref.read(appRiverpod).login(
+                                            _identifierController.text,
+                                            _passwordController.text,
+                                          );
                                   if (!success && context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
@@ -266,23 +344,36 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                     );
                                   }
                                 },
-                                child: Container( // وعاء الزر المتدرج
-                                  width: double.infinity, // تمديد الزر بكامل العرض
-                                  padding: const EdgeInsets.symmetric(vertical: 16), // حواف داخلية رأسية للزر
+                                child: Container(
+                                  // وعاء الزر المتدرج
+                                  width:
+                                      double.infinity, // تمديد الزر بكامل العرض
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 16), // حواف داخلية رأسية للزر
                                   decoration: BoxDecoration(
-                                    gradient: const LinearGradient( // تدرج لوني جذاب للزر
-                                      colors: [Color(0xFF6C63FF), Color(0xFFA78BFA)], // أرجواني وبنفسجي فاتح
+                                    gradient: const LinearGradient(
+                                      // تدرج لوني جذاب للزر
+                                      colors: [
+                                        Color(0xFF6C63FF),
+                                        Color(0xFFA78BFA)
+                                      ], // أرجواني وبنفسجي فاتح
                                     ),
-                                    borderRadius: BorderRadius.circular(20), // حواف دائرية للزر
-                                    boxShadow: [ // توهج أسفل الزر
+                                    borderRadius: BorderRadius.circular(
+                                        20), // حواف دائرية للزر
+                                    boxShadow: [
+                                      // توهج أسفل الزر
                                       BoxShadow(
-                                        color: const Color(0xFF6C63FF).withValues(alpha: 0.4), // لون التوهج
+                                        color: const Color(0xFF6C63FF)
+                                            .withValues(
+                                                alpha: 0.4), // لون التوهج
                                         blurRadius: 16, // مدى التوهج
-                                        offset: const Offset(0, 8), // إزاحة التوهج
+                                        offset:
+                                            const Offset(0, 8), // إزاحة التوهج
                                       ),
                                     ],
                                   ),
-                                  child: const Text( // نص "دخول" على الزر
+                                  child: const Text(
+                                    // نص "دخول" على الزر
                                     'دخول',
                                     textAlign: TextAlign.center, // توسيط النص
                                     style: TextStyle(
@@ -304,8 +395,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       TextButton(
-                                        onPressed: () =>
-                                            Navigator.push(
+                                        onPressed: () => Navigator.push(
                                           context,
                                           MaterialPageRoute(
                                               builder: (context) =>
@@ -331,8 +421,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                   ),
                                   const SizedBox(height: 8),
                                   TextButton.icon(
-                                    onPressed: () => _showGuestInquirySheet(context),
-                                    icon: const Icon(Icons.info_outline_rounded, color: Color(0xFF10b981), size: 18),
+                                    onPressed: () =>
+                                        _showGuestInquirySheet(context),
+                                    icon: const Icon(Icons.info_outline_rounded,
+                                        color: Color(0xFF10b981), size: 18),
                                     label: const Text(
                                       'استعلام عن مكان شاغر بالدار',
                                       style: TextStyle(
@@ -359,39 +451,50 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     );
   }
 
-  Widget _buildInput({ // دالة مساعدة لبناء حقول الإدخال بشكل موحد
+  Widget _buildInput({
+    // دالة مساعدة لبناء حقول الإدخال بشكل موحد
     required TextEditingController controller, // المتحكم بالنص
     required String label, // التلميح داخل الحقل
     required IconData icon, // الأيقونة الجانبية
     bool isPassword = false, // هل هو حقل كلمة مرور؟
   }) {
-    return Container( // وعاء الحقل مع التصميم الزجاجي
+    return Container(
+      // وعاء الحقل مع التصميم الزجاجي
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.8), // خلفية بيضاء شبه شفافة
         borderRadius: BorderRadius.circular(16), // حواف دائرية متناسقة
-        border: Border.all(color: const Color(0xFFe2e8f0), width: 1.5), // إطار رمادي فاتح
+        border: Border.all(
+            color: const Color(0xFFe2e8f0), width: 1.5), // إطار رمادي فاتح
       ),
-      child: TextField( // مكون إدخال النص الأساسي
+      child: TextField(
+        // مكون إدخال النص الأساسي
         controller: controller, // ربط المتحكم
         obscureText: isPassword, // إخفاء النص إذا كان كلمة مرور
         textAlign: TextAlign.right, // محاذاة النص لليمين (عربي)
         textDirection: TextDirection.rtl, // اتجاه النص من اليمين لليسار
-        decoration: InputDecoration( // تصميم مكونات الحقل الداخلية
+        decoration: InputDecoration(
+          // تصميم مكونات الحقل الداخلية
           hintText: label, // نص تلميحي
-          hintStyle: const TextStyle(color: Color(0xFF94a3b8), fontSize: 15), // ستايل التلميح
+          hintStyle: const TextStyle(
+              color: Color(0xFF94a3b8), fontSize: 15), // ستايل التلميح
           border: InputBorder.none, // إخفاء الإطار الافتراضي لفلاتر
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16), // حواف داخلية مريحة
-          prefixIcon: Icon(icon, color: const Color(0xFF94a3b8), size: 20), // الأيقونة في بداية الحقل (يميناً في RTL)
+          contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16, vertical: 16), // حواف داخلية مريحة
+          prefixIcon: Icon(icon,
+              color: const Color(0xFF94a3b8),
+              size: 20), // الأيقونة في بداية الحقل (يميناً في RTL)
         ),
       ),
     );
   }
 
-
   void _showGuestInquirySheet(BuildContext context) {
     final nameController = TextEditingController();
     final phoneController = TextEditingController();
-    
+    final cityController = TextEditingController();
+    String? selectedGovernorate;
+    final List<String> selectedFeatures = [];
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -408,74 +511,191 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             right: 24,
             top: 24,
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Center(
-                  child: Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                          color: Colors.grey[200],
-                          borderRadius: BorderRadius.circular(10)))),
-              const SizedBox(height: 20),
-              const Text('الاستعلام عن مكان شاغر 🛏️',
-                  style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1e1b4b))),
-              const Text('دار الأمل لرعاية كبار السن ترحب بكم. نسبة الإشغال الحالية تتيح استقبال حالات جديدة.',
-                  textAlign: TextAlign.right,
-                  style: TextStyle(fontSize: 14, color: Color(0xFF10b981), fontWeight: FontWeight.bold)),
-              const SizedBox(height: 24),
-              _buildInput(
-                  controller: nameController,
-                  label: 'الاسم الكامل',
-                  icon: Icons.person_outline),
-              const SizedBox(height: 16),
-              _buildInput(
-                  controller: phoneController,
-                  label: 'رقم الهاتف للتواصل',
-                  icon: Icons.phone_outlined),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                height: 55,
-                child: ElevatedButton(
-                  onPressed: () {
-                    ref.read(appRiverpod).triggerNotification(
-                      title: 'طلب التحاق جديد 📄',
-                      body: 'طلب استعلام من ${nameController.text} (${phoneController.text}). يرجى التواصل معه.',
-                      type: 'admin',
-                      targetRole: 'إدارة',
-                    );
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content:
-                            Text('تم إرسال طلبك للإدارة بنجاح! سنتواصل معك قريباً.'),
-                        backgroundColor: Color(0xFF10b981),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Center(
+                    child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            borderRadius: BorderRadius.circular(10)))),
+                const SizedBox(height: 20),
+                const Align(
+                  alignment: Alignment.centerRight,
+                  child: Text('البحث والاستعلام عن دار رعاية',
+                      textAlign: TextAlign.right,
+                      style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1e1b4b))),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                    'اختر المواصفات المطلوبة وسيقوم النظام بالبحث عن الدار المناسبة وإرسال طلبك.',
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF64748b),
+                        fontWeight: FontWeight.w500)),
+                const SizedBox(height: 24),
+                
+                // Dropdown for Governorate
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFe2e8f0), width: 1),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF000000).withValues(alpha: 0.05),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                      BoxShadow(
+                        color: const Color(0xFF000000).withValues(alpha: 0.03),
+                        blurRadius: 1,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      isExpanded: true,
+                      dropdownColor: const Color(0xFFf8fafc),
+                      borderRadius: BorderRadius.circular(16),
+                      hint: const Text('اختر المحافظة', style: TextStyle(color: Color(0xFF94a3b8), fontSize: 15)),
+                      value: selectedGovernorate,
+                      items: ['القاهرة', 'الجيزة', 'الإسكندرية', 'القليوبية']
+                          .map((gov) => DropdownMenuItem(
+                                value: gov,
+                                child: Text(gov, textAlign: TextAlign.right),
+                              ))
+                          .toList(),
+                      onChanged: (val) {
+                        setModalState(() {
+                          selectedGovernorate = val;
+                        });
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _buildInput(
+                    controller: cityController,
+                    label: 'المنطقة / المدينة',
+                    icon: Icons.location_city_outlined),
+                const SizedBox(height: 16),
+                const Align(
+                  alignment: Alignment.centerRight,
+                  child: Text('المميزات المطلوبة:',
+                      style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1e1b4b))),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    'رعاية طبية ٢٤ ساعة',
+                    'علاج طبيعي',
+                    'غرفة فردية',
+                    'حديقة ومتنزه',
+                    'أنشطة ترفيهية',
+                    'وجبات مخصصة'
+                  ].map((feature) {
+                    final isSelected = selectedFeatures.contains(feature);
+                    return GestureDetector(
+                      onTap: () {
+                        setModalState(() {
+                          if (isSelected) {
+                            selectedFeatures.remove(feature);
+                          } else {
+                            selectedFeatures.add(feature);
+                          }
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: isSelected ? const Color(0xFF10b981) : const Color(0xFFf0fdf4),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: isSelected ? Colors.transparent : const Color(0xFFd1fae5)),
+                        ),
+                        child: Text(feature,
+                            style: TextStyle(
+                                color: isSelected ? Colors.white : const Color(0xFF065f46),
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold)),
                       ),
                     );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF10b981),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                  ),
-                  child: const Text('إرسال الطلب',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold)),
+                  }).toList(),
                 ),
-              ),
-            ],
+                const SizedBox(height: 16),
+                _buildInput(
+                    controller: nameController,
+                    label: 'الاسم الكامل',
+                    icon: Icons.person_outline),
+                const SizedBox(height: 12),
+                _buildInput(
+                    controller: phoneController,
+                    label: 'رقم الهاتف للتواصل',
+                    icon: Icons.phone_outlined),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  height: 55,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (selectedGovernorate == null || cityController.text.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('يرجى اختيار المحافظة والمنطقة أولاً'),
+                            backgroundColor: Colors.redAccent,
+                          ),
+                        );
+                        return;
+                      }
+                      
+                      ref.read(appRiverpod).triggerNotification(
+                            title: 'طلب التحاق جديد 📄',
+                            body:
+                                'طلب استعلام من ${nameController.text} (${phoneController.text}) عن دار في $selectedGovernorate - ${cityController.text} بمميزات: ${selectedFeatures.join('، ')}.',
+                            type: 'admin',
+                            targetRole: 'إدارة',
+                          );
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                              'تم العثور على "دار الأمل" كأفضل خيار لطلبك! تم إرسال طلبك للدار بنجاح!'),
+                          backgroundColor: Color(0xFF10b981),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF10b981),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: const Text('بحث وإرسال الطلب',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
-
 }

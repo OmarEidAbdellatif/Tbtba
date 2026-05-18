@@ -24,7 +24,7 @@ class NurseProfileScreen extends StatelessWidget { // شاشة الملف الش
                   _buildSectionTitle(context, 'جدول الورديات القادمة 🗓️'), // عنوان جدول الورديات
                   _buildShiftSchedule(context), // عرض قائمة الورديات القادمة
                   const SizedBox(height: 24),
-                  _buildSectionTitle(context, 'الأوسمة والإنجازات 🏅'), // عنوان الأوسمة
+                  _buildSectionTitle(context, 'الإنجازات'), // عنوان الإنجازات
                   _buildBadges(context), // عرض الأوسمة المحققة
                   const SizedBox(height: 24),
                   _buildSectionTitle(context, 'آراء الأسر وتقييم الأداء ⭐'), // عنوان التقييمات
@@ -68,12 +68,12 @@ class NurseProfileScreen extends StatelessWidget { // شاشة الملف الش
                     _buildProfileImage(), // عرض صورة الملف الشخصي
                     const SizedBox(height: 16),
                     const Text('أ. منى علي محمود', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)), // اسم الممرض
-                    const Text('مشرف تمريض — المستوى الذهبي', style: TextStyle(color: Color(0xFFE0F2FE), fontSize: 13)), // المسمى الوظيفي والمستوى
+                    const Text('مشرف تمريض — المستوى الذهبي', style: TextStyle(color: Color(0xFFE0F2FE), fontSize: 15)), // المسمى الوظيفي والمستوى
                     const SizedBox(height: 12),
                     Container( // بطاقة تعريفية بكود الموظف
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                       decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(20)),
-                      child: const Text('كود الموظف: #N-4892', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                      child: const Text('كود الموظف: #N-4892', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
                     ),
                   ],
                 ),
@@ -116,15 +116,20 @@ class NurseProfileScreen extends StatelessWidget { // شاشة الملف الش
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
-        boxShadow: [BoxShadow(color: color.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4))],
+        border: Border.all(color: color.withValues(alpha: 0.5), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+              color: color.withValues(alpha: 0.15),
+              blurRadius: 10,
+              offset: const Offset(0, 4))
+        ],
       ),
       child: Column(
         children: [
           Icon(icon, color: color, size: 20),
           const SizedBox(height: 8),
-          Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF0F172A))), // القيمة بالأرقام
-          Text(label, style: TextStyle(fontSize: 10, color: isDark ? Colors.white60 : const Color(0xFF64748B))), // المسمى بالعربية
+          Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF0F172A))), // القيمة بالأرقام
+          Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF475569))), // المسمى بالعربية
         ],
       ),
     );
@@ -134,7 +139,7 @@ class NurseProfileScreen extends StatelessWidget { // شاشة الملف الش
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.only(bottom: 12, top: 8),
-      child: Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B))),
+      child: Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B))),
     );
   }
 
@@ -169,36 +174,36 @@ class NurseProfileScreen extends StatelessWidget { // شاشة الملف الش
             color: active ? (isDark ? const Color(0xFF0369A1).withValues(alpha: 0.2) : const Color(0xFFF0F9FF)) : (isDark ? Colors.white10 : const Color(0xFFF1F5F9)),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Text(type, style: TextStyle(color: active ? (isDark ? const Color(0xFF38BDF8) : const Color(0xFF0369A1)) : (isDark ? Colors.white38 : const Color(0xFF64748B)), fontSize: 10, fontWeight: FontWeight.bold)),
+          child: Text(type, style: TextStyle(color: active ? (isDark ? const Color(0xFF38BDF8) : const Color(0xFF0369A1)) : (isDark ? Colors.white38 : const Color(0xFF64748B)), fontSize: 12, fontWeight: FontWeight.bold)),
         ),
         const Spacer(),
         Column( // تفاصيل التاريخ والوقت
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(date, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
-            Text(time, style: TextStyle(fontSize: 11, color: isDark ? Colors.white60 : const Color(0xFF64748B))),
+            Text(date, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
+            Text(time, style: TextStyle(fontSize: 13, color: isDark ? Colors.white60 : const Color(0xFF64748B))),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildBadges(BuildContext context) { // بناء قسم الأوسمة الجمالية بشكل أفقي
+  Widget _buildBadges(BuildContext context) { // بناء قسم الإنجازات بشكل أفقي
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal, // تمرير أفقي
       reverse: true, // يبدأ من اليمين (RTL)
       child: Row(
         children: [
-          _badge('مسعف محترف', '🩺', const Color(0xFFEF4444)),
-          _badge('صديق الأسرة', '🤝', const Color(0xFF6366F1)),
-          _badge('دقة متناهية', '🎯', const Color(0xFF10B981)),
-          _badge('قائد فريق', '⭐', const Color(0xFFF59E0B)),
+          _achievementCard('موظف الشهر', 'مايو ٢٠٢٦', const Color(0xFF10B981)),
+          _achievementCard('شهادة BLS', 'تم التجديد بنجاح', const Color(0xFF0EA5E9)),
+          _achievementCard('١٠٠٪ رضا المرضى', 'خلال الربع الأول', const Color(0xFFF59E0B)),
+          _achievementCard('دورة العناية المركزة', 'إتمام بنجاح', const Color(0xFFEF4444)),
         ],
       ),
     );
   }
 
-  Widget _badge(String name, String emoji, Color color) { // بناء وسام واحد
+  Widget _achievementCard(String title, String subtitle, Color color) { // بناء كارت إنجاز واحد
     return Container(
       margin: const EdgeInsets.only(left: 12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -208,10 +213,11 @@ class NurseProfileScreen extends StatelessWidget { // شاشة الملف الش
         border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 24)), // رمز الإيموجي للوسام
+          Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: color)),
           const SizedBox(height: 4),
-          Text(name, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: color)), // اسم الوسام بالعربية
+          Text(subtitle, style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
         ],
       ),
     );
@@ -234,8 +240,8 @@ class NurseProfileScreen extends StatelessWidget { // شاشة الملف الش
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('سارة أحمد (ابنة الحاج يحيى)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)), // اسم صاحب الرأي
-                  Text('منذ ٣ أيام', style: TextStyle(fontSize: 10, color: isDark ? Colors.white38 : const Color(0xFF94A3B8))), // توقيت الرأي
+                  Text('سارة أحمد (ابنة الحاج يحيى)', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)), // اسم صاحب الرأي
+                  Text('منذ ٣ أيام', style: TextStyle(fontSize: 12, color: isDark ? Colors.white38 : const Color(0xFF94A3B8))), // توقيت الرأي
                 ],
               ),
               const SizedBox(width: 12),
@@ -246,7 +252,7 @@ class NurseProfileScreen extends StatelessWidget { // شاشة الملف الش
           Text( // نص الرأي أو التقييم بالعربية
             '"ممرضة منى ممتازة جداً في التعامل، وتهتم بأدق التفاصيل الطبية والجانب النفسي لوالدي. شكراً لجهودكم."',
             textAlign: TextAlign.right,
-            style: TextStyle(fontSize: 12, color: isDark ? Colors.white70 : const Color(0xFF475569), height: 1.5, fontStyle: FontStyle.italic),
+            style: TextStyle(fontSize: 14, color: isDark ? Colors.white70 : const Color(0xFF475569), height: 1.5, fontStyle: FontStyle.italic),
           ),
         ],
       ),

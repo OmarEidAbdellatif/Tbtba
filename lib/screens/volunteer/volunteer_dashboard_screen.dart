@@ -183,6 +183,7 @@ class _VolunteerDashboardScreenState
         clipBehavior: Clip.none,
         children: [
           Positioned.fill(child: _buildAnimatedBackground()),
+          const VolunteerDustAnimation(), // إضافة تأثير الجزيئات المتطايرة
           Padding(
             padding: EdgeInsets.fromLTRB(
                 24, isRatingTab ? 45 : 60, 24, isRatingTab ? 45 : 30),
@@ -221,7 +222,7 @@ class _VolunteerDashboardScreenState
                                           ? '$certsCount شهادات مكتسبة'
                                           : (isRatingTab
                                               ? ratingSummary
-                                              : '${provider.currentUser.name} 🌿'))),
+                                              : provider.currentUser.name))),
                               textAlign: TextAlign.right,
                               style: const TextStyle(
                                   color: Colors.white,
@@ -925,4 +926,106 @@ class RingPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+// --- تأثير الجزيئات المتطايرة الجديد ---
+
+class _VolunteerDustParticle {
+  Offset position;
+  double speed;
+  double radius;
+  Color color;
+  
+  _VolunteerDustParticle({
+    required this.position,
+    required this.speed,
+    required this.radius,
+    required this.color,
+  });
+}
+
+class VolunteerDustAnimation extends StatefulWidget {
+  const VolunteerDustAnimation({super.key});
+
+  @override
+  State<VolunteerDustAnimation> createState() => _VolunteerDustAnimationState();
+}
+
+class _VolunteerDustAnimationState extends State<VolunteerDustAnimation> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late List<_VolunteerDustParticle> _dust;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 15))..repeat();
+    
+    final random = Random();
+    final colors = [
+      const Color(0xFF4ade80).withValues(alpha: 0.6), // أخضر فاتح
+      const Color(0xFFfacc15).withValues(alpha: 0.6), // أصفر ذهبي
+    ];
+    
+    _dust = List.generate(200, (index) { // كثرناها لـ 200 بناء على طلب المستخدم
+      return _VolunteerDustParticle(
+        position: Offset(random.nextDouble(), random.nextDouble()),
+        speed: random.nextDouble() * 0.04 + 0.01,
+        radius: random.nextDouble() * 2.0 + 0.5,
+        color: colors[random.nextInt(colors.length)],
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          return CustomPaint(
+            painter: VolunteerDustPainter(dust: _dust, animationValue: _controller.value),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class VolunteerDustPainter extends CustomPainter {
+  final List<_VolunteerDustParticle> dust;
+  final double animationValue;
+
+  VolunteerDustPainter({required this.dust, required this.animationValue});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..style = PaintingStyle.fill;
+
+    for (var i = 0; i < dust.length; i++) {
+      final p = dust[i];
+      
+      double dy = (p.position.dy * size.height) - (animationValue * p.speed * size.height);
+      if (dy < 0) dy += size.height;
+
+      double dx = p.position.dx * size.width + sin(animationValue * 2 * pi + i) * 5;
+
+      final currentPos = Offset(dx, dy);
+
+      double opacity = (sin(animationValue * 2 * pi * 2 + i) + 1) / 2;
+      paint.color = p.color.withValues(alpha: p.color.opacity * opacity);
+
+      canvas.drawCircle(currentPos, p.radius, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant VolunteerDustPainter oldDelegate) {
+    return true;
+  }
 }

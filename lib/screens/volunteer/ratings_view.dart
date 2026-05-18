@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/app_riverpod.dart';
 import '../../models/app_models.dart';
+import 'widgets/volunteer_background.dart';
 
 class VolunteerRatingsView extends ConsumerStatefulWidget {
   final List<Animation<double>> fadeAnimations;
@@ -33,22 +34,24 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
   Widget build(BuildContext context) {
     final provider = ref.watch(appRiverpod);
 
-    return Column(
-      children: [
-        _buildTabSelector(),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (_activeTabIndex == 0) ..._buildRateSection(provider),
-              if (_activeTabIndex == 1) ..._buildMyRatingsSection(provider),
-              if (_activeTabIndex == 2) ..._buildPerformanceSummary(provider),
-              const SizedBox(height: 40),
-            ],
+    return VolunteerAnimatedBackground(
+      child: Column(
+        children: [
+          _buildTabSelector(),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (_activeTabIndex == 0) ..._buildRateSection(provider),
+                if (_activeTabIndex == 1) ..._buildMyRatingsSection(provider),
+                if (_activeTabIndex == 2) ..._buildPerformanceSummary(provider),
+                const SizedBox(height: 40),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -248,20 +251,17 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
           children: [
             Row(
               children: [
-                Flexible(
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(8)),
-                    child: const Text('⏰ منذ يوم',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold)),
-                  ),
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.25),
+                      shape: BoxShape.circle),
+                  child: Center(
+                      child: Text(review.icon,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold))),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -286,17 +286,20 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.25),
-                      shape: BoxShape.circle),
-                  child: Center(
-                      child: Text(review.icon,
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold))),
+                Flexible(
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(8)),
+                    child: const Text('⏰ منذ يوم',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold)),
+                  ),
                 ),
               ],
             ),
@@ -625,7 +628,7 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
                             fontSize: 13, fontWeight: FontWeight.bold)),
                     Text(rating.date,
                         style: const TextStyle(
-                            color: Color(0xFF94a3b8), fontSize: 9)),
+                            color: Color(0xFF64748b), fontSize: 11, fontWeight: FontWeight.w500)),
                   ],
                 ),
                 const Spacer(),
@@ -650,7 +653,7 @@ class _VolunteerRatingsViewState extends ConsumerState<VolunteerRatingsView> {
               child: Text(rating.comment,
                   textAlign: TextAlign.right,
                   style: const TextStyle(
-                      color: Color(0xFF374151), fontSize: 11, height: 1.6)),
+                      color: Color(0xFF334155), fontSize: 12, fontWeight: FontWeight.w500, height: 1.6)),
             ),
             if (rating.chips.isNotEmpty) ...[
               const SizedBox(height: 8),

@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -12,9 +14,13 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
   WidgetRef? _ref;
+  bool _isInitialized = false;
+  bool _isRequestingPermissions = false;
 
   Future<void> initialize(WidgetRef ref) async {
     _ref = ref;
+    if (_isInitialized) return; // منع التهيئة المتكررة
+    _isInitialized = true;
 
     // تهيئة المناطق الزمنية للجدولة
     tz.initializeTimeZones();
@@ -50,24 +56,33 @@ class NotificationService {
   }
 
   Future<void> requestPermissions() async {
-    // للأندرويد 13 فما فوق
-    final androidPlugin =
-        _notificationsPlugin.resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
-    if (androidPlugin != null) {
-      await androidPlugin.requestNotificationsPermission();
-    }
+    if (_isRequestingPermissions) return; // منع الطلب المتزامن
+    _isRequestingPermissions = true;
+    try {
+      // للأندرويد
+      final androidPlugin =
+          _notificationsPlugin.resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+      if (androidPlugin != null) {
+        // طلب صلاحية الإشعارات (لأندرويد 13+)
+        await androidPlugin.requestNotificationsPermission();
+      }
 
-    // للآيفون
-    final iosPlugin =
-        _notificationsPlugin.resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin>();
-    if (iosPlugin != null) {
-      await iosPlugin.requestPermissions(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
+      // للآيفون
+      final iosPlugin =
+          _notificationsPlugin.resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin>();
+      if (iosPlugin != null) {
+        await iosPlugin.requestPermissions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+      }
+    } catch (e) {
+      debugPrint('Error requesting permissions: $e');
+    } finally {
+      _isRequestingPermissions = false;
     }
   }
 
@@ -103,25 +118,49 @@ class NotificationService {
     required DateTime scheduledDate,
     String? payload,
   }) async {
-    await _notificationsPlugin.zonedSchedule(
-      id,
-      title,
-      body,
-      tz.TZDateTime.from(scheduledDate, tz.local),
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'taptaba_meds',
-          'تنبيهات الأدوية',
-          importance: Importance.max,
-          priority: Priority.high,
+    try {
+      await _notificationsPlugin.zonedSchedule(
+        id,
+        title,
+        body,
+        tz.TZDateTime.from(scheduledDate, tz.local),
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'taptaba_meds',
+            'تنبيهات الأدوية',
+            importance: Importance.max,
+            priority: Priority.high,
+          ),
+          iOS: DarwinNotificationDetails(),
         ),
-        iOS: DarwinNotificationDetails(),
-      ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-      payload: payload,
-    );
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        payload: payload,
+      );
+    } catch (e) {
+      // إذا فشلت الجدولة الدقيقة بسبب الصلاحيات، نستخدم الجدولة التقريبية
+      debugPrint('Exact alarm failed, falling back to inexact: $e');
+      await _notificationsPlugin.zonedSchedule(
+        id,
+        title,
+        body,
+        tz.TZDateTime.from(scheduledDate, tz.local),
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'taptaba_meds',
+            'تنبيهات الأدوية',
+            importance: Importance.max,
+            priority: Priority.high,
+          ),
+          iOS: DarwinNotificationDetails(),
+        ),
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        payload: payload,
+      );
+    }
   }
 
   void simulateIncomingNotification(String type) {

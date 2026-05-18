@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 // نموذج يمثل بيانات المستخدم (المسن) ونظام النقاط التحفيزي
 class User {
   String name; // اسم المستخدم
@@ -20,7 +22,8 @@ class Medication {
   final String dosage; // الجرعة (مثلاً: قرص واحد)
   final String timeDescription; // وصف الوقت (مثلاً: ٨ صباحاً)
   final String timeOfDay; // الفترة الزمنية: 'الصباح', 'الظهر', 'المساء'
-  bool isTaken; // هل تم تناول الجرعة؟
+  bool isTaken; // هل تم تناول الجرعة (تأكيد نهائي من الممرض)؟
+  bool isElderlyConfirmed; // هل أكد المسن تناوله للدواء؟
   bool isSkipped; // هل تم تجاوز الجرعة عمداً؟
   String? skipReason; // سبب تجاوز الجرعة (مثلاً: عدم الرغبة)
   final String dayTag; // تصنيف اليوم: 'أمس', 'اليوم', 'غداً'
@@ -34,6 +37,7 @@ class Medication {
     required this.timeDescription,
     required this.timeOfDay,
     this.isTaken = false,
+    this.isElderlyConfirmed = false,
     this.isSkipped = false,
     this.skipReason,
     this.dayTag = 'اليوم',
@@ -58,6 +62,7 @@ class FamilyMember {
   String phoneNumber; // رقم الهاتف لإجراء مكالمات حقيقية
   String? zoomLink; // رابط زووم للمكالمات المرئية
   bool isAvailable; // هل القريب متاح حالياً للمكالمة؟
+  bool isPinned; // هل تم اختياره ليظهر في الشاشة الرئيسية؟
 
   FamilyMember({
     required this.id,
@@ -68,6 +73,7 @@ class FamilyMember {
     required this.phoneNumber,
     this.zoomLink,
     this.isAvailable = false,
+    this.isPinned = true, // افتراضياً سنعتبرهم مختارين حتى يغير المستخدم
   });
 }
 
@@ -95,8 +101,9 @@ class MemoryItem {
   String category; // 'أسرة', 'رحلات', 'فيديو', 'مناسبات'
   String title;
   String date;
-  String type; // 'image', 'video'
+  String type; // 'image', 'video', 'text', 'voice'
   String assetPath;
+  String? content;
 
   MemoryItem({
     required this.id,
@@ -105,6 +112,7 @@ class MemoryItem {
     required this.date,
     required this.type,
     required this.assetPath,
+    this.content,
   });
 }
 
@@ -118,6 +126,14 @@ class Activity {
   String badges;
   int pointsReward;
   String dayTag; // 'أمس', 'اليوم', 'غداً', 'الأسبوع'
+  
+  // الحقول الجديدة لربط واجهة الأخصائي مع المسن
+  String? supervisor;
+  String? target;
+  String? image;
+  String? type; // 'رحلة' أو 'نشاط'
+  int? colorValue; // حفظ قيمة اللون كرقم
+  int? bgValue; // حفظ قيمة اللون كرقم
 
   Activity({
     required this.id,
@@ -129,7 +145,17 @@ class Activity {
     required this.badges,
     required this.pointsReward,
     this.dayTag = 'اليوم',
+    this.supervisor,
+    this.target,
+    this.image,
+    this.type,
+    this.colorValue,
+    this.bgValue,
   });
+
+  // دوال مساعدة للتعامل مع الألوان
+  Color? get color => colorValue != null ? Color(colorValue!) : null;
+  Color? get bg => bgValue != null ? Color(bgValue!) : null;
 }
 
 class VolunteerOpportunity {
@@ -350,6 +376,7 @@ class SocialSpecialistComplaint {
   final String category; // 'food', 'service', 'psych', 'maintenance'
   final String icon;
   final List<ComplaintStep> timeline;
+  final bool isEscalated; // هل تم تصعيد الشكوى للإدارة؟
 
   SocialSpecialistComplaint({
     required this.id,
@@ -362,7 +389,36 @@ class SocialSpecialistComplaint {
     required this.category,
     required this.icon,
     required this.timeline,
+    this.isEscalated = false,
   });
+
+  SocialSpecialistComplaint copyWith({
+    String? id,
+    String? title,
+    String? residentName,
+    String? room,
+    String? date,
+    String? priority,
+    String? status,
+    String? category,
+    String? icon,
+    List<ComplaintStep>? timeline,
+    bool? isEscalated,
+  }) {
+    return SocialSpecialistComplaint(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      residentName: residentName ?? this.residentName,
+      room: room ?? this.room,
+      date: date ?? this.date,
+      priority: priority ?? this.priority,
+      status: status ?? this.status,
+      category: category ?? this.category,
+      icon: icon ?? this.icon,
+      timeline: timeline ?? this.timeline,
+      isEscalated: isEscalated ?? this.isEscalated,
+    );
+  }
 }
 
 class SocialSpecialistKPI {
@@ -524,29 +580,47 @@ class FamilyHealthMetric {
   final double value; // 0.0 to 1.0
   final String status; // 'good', 'medium', 'critical'
   final String trend; // 'up', 'down', 'stable'
+  final List<double> history;
 
   FamilyHealthMetric({
     required this.label,
     required this.value,
     required this.status,
     required this.trend,
+    required this.history,
   });
 }
 
 class SpecialistResidentFile {
   final String id;
   final String name; // الاسم بالعربية
-  final String nameEn; // الاسم بالإنجليزية
+  final String nameEn;
   final String room;
-  final String status; // 'updated', 'pending', 'critical'
+  final String status;
   final String lastUpdate;
-  final List<String>
-      categories; // 'social', 'medical', 'psychological', 'admin'
+  final List<String> categories;
   final String initials;
-  final String? phone; // رقم التواصل
-  final int? age; // العمر
-  final String? familyEmail; // بريد العائلة المرتبط (لصلاحيات الوصول)
-  final List<FamilyMember> familyMembers; // الربط العائلي
+  final List<FamilyMember> familyMembers;
+  final String? phone;
+  final int? age;
+  final String? familyEmail;
+
+  // الحقول الجديدة للأرشيف الشامل
+  final String? bloodType;
+  final List<String>? chronicDiseases;
+  final List<String>? allergies;
+  final String? insuranceInfo;
+  final String? mobilityStatus;
+  final List<String>? assistiveDevices;
+  final String? cognitiveStatus;
+  final String? dietType;
+  final List<String>? foodRestrictions;
+  final String? foodPreferences;
+  final String? previousProfession;
+  final List<String>? hobbies;
+  final String? socialStatus;
+  final List<String>? uploadedDocuments;
+  final String? imageUrl;
 
   SpecialistResidentFile({
     required this.id,
@@ -557,11 +631,86 @@ class SpecialistResidentFile {
     required this.lastUpdate,
     required this.categories,
     required this.initials,
+    this.familyMembers = const [],
     this.phone,
     this.age,
     this.familyEmail,
-    this.familyMembers = const [],
+    this.bloodType,
+    this.chronicDiseases,
+    this.allergies,
+    this.insuranceInfo,
+    this.mobilityStatus,
+    this.assistiveDevices,
+    this.cognitiveStatus,
+    this.dietType,
+    this.foodRestrictions,
+    this.foodPreferences,
+    this.previousProfession,
+    this.hobbies,
+    this.socialStatus,
+    this.uploadedDocuments,
+    this.imageUrl,
   });
+
+  SpecialistResidentFile copyWith({
+    String? id,
+    String? name,
+    String? nameEn,
+    String? room,
+    String? status,
+    String? lastUpdate,
+    List<String>? categories,
+    String? initials,
+    List<FamilyMember>? familyMembers,
+    String? phone,
+    int? age,
+    String? familyEmail,
+    String? bloodType,
+    List<String>? chronicDiseases,
+    List<String>? allergies,
+    String? insuranceInfo,
+    String? mobilityStatus,
+    List<String>? assistiveDevices,
+    String? cognitiveStatus,
+    String? dietType,
+    List<String>? foodRestrictions,
+    String? foodPreferences,
+    String? previousProfession,
+    List<String>? hobbies,
+    String? socialStatus,
+    List<String>? uploadedDocuments,
+    String? imageUrl,
+  }) {
+    return SpecialistResidentFile(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      nameEn: nameEn ?? this.nameEn,
+      room: room ?? this.room,
+      status: status ?? this.status,
+      lastUpdate: lastUpdate ?? this.lastUpdate,
+      categories: categories ?? this.categories,
+      initials: initials ?? this.initials,
+      familyMembers: familyMembers ?? this.familyMembers,
+      phone: phone ?? this.phone,
+      age: age ?? this.age,
+      familyEmail: familyEmail ?? this.familyEmail,
+      bloodType: bloodType ?? this.bloodType,
+      chronicDiseases: chronicDiseases ?? this.chronicDiseases,
+      allergies: allergies ?? this.allergies,
+      insuranceInfo: insuranceInfo ?? this.insuranceInfo,
+      mobilityStatus: mobilityStatus ?? this.mobilityStatus,
+      assistiveDevices: assistiveDevices ?? this.assistiveDevices,
+      cognitiveStatus: cognitiveStatus ?? this.cognitiveStatus,
+      dietType: dietType ?? this.dietType,
+      foodRestrictions: foodRestrictions ?? this.foodRestrictions,
+      foodPreferences: foodPreferences ?? this.foodPreferences,
+      previousProfession: previousProfession ?? this.previousProfession,
+      hobbies: hobbies ?? this.hobbies,
+      socialStatus: socialStatus ?? this.socialStatus,
+      uploadedDocuments: uploadedDocuments ?? this.uploadedDocuments,
+      imageUrl: imageUrl ?? this.imageUrl,
+    );
+  }
 }
 
 class MedicalSession {
@@ -609,6 +758,7 @@ class StaffPerformance {
   final double completionRate;
   final String lastActive;
   final String status; // 'online', 'offline'
+  final String? imageUrl;
 
   StaffPerformance({
     required this.id,
@@ -617,7 +767,28 @@ class StaffPerformance {
     required this.completionRate,
     required this.lastActive,
     required this.status,
+    this.imageUrl,
   });
+
+  StaffPerformance copyWith({
+    String? id,
+    String? name,
+    String? role,
+    double? completionRate,
+    String? lastActive,
+    String? status,
+    String? imageUrl,
+  }) {
+    return StaffPerformance(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      role: role ?? this.role,
+      completionRate: completionRate ?? this.completionRate,
+      lastActive: lastActive ?? this.lastActive,
+      status: status ?? this.status,
+      imageUrl: imageUrl ?? this.imageUrl,
+    );
+  }
 }
 
 class CenterOperationalStat {
@@ -882,12 +1053,16 @@ class CompanionMessage {
   final String text;
   final bool isFromAI;
   final DateTime timestamp;
+  final String? mediaPath; // مسار الملف المرفق (صورة أو ملف)
+  final String? mediaType; // نوع الملف (image, file)
 
   CompanionMessage({
     required this.id,
     required this.text,
     required this.isFromAI,
     required this.timestamp,
+    this.mediaPath,
+    this.mediaType,
   });
 }
 
@@ -910,11 +1085,315 @@ class AppAccount {
   final String email;
   final String password;
   final String role;
+  final String? facilityName;
+  final String? facilityAddress;
+  final List<String>? amenities;
+  
+  // حقول إضافية للفئات المختلفة
+  final String? room; // للمسن
+  final String? specialty; // للممرض/الأخصائي
+  final String? shift; // للموظفين
+  final String? bloodType; // للمسن
+  final List<String>? chronicDiseases; // للمسن
+  final String? linkedResidentId; // للأسرة (لمتابعة قريبهم)
+  final String? phone;
+  final String? imageUrl;
+  final String? mobilityStatus; // للمسن
+  final String? dietType; // للمسن
+  final String? facilityPhone; // للدار
+  final String? facilityEmail; // للدار
+  final String? licenseNumber; // للدار
 
   AppAccount({
     required this.name,
     required this.email,
     required this.password,
     required this.role,
+    this.facilityName,
+    this.facilityAddress,
+    this.amenities,
+    this.room,
+    this.specialty,
+    this.shift,
+    this.bloodType,
+    this.chronicDiseases,
+    this.linkedResidentId,
+    this.phone,
+    this.imageUrl,
+    this.mobilityStatus,
+    this.dietType,
+    this.facilityPhone,
+    this.facilityEmail,
+    this.licenseNumber,
+  });
+
+  AppAccount copyWith({
+    String? name,
+    String? email,
+    String? password,
+    String? role,
+    String? facilityName,
+    String? facilityAddress,
+    List<String>? amenities,
+    String? room,
+    String? specialty,
+    String? shift,
+    String? bloodType,
+    List<String>? chronicDiseases,
+    String? linkedResidentId,
+    String? phone,
+    String? imageUrl,
+    String? mobilityStatus,
+    String? dietType,
+    String? facilityPhone,
+    String? facilityEmail,
+    String? licenseNumber,
+  }) {
+    return AppAccount(
+      name: name ?? this.name,
+      email: email ?? this.email,
+      password: password ?? this.password,
+      role: role ?? this.role,
+      facilityName: facilityName ?? this.facilityName,
+      facilityAddress: facilityAddress ?? this.facilityAddress,
+      amenities: amenities ?? this.amenities,
+      room: room ?? this.room,
+      specialty: specialty ?? this.specialty,
+      shift: shift ?? this.shift,
+      bloodType: bloodType ?? this.bloodType,
+      chronicDiseases: chronicDiseases ?? this.chronicDiseases,
+      linkedResidentId: linkedResidentId ?? this.linkedResidentId,
+      phone: phone ?? this.phone,
+      imageUrl: imageUrl ?? this.imageUrl,
+      mobilityStatus: mobilityStatus ?? this.mobilityStatus,
+      dietType: dietType ?? this.dietType,
+      facilityPhone: facilityPhone ?? this.facilityPhone,
+      facilityEmail: facilityEmail ?? this.facilityEmail,
+      licenseNumber: licenseNumber ?? this.licenseNumber,
+    );
+  }
+}
+
+// نموذج "ملف المقيم الشامل" - أرشيف رقمي متكامل يغني عن الورق
+class Resident {
+  final String id;
+  final String name;
+  final String roomNumber;
+  final String gender;
+  final DateTime birthDate;
+  final DateTime entryDate; // تاريخ الدخول للدار
+  final String nationalId; // الرقم القومي
+  final String? imageUrl; // صورة المقيم
+
+  // بيانات التواصل والطوارئ
+  final String emergencyContactName;
+  final String emergencyContactPhone;
+  final String emergencyRelation;
+
+  // التاريخ الطبي الشامل
+  final String bloodType;
+  final List<String> allergies;
+  final List<String> chronicDiseases;
+  final List<String> pastSurgeries;
+  final String insuranceInfo; // بيانات التأمين الصحي
+  final String? primaryDoctorName; // الطبيب المتابع الخارجي
+
+  // الحالة الوظيفية والحركية
+  final String
+      mobilityStatus; // 'مستقل', 'مساعدة خفيفة', 'كرسي wheelchair', 'طريح bedridden'
+  final List<String>
+      assistiveDevices; // 'سماعة hearing aid', 'نظارة glasses', 'طقم dentures'
+  final String cognitiveStatus; // الحالة الذهنية (ذاكرة، وعي)
+
+  // النظام الغذائي
+  final String dietType; // 'عادي normal', 'مهروس pureed', 'سوائل liquids'
+  final List<String> foodRestrictions; // 'سكري diabetes', 'ضغط hypertension'
+  final String foodPreferences;
+
+  // الجانب الاجتماعي
+  final String previousProfession;
+  final List<String> hobbies;
+  final String socialStatus;
+
+  // الإدارة المالية والقانونية
+  final String contractType; // 'شهري monthly', 'سنوي yearly'
+  final List<String> uploadedDocuments; // مسارات الملفات المرفوعة
+
+  Resident({
+    required this.id,
+    required this.name,
+    required this.roomNumber,
+    required this.gender,
+    required this.birthDate,
+    required this.entryDate,
+    required this.nationalId,
+    this.imageUrl,
+    required this.emergencyContactName,
+    required this.emergencyContactPhone,
+    required this.emergencyRelation,
+    required this.bloodType,
+    this.allergies = const [],
+    this.chronicDiseases = const [],
+    this.pastSurgeries = const [],
+    required this.insuranceInfo,
+    this.primaryDoctorName,
+    required this.mobilityStatus,
+    this.assistiveDevices = const [],
+    required this.cognitiveStatus,
+    required this.dietType,
+    this.foodRestrictions = const [],
+    required this.foodPreferences,
+    required this.previousProfession,
+    this.hobbies = const [],
+    required this.socialStatus,
+    required this.contractType,
+    this.uploadedDocuments = const [],
+  });
+
+  Resident copyWith({
+    String? id,
+    String? name,
+    String? roomNumber,
+    String? gender,
+    DateTime? birthDate,
+    DateTime? entryDate,
+    String? nationalId,
+    String? imageUrl,
+    String? emergencyContactName,
+    String? emergencyContactPhone,
+    String? emergencyRelation,
+    String? bloodType,
+    List<String>? allergies,
+    List<String>? chronicDiseases,
+    List<String>? pastSurgeries,
+    String? insuranceInfo,
+    String? primaryDoctorName,
+    String? mobilityStatus,
+    List<String>? assistiveDevices,
+    String? cognitiveStatus,
+    String? dietType,
+    List<String>? foodRestrictions,
+    String? foodPreferences,
+    String? previousProfession,
+    List<String>? hobbies,
+    String? socialStatus,
+    String? contractType,
+    List<String>? uploadedDocuments,
+  }) {
+    return Resident(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      roomNumber: roomNumber ?? this.roomNumber,
+      gender: gender ?? this.gender,
+      birthDate: birthDate ?? this.birthDate,
+      entryDate: entryDate ?? this.entryDate,
+      nationalId: nationalId ?? this.nationalId,
+      imageUrl: imageUrl ?? this.imageUrl,
+      emergencyContactName: emergencyContactName ?? this.emergencyContactName,
+      emergencyContactPhone: emergencyContactPhone ?? this.emergencyContactPhone,
+      emergencyRelation: emergencyRelation ?? this.emergencyRelation,
+      bloodType: bloodType ?? this.bloodType,
+      allergies: allergies ?? this.allergies,
+      chronicDiseases: chronicDiseases ?? this.chronicDiseases,
+      pastSurgeries: pastSurgeries ?? this.pastSurgeries,
+      insuranceInfo: insuranceInfo ?? this.insuranceInfo,
+      primaryDoctorName: primaryDoctorName ?? this.primaryDoctorName,
+      mobilityStatus: mobilityStatus ?? this.mobilityStatus,
+      assistiveDevices: assistiveDevices ?? this.assistiveDevices,
+      cognitiveStatus: cognitiveStatus ?? this.cognitiveStatus,
+      dietType: dietType ?? this.dietType,
+      foodRestrictions: foodRestrictions ?? this.foodRestrictions,
+      foodPreferences: foodPreferences ?? this.foodPreferences,
+      previousProfession: previousProfession ?? this.previousProfession,
+      hobbies: hobbies ?? this.hobbies,
+      socialStatus: socialStatus ?? this.socialStatus,
+      contractType: contractType ?? this.contractType,
+      uploadedDocuments: uploadedDocuments ?? this.uploadedDocuments,
+    );
+  }
+
+  // حساب العمر تلقائياً
+  int get age => DateTime.now().year - birthDate.year;
+}
+
+class CareReport {
+  final String id;
+  final String title;
+  final String date;
+  final String summary;
+  final String socialNotes;
+  final String recommendations;
+  final String authorName;
+  final String authorRole;
+  final String interactionLevel; // ممتاز, جيد, الخ
+  final String moodStatus; // مستقر, متقلب, الخ
+
+  CareReport({
+    required this.id,
+    required this.title,
+    required this.date,
+    required this.summary,
+    required this.socialNotes,
+    required this.recommendations,
+    required this.authorName,
+    required this.authorRole,
+    required this.interactionLevel,
+    required this.moodStatus,
+  });
+}
+
+class ChatMessage {
+  final String id;
+  final String text;
+  final bool isFromMe;
+  final DateTime timestamp;
+  final String? mediaPath;
+  final String? mediaType;
+
+  ChatMessage({
+    required this.id,
+    required this.text,
+    required this.isFromMe,
+    required this.timestamp,
+    this.mediaPath,
+    this.mediaType,
+  });
+}
+
+class SentReport {
+  final String id;
+  final String icon;
+  final String title;
+  final String meta;
+  final String status;
+  final String date;
+  
+  SentReport({
+    required this.id,
+    required this.icon,
+    required this.title,
+    required this.meta,
+    required this.status,
+    required this.date,
+  });
+}
+
+class Review {
+  final String id;
+  final String fromRole; // 'family' or 'elderly'
+  final String fromName; // اسم المقيم أو صاحب التقييم
+  final String toRole; // 'specialist', 'nurse', or 'home'
+  final double rating; // 1 to 5
+  final String comment;
+  final String date;
+  
+  Review({
+    required this.id,
+    required this.fromRole,
+    required this.fromName,
+    required this.toRole,
+    required this.rating,
+    required this.comment,
+    required this.date,
   });
 }

@@ -362,9 +362,15 @@ class SpecialistHomeView extends ConsumerWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFF6366F1).withValues(alpha: 0.5), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+              color: const Color(0xFF6366F1).withValues(alpha: 0.15),
+              blurRadius: 10,
+              offset: const Offset(0, 4))
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -446,9 +452,20 @@ class SpecialistHomeView extends ConsumerWidget {
 
   // عرض تفاصيل صف الاحتياج الفردي
   Widget _buildNeedRow(SocialSpecialistNeed need) {
+    final color = _getColor(need.type);
     return Container(
       margin: const EdgeInsets.only(bottom: 8), padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(color: need.isUrgent ? const Color(0xFFfff5f5) : const Color(0xFFf8fafc), borderRadius: BorderRadius.circular(12), border: Border.all(color: need.isUrgent ? const Color(0xFFfca5a5) : const Color(0xFFf1f5f9))),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: need.isUrgent ? const Color(0xFFef4444) : color.withValues(alpha: 0.5), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+              color: (need.isUrgent ? const Color(0xFFef4444) : color).withValues(alpha: 0.15),
+              blurRadius: 10,
+              offset: const Offset(0, 4))
+        ],
+      ),
       child: Row(
         children: [
           Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: _getBadgeBg(need.type, need.isUrgent), borderRadius: BorderRadius.circular(8)), child: Text(need.isUrgent ? 'عاجل' : need.type, style: TextStyle(color: _getBadgeFg(need.type, need.isUrgent), fontSize: 9, fontWeight: FontWeight.bold))),

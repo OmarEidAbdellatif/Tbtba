@@ -1,6 +1,9 @@
 import 'dart:async';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../providers/app_riverpod.dart';
 import '../../models/app_models.dart';
 import '../../widgets/taptaba_scaffold.dart';
@@ -20,6 +23,8 @@ class _FamilyBridgeScreenState extends ConsumerState<FamilyBridgeScreen>
   bool _isUploading = false; // حالة الرفع الحالية
   double _uploadProgress = 0.0; // نسبة تقدم الرفع
   String _uploadStatus = ''; // نص حالة الرفع
+  bool _showDoneAnimation = false; // هل نعرض أنيميشن الانتهاء؟
+  bool _showDeleteAnimation = false; // هل نعرض أنيميشن الحذف؟
   bool _isRecording = false; // هل يجري تسجيل صوتي الآن؟
   int _recordDuration = 0; // مدة التسجيل بالثواني
   Timer? _timer; // مؤقت لحساب وقت التسجيل
@@ -61,36 +66,42 @@ class _FamilyBridgeScreenState extends ConsumerState<FamilyBridgeScreen>
     _showConfirmUpload('تسجيل صوتي');
   }
 
+  // فتح المعرض واختيار صورة
+  Future<void> _pickAndUploadImage() async {
+    final picker = ImagePicker();
+    final image = await picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      _showConfirmUpload('صورة', imagePath: image.path);
+    }
+  }
+
   // محاكاة عملية الرفع مع تحديث شريط التقدم
-  void _simulateUpload(String title, String type) async {
+  void _simulateUpload(String title, String type, {String? imagePath}) async {
     setState(() {
       _isUploading = true;
       _uploadProgress = 0.0;
       _uploadStatus = 'جاري رفع $type...';
+      _showDoneAnimation = false;
     });
 
     // محاكاة تأخير الرفع
     for (int i = 1; i <= 10; i++) {
-      await Future.delayed(const Duration(milliseconds: 300));
+      await Future.delayed(const Duration(milliseconds: 200));
       setState(() {
         _uploadProgress = i / 10.0;
       });
     }
 
     setState(() {
-      _uploadStatus = 'تم الرفع بنجاح! 🎉';
+      _showDoneAnimation = true;
     });
-
-    await Future.delayed(const Duration(seconds: 1));
 
     // إنشاء كائن ذكرى جديدة وإضافته للمزود
     final newMoment = MemoryMoment(
       id: 'm${DateTime.now().millisecondsSinceEpoch}',
       residentId: 'r1',
       residentName: 'محمود', // إضافة المعامل المطلوب لاسم المقيم
-      imageUrl: type == 'صورة'
-          ? 'https://images.unsplash.com/photo-1516627145497-ae6968895b74?q=80&w=400'
-          : 'https://images.unsplash.com/photo-1533090161767-e6ffed986c88?q=80&w=400',
+      imageUrl: imagePath ?? 'https://images.unsplash.com/photo-1516627145497-ae6968895b74?q=80&w=400',
       activityTitle: title,
       date: 'الآن',
       appreciations: 0,
@@ -98,21 +109,19 @@ class _FamilyBridgeScreenState extends ConsumerState<FamilyBridgeScreen>
 
     ref.read(appRiverpod).addMemoryMoment(newMoment);
 
-    setState(() {
-      _isUploading = false;
-    });
-
+    // إخفاء الأنيميشن بعد ثانيتين
+    await Future.delayed(const Duration(seconds: 2));
+    
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('تمت إضافة ذكرى جديدة للحائط ❤️'),
-            backgroundColor: Color(0xFF10b981)),
-      );
+      setState(() {
+        _isUploading = false;
+        _showDoneAnimation = false;
+      });
     }
   }
 
   // إظهار نافذة تأكيد قبل الرفع الفعلي
-  void _showConfirmUpload(String type) {
+  void _showConfirmUpload(String type, {String? imagePath}) {
     String title = type == 'صورة' ? 'صورة عائلية جديدة' : 'رسالة صوتية للأب';
     showModalBottomSheet(
       context: context,
@@ -148,7 +157,7 @@ class _FamilyBridgeScreenState extends ConsumerState<FamilyBridgeScreen>
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.pop(context);
-                      _simulateUpload(title, type);
+                      _simulateUpload(title, type, imagePath: imagePath);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFea580c),
@@ -205,6 +214,7 @@ class _FamilyBridgeScreenState extends ConsumerState<FamilyBridgeScreen>
             ],
           ),
           if (_isUploading) _buildUploadOverlay(), // واجهة التحميل عند الرفع
+          if (_showDeleteAnimation) _buildDeleteOverlay(), // أنيميشن الحذف
         ],
       ),
     );
@@ -231,7 +241,7 @@ class _FamilyBridgeScreenState extends ConsumerState<FamilyBridgeScreen>
                         color: Colors.white, size: 22),
                     onPressed: () => Navigator.pop(context),
                   ),
-                  const Text('جسر العائلة ✨',
+                  const Text('جسر العائلة',
                       style: TextStyle(
                           color: Colors.white,
                           fontSize: 22,
@@ -375,37 +385,10 @@ class _FamilyBridgeScreenState extends ConsumerState<FamilyBridgeScreen>
           const SizedBox(height: 16),
           Row(
             children: [
-              _uploadBtn(
-                  Icons.mic_rounded,
-                  'رسالة صوتية',
-                  const Color(0xFFa855f7),
-                  _isRecording ? _stopRecording : _startRecording,
-                  isRecording: _isRecording),
-              const SizedBox(width: 12),
               _uploadBtn(Icons.image_rounded, 'صورة جديدة',
-                  const Color(0xFF0ea5e9), () => _showConfirmUpload('صورة')),
+                  const Color(0xFF0ea5e9), _pickAndUploadImage),
             ],
           ),
-          // عرض عداد الوقت عند التسجيل الصوتي
-          if (_isRecording)
-            Padding(
-              padding: const EdgeInsets.only(top: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text('جاري التسجيل...',
-                      style:
-                          TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-                  const SizedBox(width: 8),
-                  Text(
-                      '${(_recordDuration ~/ 60).toString().padLeft(2, '0')}:${(_recordDuration % 60).toString().padLeft(2, '0')}',
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold)),
-                  const SizedBox(width: 12),
-                  const Icon(Icons.circle, color: Colors.red, size: 12),
-                ],
-              ),
-            ),
         ],
       ),
     );
@@ -446,6 +429,42 @@ class _FamilyBridgeScreenState extends ConsumerState<FamilyBridgeScreen>
     );
   }
 
+  void _showDeleteConfirmation(BuildContext context, WidgetRef ref, String id) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('حذف الصورة', textAlign: TextAlign.center),
+        content: const Text('هل أنت متأكد أنك تريد حذف هذه الصورة من حائط الذكريات؟'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () async {
+              Navigator.pop(context); // Close dialog
+              setState(() {
+                _showDeleteAnimation = true;
+              });
+              
+              ref.read(appRiverpod).deleteMemoryMoment(id);
+              
+              await Future.delayed(const Duration(milliseconds: 1500));
+              
+              if (mounted) {
+                setState(() {
+                  _showDeleteAnimation = false;
+                });
+              }
+            },
+            child: const Text('حذف', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
   // بناء معرض الصور والرسائل المرفوعة (Grid View)
   Widget _buildGallery(List<MemoryMoment> moments) {
     return GridView.builder(
@@ -475,10 +494,39 @@ class _FamilyBridgeScreenState extends ConsumerState<FamilyBridgeScreen>
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
-                child: ClipRRect(
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(24)),
-                  child: Image.network(m.imageUrl, fit: BoxFit.cover),
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                        child: kIsWeb
+                            ? Image.network(m.imageUrl, fit: BoxFit.cover)
+                            : (m.imageUrl.startsWith('http') || m.imageUrl.startsWith('blob')
+                                ? Image.network(m.imageUrl, fit: BoxFit.cover)
+                                : Image.file(File(m.imageUrl), fit: BoxFit.cover)),
+                      ),
+                    ),
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: GestureDetector(
+                        onTap: () {
+                          _showDeleteConfirmation(context, ref, m.id);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(color: Colors.black26, blurRadius: 4),
+                            ],
+                          ),
+                          child: const Icon(Icons.close, color: Colors.red, size: 16),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Padding(
@@ -504,6 +552,7 @@ class _FamilyBridgeScreenState extends ConsumerState<FamilyBridgeScreen>
     );
   }
 
+
   // واجهة التغطية (Overlay) التي تظهر أثناء عملية الرفع
   Widget _buildUploadOverlay() {
     return Container(
@@ -518,28 +567,93 @@ class _FamilyBridgeScreenState extends ConsumerState<FamilyBridgeScreen>
               color: Colors.white, borderRadius: BorderRadius.circular(32)),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: 80,
-                height: 80,
-                child: CircularProgressIndicator(
-                  value: _uploadProgress,
-                  strokeWidth: 8,
-                  backgroundColor: const Color(0xFFf1f5f9),
-                  color: const Color(0xFFea580c),
+            children: _showDoneAnimation
+                ? [
+                    const Icon(
+                      Icons.check_circle_rounded,
+                      color: Colors.green,
+                      size: 70,
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'تم بنجاح!',
+                      style: TextStyle(
+                          color: Colors.green,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18),
+                    ),
+                  ]
+                : [
+                    SizedBox(
+                      width: 80,
+                      height: 80,
+                      child: CircularProgressIndicator(
+                        value: _uploadProgress,
+                        strokeWidth: 8,
+                        backgroundColor: const Color(0xFFf1f5f9),
+                        color: const Color(0xFFea580c),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(_uploadStatus,
+                        style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1e293b))),
+                    const SizedBox(height: 8),
+                    Text('${(_uploadProgress * 100).toInt()}% اكتمل',
+                        style: const TextStyle(color: Color(0xFF64748b))),
+                  ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDeleteOverlay() {
+    return Container(
+      color: Colors.black.withValues(alpha: 0.5),
+      width: double.infinity,
+      height: double.infinity,
+      child: Center(
+        child: TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.0, end: 1.0),
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.elasticOut,
+          builder: (context, value, child) {
+            return Transform.scale(
+              scale: value,
+              child: Container(
+                width: 150,
+                height: 150,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(color: Colors.black26, blurRadius: 10, spreadRadius: 2),
+                  ],
+                ),
+                child: const Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.delete_forever_rounded,
+                      color: Colors.red,
+                      size: 70,
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'تم الحذف!',
+                      style: TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 24),
-              Text(_uploadStatus,
-                  style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1e293b))),
-              const SizedBox(height: 8),
-              Text('${(_uploadProgress * 100).toInt()}% اكتمل',
-                  style: const TextStyle(color: Color(0xFF64748b))),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );

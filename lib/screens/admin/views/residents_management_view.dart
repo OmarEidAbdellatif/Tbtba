@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -138,148 +139,198 @@ class _ResidentsManagementViewState
         ? 'حالة حرجة'
         : (r.status == 'pending' ? 'متابعة دقيقة' : 'مستقر');
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+    return TweenAnimationBuilder(
+      duration: const Duration(milliseconds: 400),
+      tween: Tween<double>(begin: 0, end: 1),
+      builder: (context, double value, child) {
+        return Transform.translate(
+          offset: Offset(0, 20 * (1 - value)),
+          child: Opacity(
+            opacity: value,
+            child: child,
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16, left: 2, right: 2),
+        decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xFFf1f5f9))),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              // 1. أيقونة التعريف (أقصى اليمين)
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.1),
-                    shape: BoxShape.circle),
-                child: Center(
-                  child: Text(r.name.substring(0, min(2, r.name.length)),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          color: statusColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12)),
-                ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+            BoxShadow(
+              color: statusColor.withValues(alpha: 0.05),
+              blurRadius: 1,
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    AdminResidentDetailScreen(residentId: r.id),
               ),
-              const SizedBox(width: 12),
-              // 2. معلومات المقيم
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(r.name,
-                        textAlign: TextAlign.right,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w900,
-                            color: Color(0xFF0f172a))),
-                    if (r.familyEmail != null)
-                      Text('مرتبط بـ: ${r.familyEmail}',
-                          textAlign: TextAlign.right,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                              fontSize: 11, color: Color(0xFF0ea5e9)))
-                    else
-                      Text(r.nameEn,
-                          textAlign: TextAlign.right,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                              fontSize: 12, color: Color(0xFF64748b))),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              // 3. قائمة الخيارات المنبثقة (الجهة اليسرى)
-              PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert_rounded,
-                    color: Color(0xFF94a3b8)),
-                color: const Color(0xFFf8fafc), // خلفية هادئة
-                elevation: 6, // شادو
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    side:
-                        const BorderSide(color: Color(0xFFe2e8f0), width: 0.5)),
-                onSelected: (value) {
-                  switch (value) {
-                    case 'edit':
-                      _showResidentForm(context, ref, resident: r);
-                      break;
-                    case 'details':
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) =>
-                                  AdminResidentDetailScreen(residentId: r.id)));
-                      break;
-                    case 'link':
-                      _showLinkFamilySheet(context, ref, r);
-                      break;
-                  }
-                },
-                itemBuilder: (context) => [
-                  _buildPopupItem('تعديل', Icons.edit_outlined, 'edit'),
-                  _buildPopupItem(
-                      'التفاصيل', Icons.info_outline_rounded, 'details'),
-                  _buildPopupItem(
-                      'ربط العائلة', Icons.family_restroom_outlined, 'link',
-                      color: const Color(0xFF0ea5e9)),
+            ),
+            borderRadius: BorderRadius.circular(24),
+            splashColor: statusColor.withValues(alpha: 0.05),
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      // 1. أيقونة التعريف الملونة (3D Effect)
+                      GestureDetector(
+                        onTap: () {
+                          ref.read(appRiverpod).pickAndSetResidentImage(r.id);
+                        },
+                        child: Stack(
+                          children: [
+                            Builder(
+                              builder: (context) {
+                                final String? img = r.imageUrl;
+                                return Container(
+                                  width: 50,
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        statusColor.withValues(alpha: 0.2),
+                                        statusColor.withValues(alpha: 0.05),
+                                      ],
+                                    ),
+                                    shape: BoxShape.circle,
+                                    image: (img != null && img.isNotEmpty)
+                                        ? DecorationImage(
+                                            image: FileImage(File(img)),
+                                            fit: BoxFit.cover)
+                                        : null,
+                                    border: Border.all(
+                                      color: statusColor.withValues(alpha: 0.2),
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  child: (img == null || img.isEmpty)
+                                      ? Center(
+                                          child: Text(
+                                            r.name.isNotEmpty
+                                                ? (r.name.isNotEmpty
+                                                    ? r.name.substring(0, 1)
+                                                    : 'م')
+                                                : 'م',
+                                            style: TextStyle(
+                                              color: statusColor,
+                                              fontWeight: FontWeight.w900,
+                                              fontSize: 18,
+                                            ),
+                                          ),
+                                        )
+                                      : null,
+                                );
+                              },
+                            ),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: statusColor,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.white, width: 1.5),
+                                ),
+                                child: const Icon(
+                                  Icons.edit_rounded,
+                                  size: 10,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      // 2. معلومات المقيم
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              r.name,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w900,
+                                color: Color(0xFF0f172a),
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Icon(Icons.meeting_room_rounded,
+                                    size: 14, color: Colors.grey[400]),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'غرفة ${r.room}',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      // 3. مؤشر الحالة الجمالي
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: statusColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 6,
+                              height: 6,
+                              decoration: BoxDecoration(
+                                color: statusColor,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              statusText,
+                              style: TextStyle(
+                                color: statusColor,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
-            ],
+            ),
           ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              const SizedBox(width: 56),
-              Text('غرفة ${r.room}',
-                  style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF475569))),
-              const SizedBox(width: 12),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10)),
-                child: Text(statusText,
-                    style: TextStyle(
-                        color: statusColor,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w900)),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  PopupMenuItem<String> _buildPopupItem(String label, IconData icon, String val,
-      {Color? color}) {
-    return PopupMenuItem<String>(
-      value: val,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Text(label,
-              style: TextStyle(
-                  fontSize: 13,
-                  color: color ?? const Color(0xFF334155),
-                  fontWeight: FontWeight.w500)),
-          const SizedBox(width: 10),
-          Icon(icon, color: color ?? const Color(0xFF94a3b8), size: 18),
-        ],
+        ),
       ),
     );
   }
@@ -297,6 +348,20 @@ class _ResidentsManagementViewState
     final passwordController = TextEditingController();
     String selectedStatus = resident?.status ?? 'updated';
 
+    // Medical State
+    final bloodTypeController = TextEditingController(text: 'A+');
+    final chronicDiseasesController = TextEditingController();
+    final allergiesController = TextEditingController();
+
+    // Functional/Dietary State
+    String mobilityStatus = 'مستقل';
+    final dietTypeController = TextEditingController(text: 'عادي');
+    final foodRestrictionsController = TextEditingController();
+
+    // Social State
+    final professionController = TextEditingController();
+    final hobbiesController = TextEditingController();
+
     // Validation State
     final formKey = GlobalKey<FormState>();
 
@@ -306,6 +371,7 @@ class _ResidentsManagementViewState
       backgroundColor: Colors.transparent,
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) => Container(
+          height: MediaQuery.of(context).size.height * 0.85, // جعل النافذة أكبر
           decoration: const BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
@@ -316,175 +382,243 @@ class _ResidentsManagementViewState
               top: 24),
           child: Form(
             key: formKey,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                      child: Container(
-                          width: 40,
-                          height: 4,
-                          decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(10)))),
-                  const SizedBox(height: 20),
-                  Text(isEdit ? 'تعديل بيانات المقيم ✏️' : 'تسجيل مقيم جديد 👥',
-                      style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF0f172a))),
-                  const Text(
-                      'يرجى التأكد من دقة البيانات المدخلة للحفاظ على جودة السجلات',
-                      style: TextStyle(fontSize: 13, color: Color(0xFF64748b))),
-                  const SizedBox(height: 24),
-                  _buildLabel('الاسم بالعربية *'),
-                  _buildField(nameArController, 'مثلاً: محمود الجوهري',
-                      validator: (v) => v!.isEmpty ? 'هذا الحقل مطلوب' : null),
-                  const SizedBox(height: 16),
-                  _buildLabel('الاسم بالإنجليزية *'),
-                  _buildField(nameEnController, 'Example: Mahmoud El Gohary',
-                      validator: (v) => v!.isEmpty ? 'هذا الحقل مطلوب' : null,
-                      isEn: true),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+            child: Column(
+              children: [
+                Center(
+                    child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            borderRadius: BorderRadius.circular(10)))),
+                const SizedBox(height: 15),
+                Text(isEdit ? 'تعديل بيانات المقيم ✏️' : 'تسجيل مقيم شامل 👥',
+                    style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0f172a))),
+                const SizedBox(height: 20),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionHeader('البيانات الأساسية'),
+                        _buildLabel('الاسم بالكامل (عربي) *'),
+                        _buildField(nameArController, 'مثلاً: محمود الجوهري'),
+                        const SizedBox(height: 12),
+                        Row(
                           children: [
-                            _buildLabel('العمر'),
-                            _buildField(ageController, '٧٠',
-                                keyboardType: TextInputType.number),
+                            Expanded(
+                                child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                  _buildLabel('العمر'),
+                                  _buildField(ageController, '70',
+                                      keyboardType: TextInputType.number)
+                                ])),
+                            const SizedBox(width: 12),
+                            Expanded(
+                                child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                  _buildLabel('رقم الغرفة *'),
+                                  _buildField(roomController, '101',
+                                      keyboardType: TextInputType.number)
+                                ])),
                           ],
                         ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        const SizedBox(height: 12),
+                        _buildLabel('رقم الهاتف / المعرف'),
+                        _buildField(phoneController, '01xxxxxxxxx',
+                            keyboardType: TextInputType.phone),
+                        const SizedBox(height: 24),
+                        _buildSectionHeader('الملف الطبي'),
+                        Row(
                           children: [
-                            _buildLabel('رقم الغرفة *'),
-                            _buildField(roomController, '٢٠٥',
-                                keyboardType: TextInputType.number,
-                                validator: (v) => v!.isEmpty ? 'مطلوب' : null),
+                            Expanded(
+                                child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                  _buildLabel('فصيلة الدم'),
+                                  _buildField(bloodTypeController, 'A+')
+                                ])),
+                            const SizedBox(width: 12),
+                            Expanded(
+                                child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                  _buildLabel('الحالة الصحية'),
+                                  _buildMiniStatus(
+                                      selectedStatus,
+                                      (val) => setModalState(
+                                          () => selectedStatus = val))
+                                ])),
                           ],
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  _buildLabel('رقم الهاتف / اسم المستخدم'),
-                  _buildField(phoneController, '01xxxxxxxxx',
-                      keyboardType: TextInputType.phone,
-                      validator: (v) => v!.isEmpty ? 'مطلوب للدخول' : null),
-                  const SizedBox(height: 16),
-                  _buildLabel('كلمة المرور للدخول'),
-                  _buildField(passwordController, 'أدخل كلمة مرور للمسن',
-                      validator: (v) => v!.isEmpty ? 'مطلوب للدخول' : null),
-                  const SizedBox(height: 20),
-                  _buildLabel('الحالة الصحية'),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      _statusOption(
-                          'critical',
-                          'حرجة',
-                          Colors.red,
-                          selectedStatus == 'critical',
-                          () =>
-                              setModalState(() => selectedStatus = 'critical')),
-                      const SizedBox(width: 10),
-                      _statusOption(
-                          'pending',
-                          'متابعة',
-                          Colors.amber,
-                          selectedStatus == 'pending',
-                          () =>
-                              setModalState(() => selectedStatus = 'pending')),
-                      const SizedBox(width: 10),
-                      _statusOption(
-                          'updated',
-                          'مستقرة',
-                          Colors.green,
-                          selectedStatus == 'updated',
-                          () =>
-                              setModalState(() => selectedStatus = 'updated')),
-                    ],
-                  ),
-                  const SizedBox(height: 32),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 55,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        if (formKey.currentState!.validate()) {
-                          // 1. إنشاء الحساب للدخول إذا كان مقيم جديد
-                          if (!isEdit) {
-                            ref.read(appRiverpod).createAccount(
-                                  name: nameArController.text,
-                                  email: phoneController
-                                      .text, // يستخدم الهاتف كمعرف
-                                  password: passwordController.text,
-                                  role: 'مسن',
-                                );
-                          }
-
-                          // 2. تحديث/إضافة بيانات المقيم
-                          final initials = nameArController.text.length >= 2
-                              ? nameArController.text.substring(0, 2)
-                              : 'مق';
-                          final residentData = SpecialistResidentFile(
-                            id: isEdit
-                                ? resident.id
-                                : 'r${DateTime.now().millisecondsSinceEpoch}',
-                            name: nameArController.text,
-                            nameEn: nameEnController.text,
-                            room: roomController.text,
-                            status: selectedStatus,
-                            lastUpdate:
-                                isEdit ? 'تم التعديل الآن' : 'تم التسجيل الآن',
-                            categories:
-                                isEdit ? resident.categories : ['admin'],
-                            initials: initials,
-                            familyMembers: isEdit ? resident.familyMembers : [],
-                            age: int.tryParse(ageController.text) ?? 70,
-                            phone: phoneController.text,
-                            familyEmail: isEdit ? resident.familyEmail : null,
-                          );
-
-                          if (isEdit) {
-                            ref.read(appRiverpod).updateResident(residentData);
-                          } else {
-                            ref.read(appRiverpod).addResident(residentData);
-                          }
-
-                          Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(isEdit
-                                  ? 'تم تحديث بيانات المقيم بنجاح! ✅'
-                                  : 'تم تسجيل المقيم وحسابه بنجاح! 🎉'),
-                              backgroundColor: const Color(0xFF10b981),
-                            ),
-                          );
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0ea5e9),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16))),
-                      child: Text(isEdit ? 'حفظ التعديلات' : 'تأكيد التسجيل',
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 12),
+                        _buildLabel('الأمراض المزمنة (افصل بفاصلة)'),
+                        _buildField(
+                            chronicDiseasesController, 'السكري، ضغط، ...'),
+                        const SizedBox(height: 12),
+                        _buildLabel('الحساسية'),
+                        _buildField(
+                            allergiesController, 'البنسلين، أطعمة معينة، ...'),
+                        const SizedBox(height: 24),
+                        _buildSectionHeader('الحالة الحركية والغذائية'),
+                        _buildLabel('درجة الحركة'),
+                        _buildDropdown(
+                            [
+                              'مستقل',
+                              'مساعدة خفيفة',
+                              'كرسي متحرك',
+                              'طريح الفراش'
+                            ],
+                            mobilityStatus,
+                            (val) =>
+                                setModalState(() => mobilityStatus = val!)),
+                        const SizedBox(height: 12),
+                        _buildLabel('نوع النظام الغذائي'),
+                        _buildField(
+                            dietTypeController, 'عادي، مهروس، سوائل...'),
+                        const SizedBox(height: 12),
+                        _buildLabel('الممنوعات من الطعام'),
+                        _buildField(foodRestrictionsController,
+                            'السكريات، الأملاح، ...'),
+                        const SizedBox(height: 24),
+                        _buildSectionHeader('الجانب الاجتماعي'),
+                        _buildLabel('المهنة السابقة'),
+                        _buildField(professionController, 'مثلاً: مدرس متقاعد'),
+                        const SizedBox(height: 12),
+                        _buildLabel('الهوايات'),
+                        _buildField(hobbiesController, 'القراءة، المشي، ...'),
+                        const SizedBox(height: 32),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+                SizedBox(
+                  width: double.infinity,
+                  height: 55,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (formKey.currentState!.validate()) {
+                        final residentData = SpecialistResidentFile(
+                          id: isEdit
+                              ? resident.id
+                              : 'r${DateTime.now().millisecondsSinceEpoch}',
+                          name: nameArController.text,
+                          nameEn: nameEnController.text.isEmpty
+                              ? 'New Resident'
+                              : nameEnController.text,
+                          room: roomController.text,
+                          status: selectedStatus,
+                          lastUpdate: 'تم التسجيل الآن',
+                          initials: nameArController.text.isNotEmpty
+                              ? nameArController.text.substring(0, 1)
+                              : 'م',
+                          categories:
+                              isEdit ? resident.categories : ['resident'],
+                          familyMembers: isEdit ? resident.familyMembers : <FamilyMember>[],
+                          age: int.tryParse(ageController.text) ?? 70,
+                          phone: phoneController.text,
+                        );
+
+                        if (isEdit) {
+                          ref.read(appRiverpod).updateResident(residentData);
+                        } else {
+                          ref.read(appRiverpod).addResident(residentData);
+                        }
+                        Navigator.pop(context);
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0ea5e9),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16))),
+                    child: Text(
+                        isEdit ? 'حفظ التعديلات' : 'تأكيد التسجيل الشامل',
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) => Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: Row(
+          children: [
+            const Expanded(child: Divider(color: Color(0xFFe2e8f0))),
+            Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Text(title,
+                    style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0ea5e9)))),
+            const Expanded(child: Divider(color: Color(0xFFe2e8f0))),
+          ],
+        ),
+      );
+
+  Widget _buildMiniStatus(String current, Function(String) onSelect) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+          color: const Color(0xFFf8fafc),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFe2e8f0))),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: current,
+          isExpanded: true,
+          onChanged: (v) => onSelect(v!),
+          items: const [
+            DropdownMenuItem(
+                value: 'updated',
+                child: Text('مستقر', style: TextStyle(fontSize: 13))),
+            DropdownMenuItem(
+                value: 'pending',
+                child: Text('متابعة', style: TextStyle(fontSize: 13))),
+            DropdownMenuItem(
+                value: 'critical',
+                child: Text('حرجة', style: TextStyle(fontSize: 13))),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDropdown(
+      List<String> items, String current, Function(String?) onChange) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+          color: const Color(0xFFf8fafc),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFe2e8f0))),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: current,
+          isExpanded: true,
+          onChanged: onChange,
+          items: items
+              .map((e) => DropdownMenuItem(
+                  value: e,
+                  child: Text(e, style: const TextStyle(fontSize: 13))))
+              .toList(),
         ),
       ),
     );

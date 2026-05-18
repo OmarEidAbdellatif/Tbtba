@@ -1,5 +1,7 @@
 import 'dart:async'; // مكتبة التوقيت والعمليات غير المتزامنة
+import 'dart:math'; // مكتبة العمليات الرياضية
 import 'package:flutter/material.dart'; // مكتبة فلاتر للواجهات
+import 'package:lottie/lottie.dart'; // مكتبة الأنيميشن
 import 'nurse_reports_screen.dart'; // شاشة التقارير الخاصة بالتمريض
 import 'nurse_residents_screen.dart'; // شاشة قائمة المقيمين
 import 'nurse_resident_detail_screen.dart'; // شاشة تفاصيل المقيم
@@ -16,6 +18,13 @@ import 'widgets/healing_particles.dart'; // الأنميشن الخاص بعلا
 // القائمة الجانبية الموحدة
 import '../../widgets/taptaba_scaffold.dart'; // الهيكل الموحد للتطبيق
 
+// أرقام الطوارئ (يمكن للإدارة تعديلها من هنا حالياً، ومستقبلاً من لوحة التحكم)
+class EmergencyContacts {
+  static const String ambulance = '128';
+  static const String doctor = '01012345678';
+  static const String codeBlue = '01112345678';
+}
+
 class NurseDashboardScreen extends ConsumerStatefulWidget {
   // شاشة لوحة تحكم الممرض
   const NurseDashboardScreen({super.key}); // مشيد الفئة
@@ -30,6 +39,7 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
   // حالة الشاشة مع دعم الأنيميشن والتوقيت
   int _currentTabIndex = 0; // الفهرس الحالي للتبويبات
   Timer? _timer; // مؤقت لحساب وقت الوردية
+  final List<String> _dismissedAlerts = []; // التنبيهات التي تم حذفها بالسحب
 
   late AnimationController _pulseController; // متحكم أنيميشن النبض للتنبيهات
 
@@ -123,11 +133,17 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
             // عرض المحتوى بناءً على التبويب المختار
             index: _currentTabIndex, // التبويب الحالي
             children: [
-              _buildHomeView(provider), // واجهة الرئيسية (نظرة عامة)
-              const NurseResidentsScreen(), // واجهة قائمة المقيمين
-              const OperationsView(), // واجهة العمليات والرعاية
-              const MedicalAdminView(), // واجهة الإدارة الطبية
-              const NurseReportsScreen(), // واجهة التقارير والتحليلات
+              AnimatedBackground(
+                  child:
+                      _buildHomeView(provider)), // واجهة الرئيسية (نظرة عامة)
+              const NurseResidentsScreen(), // واجهة قائمة المقيمين (لديها خلفيتها الخاصة)
+              AnimatedBackground(
+                  child: const OperationsView()), // واجهة العمليات والرعاية
+              AnimatedBackground(
+                  child: const MedicalAdminView()), // واجهة الإدارة الطبية
+              AnimatedBackground(
+                  child:
+                      const NurseReportsScreen()), // واجهة التقارير والتحليلات
             ],
           ),
           _buildDraggableSOS(), // زر الطوارئ المخفي القابل للسحب
@@ -137,20 +153,17 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
   }
 
   Widget _buildHomeView(AppRiverpod provider) {
-    // بناء واجهة "الرئيسية" للممرض
+    // بناء واجهة "الرئيسية" للممرض (مبسطة)
     return SingleChildScrollView(
-      // السماح بالتمرير الرأسي
-      physics: const BouncingScrollPhysics(), // تأثير الارتداد عند التمرير
+      physics: const BouncingScrollPhysics(),
       child: Column(
-        // ترتيب العناصر رأسياً
         children: [
           _buildHero(), // بناء الجزء العلوي (الهوية والوردية)
           _buildOperationalAlerts(provider), // بناء تنبيهات المخزون والمهام
           _buildShiftHandoffCard(provider), // بناء بطاقة تسليم الوردية
           _buildKPIs(), // بناء مؤشرات الأداء الرئيسية
-          _buildTabs(), // بناء فلاتر فرز المقيمين
-          _buildResidentsSection(provider), // بناء قائمة المقيمين ذات الأولوية
-          _buildMedScheduleSection(), // بناء جدول مواعيد الأدوية
+          _buildResidentsSection(
+              provider), // بناء قائمة المقيمين ذات الأولوية (مبسط)
           const SizedBox(height: 100), // مسافة فارغة في الأسفل
         ],
       ),
@@ -166,7 +179,12 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
         .where((t) => !t.isCompleted)
         .toList(); // جرد المهام غير المكتملة
 
-    if (lowStockItems.isEmpty && pendingTasks.isEmpty) {
+    final showLowStock = lowStockItems.isNotEmpty &&
+        !((_dismissedAlerts as dynamic)?.contains('نقص في المخزون!') ?? false);
+    final showPendingTasks = pendingTasks.isNotEmpty &&
+        !((_dismissedAlerts as dynamic)?.contains('مهام رعاية معلقة') ?? false);
+
+    if (!showLowStock && !showPendingTasks) {
       return const SizedBox.shrink(); // إخفاء إذا لم يوجد تنبيهات
     }
 
@@ -175,60 +193,105 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
       child: Column(
         children: [
-          if (lowStockItems.isNotEmpty) // تنبيه نقص المخزون
+          if (showLowStock) // تنبيه نقص المخزون
             _alertCard(
               'نقص في المخزون!',
               'يوجد ${lowStockItems.length} أصناف أوشكت على النفاذ',
               const Color(0xFFEF4444),
               () => setState(
                   () => _currentTabIndex = 2), // الانتقال لتبويب العمليات
+              onDismissed: (direction) {
+                setState(() {
+                  _dismissedAlerts.add('نقص في المخزون!');
+                });
+              },
             ),
-          if (pendingTasks.isNotEmpty) const SizedBox(height: 8),
-          if (pendingTasks.isNotEmpty) // تنبيه المهام المعلقة
+          if (showLowStock && showPendingTasks) const SizedBox(height: 8),
+          if (showPendingTasks) // تنبيه المهام المعلقة
             _alertCard(
               'مهام رعاية معلقة',
               'لديك ${pendingTasks.length} مهام متبقية لليوم',
               const Color(0xFFF59E0B),
               () => setState(
                   () => _currentTabIndex = 2), // الانتقال لتبويب العمليات
+              onDismissed: (direction) {
+                setState(() {
+                  _dismissedAlerts.add('مهام رعاية معلقة');
+                });
+              },
             ),
         ],
       ),
     );
   }
 
-  Widget _alertCard(String title, String sub, Color color, VoidCallback onTap) {
+  Widget _alertCard(String title, String sub, Color color, VoidCallback onTap,
+      {required ValueChanged<DismissDirection>? onDismissed}) {
     // قالب بطاقة التنبيه
-    return GestureDetector(
-      // كاشف للمسات
-      onTap: onTap,
-      child: Container(
-        // تصميم البطاقة
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    return Dismissible(
+      key: Key(title),
+      direction: DismissDirection.horizontal,
+      onDismissed: onDismissed,
+      background: Container(
         decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
+          color: const Color(0xFFEF4444),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        child: const Icon(Icons.delete_outline_rounded,
+            color: Colors.white, size: 28),
+      ),
+      secondaryBackground: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFEF4444),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.only(left: 20),
+        child: const Icon(Icons.delete_outline_rounded,
+            color: Colors.white, size: 28),
+      ),
+      child: GestureDetector(
+        // كاشف للمسات
+        onTap: onTap,
+        child: Container(
+          // تصميم البطاقة
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: color.withValues(alpha: 0.3))),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title,
-                      style: TextStyle(
-                          color: color,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13)), // عنوان التنبيه
-                  Text(sub,
-                      style: TextStyle(
-                          color: color.withValues(alpha: 0.8),
-                          fontSize: 10)), // نص فرعي للتنبيه
-                ],
+            border: Border.all(color: color.withValues(alpha: 0.5), width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.15),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
-            ),
-          ],
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        style: TextStyle(
+                            color: color,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14)), // عنوان التنبيه
+                    const SizedBox(height: 4),
+                    Text(sub,
+                        style: TextStyle(
+                            color: color.withValues(alpha: 0.8),
+                            fontSize: 12)), // نص فرعي للتنبيه
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -243,12 +306,14 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xFF0EA5E9).withValues(alpha: 0.2)),
+          border: Border.all(
+              color: const Color(0xFF0EA5E9).withValues(alpha: 0.5),
+              width: 1.5),
           boxShadow: [
             BoxShadow(
-                color: const Color(0xFF0369A1).withValues(alpha: 0.04),
-                blurRadius: 20,
-                offset: const Offset(0, 8))
+                color: const Color(0xFF0369A1).withValues(alpha: 0.15),
+                blurRadius: 10,
+                offset: const Offset(0, 4))
           ],
         ),
         child: Column(
@@ -498,7 +563,13 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFE0F2FE)),
+          border: Border.all(color: const Color(0xFFBAE6FD), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+                color: const Color(0xFF0369A1).withValues(alpha: 0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 4))
+          ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -516,23 +587,18 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
               ),
             ),
             const SizedBox(height: 4),
-            Text(
-              // مسمى المؤشر - تم تفعيل الاختصار لمنع الأسطر المتعددة
-              lbl,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 9, color: Color(0xFF64748B)),
+            MarqueeText(
+              text: lbl,
+              style: const TextStyle(
+                  fontSize: 12,
+                  color: Color(0xFF64748B),
+                  fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
-            Text(
-              // نص توضيحي إضافي
-              sub,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            MarqueeText(
+              text: sub,
               style: TextStyle(
-                fontSize: 9,
+                fontSize: 11,
                 color: subColor,
                 fontWeight: FontWeight.bold,
               ),
@@ -640,9 +706,8 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
   }
 
   Widget _buildResidentsSection(AppRiverpod provider) {
-    // بناء قسم قائمة المقيمين
+    // بناء قسم قائمة المقيمين (مبسط كمثال)
     String getLatestNote(String name) {
-      // دالة للحصول على آخر ملاحظة لمقيم معين
       final cleanName = name.split(' — ')[0];
       final notes = provider.getNotesForResident(cleanName);
       return notes.isNotEmpty
@@ -650,74 +715,43 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
           : '';
     }
 
-    // تعريف قائمة ثابتة للمقيمين (لغرض العرض)
-    List<Widget> residents = [
-      _buildResCard(
-        // كارت الحاج محمود (حالة حرجة)
-        name: 'الحاج محمود سالم — غرفة ١٠٣',
-        room: '٧٨ سنة · متابعة دورية',
-        av: 'مح',
-        avBg: const Color(0xFFFFE4E6),
-        avColor: const Color(0xFF9F1239),
-        statusColor: const Color(0xFFEF4444),
-        borderColor: const Color(0xFFFCA5A5),
-        bg: const Color(0xFFFFF5F5),
-        btnText: 'تدخّل',
-        btnColor: const Color(0xFFEF4444),
-        warnText: '⏰ ميتفورمين — فات موعده منذ ٣٠ د',
-        category: 'حرجة 🔴',
-        note: getLatestNote('الحاج محمود سالم'),
-      ),
-      _buildResCard(
-        // كارت الحاجة فاطمة (حالة تحذير)
-        name: 'الحاجة فاطمة علي — غرفة ١٠٧',
-        room: '٧٢ سنة · أمراض قلب',
-        av: 'فا',
-        avBg: const Color(0xFFFEF3C7),
-        avColor: const Color(0xFF92400E),
-        statusColor: const Color(0xFFF59E0B),
-        borderColor: const Color(0xFFFDE68A),
-        bg: Colors.white,
-        btnText: 'تأكيد',
-        btnColor: const Color(0xFF0EA5E9),
-        warnText: '⏰ أملوديبين — باقي ١٥ دقيقة',
-        category: 'تحذير 🟡',
-        note: getLatestNote('الحاجة فاطمة علي'),
-      ),
-      _buildResCard(
-        // كارت الحاج أحمد (حالة مستقرة)
-        name: 'الحاج أحمد كمال — غرفة ١١٢',
-        room: '٦٩ سنة · مستقر',
-        av: 'أح',
-        avBg: const Color(0xFFD1FAE5),
-        avColor: const Color(0xFF065F46),
-        statusColor: const Color(0xFF10B981),
-        borderColor: const Color(0xFFE0F2FE),
-        bg: Colors.white,
-        btnText: 'تفاصيل',
-        btnColor: const Color(0xFF10B981),
-        warnText: '✓ جميع أدويته مكتملة اليوم',
-        isStable: true,
-        category: 'مستقرة ✅',
-        note: getLatestNote('الحاج أحمد كمال'),
-      ),
-    ];
-
-    // تصفية القائمة بناءً على الفلتر المختار
-    List<Widget> filtered = residents.where((r) {
-      if (_selectedFilter == 'الكل') return true;
-      if (r is! Container) return true; // تأمين ضد أنواع أخرى
-      if (_selectedFilter == 'حرجة 🔴') return residents.indexOf(r) == 0;
-      if (_selectedFilter == 'تحذير 🟡') return residents.indexOf(r) == 1;
-      if (_selectedFilter == 'مستقرة ✅') return residents.indexOf(r) == 2;
-      return false;
-    }).toList();
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionHeader('المقيمون — حسب الأولوية', const Color(0xFFEF4444)),
-        ...filtered, // عرض العناصر المصفاة
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildSectionHeader(
+                  'المقيمون — أولوية المتابعة', const Color(0xFFEF4444)),
+              TextButton(
+                onPressed: () => setState(
+                    () => _currentTabIndex = 1), // الانتقال لتبويب المقيمين
+                child: const Text('عرض الكل',
+                    style: TextStyle(
+                        color: Color(0xFF0EA5E9),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12)),
+              ),
+            ],
+          ),
+        ),
+        _buildResCard(
+          name: 'الحاج محمود سالم — غرفة ١٠٣',
+          room: '٧٨ سنة · متابعة دورية',
+          av: 'مح',
+          avBg: const Color(0xFFFFE4E6),
+          avColor: const Color(0xFF9F1239),
+          statusColor: const Color(0xFFEF4444),
+          borderColor: const Color(0xFFFCA5A5),
+          bg: const Color(0xFFFFF5F5),
+          btnText: 'تدخّل',
+          btnColor: const Color(0xFFEF4444),
+          warnText: '⏰ ميتفورمين — فات موعده منذ ٣٠ د',
+          category: 'حرجة 🔴',
+          note: getLatestNote('الحاج محمود سالم'),
+        ),
       ],
     );
   }
@@ -746,6 +780,12 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
         color: bg,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: borderColor, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+              color: borderColor.withValues(alpha: 0.15),
+              blurRadius: 10,
+              offset: const Offset(0, 4))
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -797,7 +837,7 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
-                                fontSize: 14,
+                                fontSize: 16,
                                 fontWeight: FontWeight.bold,
                                 color: Color(0xFF0F172A)),
                           ),
@@ -807,7 +847,9 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
-                                fontSize: 11, color: Color(0xFF64748B)),
+                                fontSize: 13,
+                                color: Color(0xFF64748B),
+                                fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 6),
                           Text(
@@ -815,7 +857,8 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                                fontSize: 11,
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
                                 color: isStable
                                     ? const Color(0xFF10B981)
                                     : const Color(0xFF0369A1)),
@@ -844,7 +887,9 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
                             note,
                             textAlign: TextAlign.right,
                             style: const TextStyle(
-                                fontSize: 10, color: Color(0xFF475569)),
+                                fontSize: 12,
+                                color: Color(0xFF475569),
+                                fontWeight: FontWeight.bold),
                           ),
                         ),
                       ],
@@ -1266,7 +1311,7 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
                   // زر التأكيد النهائي
                   child: ElevatedButton(
                     onPressed: () {
-                      ref.read(appRiverpod).takeMedication(med.id);
+                      ref.read(appRiverpod).nurseConfirmMedication(med.id);
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                           content: Text('تم تسجيل إعطاء الدواء بنجاح')));
@@ -1539,13 +1584,17 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
               size: 28, // حجم أيقونة أكبر لتكون "أثقل"
               color: active
                   ? const Color(0xFF0EA5E9)
-                  : (isDark ? Colors.white54 : const Color(0xFF64748B))), // لون أغمق قليلاً للعناصر غير النشطة
+                  : (isDark
+                      ? Colors.white54
+                      : const Color(
+                          0xFF64748B))), // لون أغمق قليلاً للعناصر غير النشطة
           const SizedBox(height: 4),
           Text(
             label,
             style: TextStyle(
                 fontSize: 12, // خط أكبر قليلاً
-                fontWeight: active ? FontWeight.w900 : FontWeight.bold, // خط أسمك
+                fontWeight:
+                    active ? FontWeight.w900 : FontWeight.bold, // خط أسمك
                 color: active
                     ? const Color(0xFF0EA5E9)
                     : (isDark ? Colors.white54 : const Color(0xFF64748B))),
@@ -1568,7 +1617,7 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
 
   Widget _buildDraggableSOS() {
     final size = MediaQuery.of(context).size;
-    
+
     return AnimatedPositioned(
       duration: _isDragging ? Duration.zero : const Duration(milliseconds: 300),
       right: -_dragPosition, // المقبض ملتصق باليمين
@@ -1577,7 +1626,8 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
         onHorizontalDragUpdate: (details) {
           setState(() {
             _isDragging = true;
-            _dragPosition = (_dragPosition - details.delta.dx).clamp(0.0, size.width * 0.8);
+            _dragPosition =
+                (_dragPosition - details.delta.dx).clamp(0.0, size.width * 0.8);
           });
         },
         onHorizontalDragEnd: (details) {
@@ -1632,7 +1682,8 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
                     padding: const EdgeInsets.only(right: 20),
                     child: const Row(
                       children: [
-                        Icon(Icons.warning_amber_rounded, color: Colors.white, size: 20),
+                        Icon(Icons.warning_amber_rounded,
+                            color: Colors.white, size: 20),
                         SizedBox(width: 6),
                         Text(
                           'اسحب للطوارئ',
@@ -1746,7 +1797,19 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
         ),
         child: Column(
           children: [
-            Icon(icon, color: color, size: 28),
+            label == 'طلب إسعاف'
+                ? Lottie.asset('assets/animations/ambulancia.json',
+                    width: 50, height: 50)
+                : label == 'الطبيب المناوب'
+                    ? Lottie.asset('assets/animations/doctors.json',
+                        width: 50, height: 50)
+                    : label == 'كود بلو (قلبي)'
+                        ? Lottie.asset('assets/animations/heart.json',
+                            width: 50, height: 50)
+                        : label == 'تنبيه الإدارة'
+                            ? Lottie.asset('assets/animations/allert.json',
+                                width: 50, height: 50)
+                            : Icon(icon, color: color, size: 28),
             const SizedBox(height: 8),
             Text(label,
                 style: TextStyle(
@@ -1761,30 +1824,264 @@ class _NurseDashboardScreenState extends ConsumerState<NurseDashboardScreen>
     // معالجة تفعيل حالة الطوارئ (الاتصال بالإسعاف أو تنبيه الطاقم)
     Navigator.pop(context); // إغلاق النافذة
 
-    if (type == 'سيارة إسعاف') {
-      // محاولة الاتصال برقم الإسعاف (128)
-      final status = await Permission.phone.request();
-      if (!mounted) return;
+    final status = await Permission.phone.request();
+    if (!mounted) return;
 
-      if (status.isGranted) {
-        final Uri telUri = Uri.parse('tel:128');
+    if (status.isGranted) {
+      String phoneNumber = '';
+      if (type == 'سيارة إسعاف') {
+        phoneNumber = EmergencyContacts.ambulance;
+      } else if (type == 'الطبيب المناوب') {
+        phoneNumber = EmergencyContacts.doctor;
+      } else if (type == 'Code Blue') {
+        phoneNumber = EmergencyContacts.codeBlue;
+      }
+
+      if (phoneNumber.isNotEmpty) {
+        final Uri telUri = Uri.parse('tel:$phoneNumber');
         if (await canLaunchUrl(telUri)) {
           await launchUrl(telUri);
+          return; // الخروج بعد الاتصال
         }
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('يجب منح إذن الاتصال لطلب الإسعاف 📞'),
-          backgroundColor: Color(0xFFF59E0B),
-        ));
       }
+    } else if (type == 'سيارة إسعاف' ||
+        type == 'الطبيب المناوب' ||
+        type == 'Code Blue') {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('يجب منح إذن الاتصال لإجراء المكالمة الطارئة 📞'),
+        backgroundColor: Color(0xFFF59E0B),
+      ));
+      return;
     }
 
-    if (!mounted) return;
+    // إذا كان تنبيه الإدارة أو في حال عدم وجود رقم (أو فشل الاتصال)
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      // إشعار نجاح إرسال التنبيه
-      content: Text('تم إرسال تنبيه $type لجميع الطاقم المعني 🚨'),
-      backgroundColor: const Color(0xFFEF4444),
+      content: Text(type == 'الإدارة'
+          ? 'تم إرسال تنبيه عاجل للوحة تحكم الإدارة 🔔'
+          : 'تم إرسال تنبيه $type لجميع الطاقم المعني 🚨'),
+      backgroundColor:
+          type == 'الإدارة' ? const Color(0xFF10B981) : const Color(0xFFEF4444),
       behavior: SnackBarBehavior.floating,
     ));
+  }
+}
+
+class MarqueeText extends StatefulWidget {
+  final String text;
+  final TextStyle style;
+  final TextAlign textAlign;
+
+  const MarqueeText({
+    super.key,
+    required this.text,
+    required this.style,
+    this.textAlign = TextAlign.center,
+  });
+
+  @override
+  State<MarqueeText> createState() => _MarqueeTextState();
+}
+
+class _MarqueeTextState extends State<MarqueeText> {
+  late ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startScrolling();
+    });
+  }
+
+  void _startScrolling() {
+    Future.delayed(const Duration(seconds: 1), () {
+      if (_scrollController.hasClients) {
+        double maxScroll = _scrollController.position.maxScrollExtent;
+        if (maxScroll > 0) {
+          _scrollController
+              .animateTo(
+            maxScroll,
+            duration: Duration(milliseconds: (maxScroll * 30).toInt()),
+            curve: Curves.linear,
+          )
+              .then((_) {
+            Future.delayed(const Duration(seconds: 1), () {
+              if (_scrollController.hasClients) {
+                _scrollController.jumpTo(0);
+                _startScrolling();
+              }
+            });
+          });
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      controller: _scrollController,
+      child:
+          Text(widget.text, style: widget.style, textAlign: widget.textAlign),
+    );
+  }
+}
+
+class AnimatedBackground extends StatefulWidget {
+  final Widget child;
+  const AnimatedBackground({super.key, required this.child});
+
+  @override
+  State<AnimatedBackground> createState() => _AnimatedBackgroundState();
+}
+
+class _AnimatedBackgroundState extends State<AnimatedBackground>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 50), // أبطأ قليلاً
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            return CustomPaint(
+              painter: BackgroundPainter(_controller.value),
+              child: Container(),
+            );
+          },
+        ),
+        const SodaBubblesBackground(), // إضافة فقاعات المياه الغازية (+)
+        widget.child,
+      ],
+    );
+  }
+}
+
+class BackgroundPainter extends CustomPainter {
+  final double progress;
+  BackgroundPainter(this.progress);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint1 = Paint()
+      ..color = const Color(0xFFBAE6FD).withValues(alpha: 0.15)
+      ..style = PaintingStyle.fill;
+
+    // Draw some circles that move based on progress!
+    final center1 = Offset(
+        size.width * 0.2, size.height * (0.2 + 0.1 * sin(progress * 2 * pi)));
+    canvas.drawCircle(center1, 150, paint1);
+
+    final paint2 = Paint()
+      ..color = const Color(0xFFD1FAE5).withValues(alpha: 0.15)
+      ..style = PaintingStyle.fill;
+    final center2 = Offset(
+        size.width * 0.8, size.height * (0.8 - 0.1 * cos(progress * 2 * pi)));
+    canvas.drawCircle(center2, 200, paint2);
+
+    final paint3 = Paint()
+      ..color = const Color(0xFFFEF08A).withValues(alpha: 0.1)
+      ..style = PaintingStyle.fill;
+    final center3 = Offset(
+        size.width * 0.5, size.height * (0.5 + 0.05 * sin(progress * 4 * pi)));
+    canvas.drawCircle(center3, 100, paint3);
+  }
+
+  @override
+  bool shouldRepaint(covariant BackgroundPainter oldDelegate) {
+    return oldDelegate.progress != progress;
+  }
+}
+
+class SodaBubblesBackground extends StatefulWidget {
+  const SodaBubblesBackground({super.key});
+
+  @override
+  State<SodaBubblesBackground> createState() => _SodaBubblesBackgroundState();
+}
+
+class _SodaBubblesBackgroundState extends State<SodaBubblesBackground>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 20), // أبطأ قليلاً
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          final size = MediaQuery.of(context).size;
+          return Stack(
+            children: List.generate(30, (index) {
+              // كثرها (30 particles)
+              final speed = 0.5 + (index * 0.15); // سرعات متفاوتة
+              final progress =
+                  (_controller.value * speed + (index * 0.05)) % 1.0;
+
+              // توزيع أفقي عشوائي بناءً على الـ index
+              final left = (index * 17.0) % size.width;
+
+              return Positioned(
+                left: left,
+                bottom: progress *
+                    size.height, // تتصاعد من الأسفل للأعلى بكامل طول الشاشة
+                child: Opacity(
+                  opacity: (1.0 - progress) * 0.7, // جعلها باينة أكثر
+                  child: RotationTransition(
+                    turns: AlwaysStoppedAnimation(progress * 2), // دوران مستمر
+                    child: Icon(
+                      Icons.add_rounded,
+                      size: 12.0 + (index * 6) % 30, // تكبير الحجم قليلاً
+                      color: const Color(0xFF0EA5E9)
+                          .withValues(alpha: 0.6), // توضيح اللون أكثر
+                    ),
+                  ),
+                ),
+              );
+            }),
+          );
+        },
+      ),
+    );
   }
 }

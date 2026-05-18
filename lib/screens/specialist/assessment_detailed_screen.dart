@@ -4,12 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/app_riverpod.dart'; // مزود الحالة العام
 import '../../models/app_models.dart'; // نماذج البيانات
 import '../../services/pdf_service.dart'; // خدمة إنشاء ملفات PDF
+import 'package:lottie/lottie.dart';
 
 // شاشة التقييم الاجتماعي التفصيلي للمقيم - تسمح للأخصائي بإجراء التقييمات وحفظ النتائج
 class AssessmentDetailedScreen extends ConsumerStatefulWidget {
   final SocialSpecialistAssessmentTool? tool; // أداة التقييم المختارة (نفسي، اجتماعي، إلخ)
   final SocialSpecialistResidentScore resident; // بيانات المقيم المستهدف بالتقييم
-  const AssessmentDetailedScreen({super.key, this.tool, required this.resident});
+  final List<AssessmentQuestion>? initialQuestions; // الأسئلة المختارة مسبقاً
+  const AssessmentDetailedScreen({super.key, this.tool, required this.resident, this.initialQuestions});
 
   @override
   ConsumerState<AssessmentDetailedScreen> createState() =>
@@ -35,22 +37,28 @@ class _AssessmentDetailedScreenState extends ConsumerState<AssessmentDetailedScr
   void initState() {
     super.initState();
     
-    // تحميل الأسئلة ديناميكياً بناءً على نوع التقييم
+    // تحميل الأسئلة ديناميكياً بناءً على نوع التقييم أو استخدام الأسئلة الممررة
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final provider = ref.read(appRiverpod);
-      final rawQuestions = provider.getQuestionsForTool(widget.tool?.id ?? 't1');
-      setState(() {
-        _questions = rawQuestions.asMap().entries.map((e) {
-          final i = e.key;
-          final q = e.value;
-          return AssessmentQuestion(
-            id: 'q$i',
-            text: q['text'],
-            type: q['type'],
-            options: q['options'] != null ? List<String>.from(q['options']) : null,
-          );
-        }).toList();
-      });
+      if (widget.initialQuestions != null) {
+        setState(() {
+          _questions = widget.initialQuestions!;
+        });
+      } else {
+        final provider = ref.read(appRiverpod);
+        final rawQuestions = provider.getQuestionsForTool(widget.tool?.id ?? 't1');
+        setState(() {
+          _questions = rawQuestions.asMap().entries.map((e) {
+            final i = e.key;
+            final q = e.value;
+            return AssessmentQuestion(
+              id: 'q$i',
+              text: q['text'],
+              type: q['type'],
+              options: q['options'] != null ? List<String>.from(q['options']) : null,
+            );
+          }).toList();
+        });
+      }
     });
 
     // حالة افتراضية للأسئلة أثناء التحميل
@@ -91,7 +99,6 @@ class _AssessmentDetailedScreenState extends ConsumerState<AssessmentDetailedScr
       body: Column(
         children: [
           _buildHero(provider), // الواجهة العلوية (اسم المقيم)
-          _buildToolTabs(), // تبويبات أنواع التقييم
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(12),
@@ -132,22 +139,22 @@ class _AssessmentDetailedScreenState extends ConsumerState<AssessmentDetailedScr
         children: [
           Row(
             children: [
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('التقييم التفصيلي', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                    Text('أ. نور — الأخصائية الاجتماعية', style: TextStyle(color: Colors.white70, fontSize: 10)),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
               GestureDetector(
                 onTap: () => Navigator.pop(context),
                 child: Container(
                   width: 32, height: 32,
                   decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), shape: BoxShape.circle),
-                  child: const Center(child: Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 14)),
-                ),
-              ),
-              const SizedBox(width: 10),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text('📋 التقييم التفصيلي', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                    Text('أ. نور — الأخصائية الاجتماعية', style: TextStyle(color: Colors.white70, fontSize: 10)),
-                  ],
+                  child: const Center(child: Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 14)),
                 ),
               ),
             ],
@@ -161,25 +168,25 @@ class _AssessmentDetailedScreenState extends ConsumerState<AssessmentDetailedScr
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
-                    child: const Text('يحتاج تجديد', style: TextStyle(color: Colors.white, fontSize: 9)),
+                    width: 38, height: 38,
+                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.28), shape: BoxShape.circle),
+                    child: Center(child: Text(widget.resident.initials, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold))),
                   ),
-                  const Spacer(),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(widget.resident.name, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
                         Text('غرفة ${widget.resident.room} · آخر تقييم: ٣ أشهر', style: const TextStyle(color: Colors.white70, fontSize: 10)),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const Spacer(),
                   Container(
-                    width: 38, height: 38,
-                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.28), shape: BoxShape.circle),
-                    child: Center(child: Text(widget.resident.initials, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold))),
+                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
+                    child: const Text('يحتاج تجديد', style: TextStyle(color: Colors.white, fontSize: 9)),
                   ),
                 ],
               ),
@@ -242,10 +249,10 @@ class _AssessmentDetailedScreenState extends ConsumerState<AssessmentDetailedScr
           children: [
             Expanded(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text('تقييم الحالة النفسية GDS', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0f172a))),
-                  const Text('مؤشر اكتئاب متوسط · يحتاج متابعة', style: TextStyle(fontSize: 10, color: Color(0xFF64748b))),
+                  const Text('مؤشر اكتئاب متوسط · يحتاج متابعة', style: TextStyle(fontSize: 10, color: Color(0xFF334155), fontWeight: FontWeight.w600)),
                   const SizedBox(height: 8),
                   _buildSubScoreBar('المزاج', 0.40, const Color(0xFFf59e0b)),
                   _buildSubScoreBar('الطاقة', 0.30, const Color(0xFFef4444)),
@@ -264,7 +271,7 @@ class _AssessmentDetailedScreenState extends ConsumerState<AssessmentDetailedScr
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Text('٨', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF92400e))),
-                      Text('من ١٥', style: TextStyle(fontSize: 8, color: const Color(0xFFb45309).withValues(alpha: 0.8))),
+                      Text('من ١٥', style: TextStyle(fontSize: 8, color: const Color(0xFF92400e), fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ],
@@ -282,7 +289,7 @@ class _AssessmentDetailedScreenState extends ConsumerState<AssessmentDetailedScr
       padding: const EdgeInsets.only(bottom: 5),
       child: Row(
         children: [
-          Text('${(val * 100).toInt()}%', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: col)),
+          SizedBox(width: 44, child: Text(label, textAlign: TextAlign.right, style: const TextStyle(fontSize: 9, color: Color(0xFF334155), fontWeight: FontWeight.w600))),
           const SizedBox(width: 6),
           Expanded(
             child: Container(
@@ -292,7 +299,7 @@ class _AssessmentDetailedScreenState extends ConsumerState<AssessmentDetailedScr
             ),
           ),
           const SizedBox(width: 6),
-          SizedBox(width: 44, child: Text(label, textAlign: TextAlign.right, style: const TextStyle(fontSize: 9, color: Color(0xFF64748b)))),
+          Text('${(val * 100).toInt()}%', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: col)),
         ],
       ),
     );
@@ -315,8 +322,8 @@ class _AssessmentDetailedScreenState extends ConsumerState<AssessmentDetailedScr
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  Text(tool.name, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
                   Text('${_questionIndex + 1} / ${_questions.length} سؤال', style: const TextStyle(color: Colors.white70, fontSize: 10)),
-                  Text('📝 ${tool.name}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
                 ],
               ),
             ),
@@ -362,26 +369,57 @@ class _AssessmentDetailedScreenState extends ConsumerState<AssessmentDetailedScr
   // بناء عنصر السؤال الفردي (اختيارات، مقياس، أو نص)
   Widget _buildQuestionItem(String num, String text, {required String type, List<String>? options, int? selected, int? selectedScale, Function(int)? onSelected, Function(int)? onScaleSelected}) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFfff7ed)))),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(num, style: const TextStyle(fontSize: 10, color: Color(0xFF94a3b8))),
-          Text(text, textAlign: TextAlign.right, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF0f172a), height: 1.5)),
-          const SizedBox(height: 8),
+          Text(num, style: const TextStyle(fontSize: 10, color: Color(0xFF475569), fontWeight: FontWeight.w600)),
+          const SizedBox(height: 4),
+          Text(text, textAlign: TextAlign.right, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0f172a), height: 1.5)),
+          const SizedBox(height: 16),
           // عرض الخيارات المتعددة
           if (type == 'choice' && options != null)
-            Wrap(
-              spacing: 6, runSpacing: 6, alignment: WrapAlignment.end,
+            Column(
               children: List.generate(options.length, (index) {
                 final isSel = selected == index;
-                return GestureDetector(
-                  onTap: () => onSelected?.call(index),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(color: isSel ? null : const Color(0xFFf8fafc), gradient: isSel ? const LinearGradient(colors: [Color(0xFFea580c), Color(0xFFf97316)]) : null, borderRadius: BorderRadius.circular(20), border: isSel ? null : Border.all(color: const Color(0xFFe2e8f0), width: 1.5)),
-                    child: Text(options[index], style: TextStyle(color: isSel ? Colors.white : const Color(0xFF64748b), fontSize: 10, fontWeight: FontWeight.bold)),
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: GestureDetector(
+                    onTap: () => onSelected?.call(index),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: isSel ? const Color(0xFFea580c).withValues(alpha: 0.1) : Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: isSel ? const Color(0xFFea580c) : const Color(0xFFe2e8f0), width: 1.5),
+                        boxShadow: isSel ? [BoxShadow(color: const Color(0xFFea580c).withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 2))] : null,
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 20,
+                            height: 20,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: isSel ? const Color(0xFFea580c) : const Color(0xFFcbd5e1),
+                                width: 2,
+                              ),
+                              color: isSel ? const Color(0xFFea580c) : Colors.transparent,
+                            ),
+                            child: isSel
+                                ? const Icon(Icons.check, color: Colors.white, size: 12)
+                                : null,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(options[index], style: TextStyle(color: isSel ? const Color(0xFFea580c) : const Color(0xFF0f172a), fontSize: 14, fontWeight: FontWeight.w800)),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 );
               }),
@@ -430,20 +468,20 @@ class _AssessmentDetailedScreenState extends ConsumerState<AssessmentDetailedScr
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           GestureDetector(
-            onTap: () => setState(() { if (_questionIndex < _questions.length - 1) _questionIndex++; }),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-              decoration: BoxDecoration(color: const Color(0xFFfff7ed), borderRadius: BorderRadius.circular(10), border: Border.all(color: const Color(0xFFfed7aa))),
-              child: const Text('التالي →', style: TextStyle(color: Color(0xFF9a3412), fontSize: 11, fontWeight: FontWeight.bold)),
-            ),
-          ),
-          Text('${_questionIndex + 1} من ${_questions.length}', style: const TextStyle(fontSize: 10, color: Color(0xFF94a3b8))),
-          GestureDetector(
             onTap: () => setState(() { if (_questionIndex > 0) _questionIndex--; }),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
               decoration: BoxDecoration(color: const Color(0xFFfff7ed), borderRadius: BorderRadius.circular(10), border: Border.all(color: const Color(0xFFfed7aa))),
-              child: const Text('← السابق', style: TextStyle(color: Color(0xFF9a3412), fontSize: 11, fontWeight: FontWeight.bold)),
+              child: const Text('→ السابق', style: TextStyle(color: Color(0xFF9a3412), fontSize: 11, fontWeight: FontWeight.bold)),
+            ),
+          ),
+          Text('${_questionIndex + 1} من ${_questions.length}', style: const TextStyle(fontSize: 11, color: Color(0xFF334155), fontWeight: FontWeight.w600)),
+          GestureDetector(
+            onTap: () => setState(() { if (_questionIndex < _questions.length - 1) _questionIndex++; }),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+              decoration: BoxDecoration(color: const Color(0xFFfff7ed), borderRadius: BorderRadius.circular(10), border: Border.all(color: const Color(0xFFfed7aa))),
+              child: const Text('التالي ←', style: TextStyle(color: Color(0xFF9a3412), fontSize: 11, fontWeight: FontWeight.bold)),
             ),
           ),
         ],
@@ -457,7 +495,7 @@ class _AssessmentDetailedScreenState extends ConsumerState<AssessmentDetailedScr
       opacity: _fadeAnimations[4],
       child: Column(
         children: [
-          Row(mainAxisAlignment: MainAxisAlignment.end, children: [const Text('مقارنة التقييمات السابقة', style: TextStyle(color: Color(0xFF9a3412), fontSize: 11, fontWeight: FontWeight.bold)), const SizedBox(width: 8), Container(width: 7, height: 7, decoration: const BoxDecoration(color: Color(0xFF6366f1), shape: BoxShape.circle))]),
+          Row(mainAxisAlignment: MainAxisAlignment.start, children: [Container(width: 7, height: 7, decoration: const BoxDecoration(color: Color(0xFF6366f1), shape: BoxShape.circle)), const SizedBox(width: 8), const Text('مقارنة التقييمات السابقة', style: TextStyle(color: Color(0xFF9a3412), fontSize: 11, fontWeight: FontWeight.bold))]),
           const SizedBox(height: 10),
           Container(
             padding: const EdgeInsets.all(12),
@@ -481,7 +519,7 @@ class _AssessmentDetailedScreenState extends ConsumerState<AssessmentDetailedScr
           const SizedBox(width: 8),
           Expanded(child: Container(height: 8, decoration: BoxDecoration(color: const Color(0xFFf1f5f9), borderRadius: BorderRadius.circular(4)), alignment: Alignment.centerRight, child: FractionallySizedBox(widthFactor: h.score / (double.tryParse(h.total) ?? 15.0), child: Container(decoration: BoxDecoration(color: const Color(0xFFf59e0b), borderRadius: BorderRadius.circular(4)))))),
           const SizedBox(width: 8),
-          SizedBox(width: 72, child: Text(h.date, textAlign: TextAlign.right, style: const TextStyle(fontSize: 10, color: Color(0xFF64748b)))),
+          SizedBox(width: 72, child: Text(h.date, textAlign: TextAlign.right, style: const TextStyle(fontSize: 11, color: Color(0xFF334155), fontWeight: FontWeight.w600))),
         ],
       ),
     );
@@ -503,14 +541,14 @@ class _AssessmentDetailedScreenState extends ConsumerState<AssessmentDetailedScr
         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: const Color(0xFFfed7aa), width: 1.5)),
         child: Column(
           children: [
-            Row(mainAxisAlignment: MainAxisAlignment.end, children: [const Text('ملاحظات الأخصائية', style: TextStyle(color: Color(0xFF9a3412), fontSize: 11, fontWeight: FontWeight.bold)), const SizedBox(width: 8), Container(width: 7, height: 7, decoration: const BoxDecoration(color: Color(0xFFf97316), shape: BoxShape.circle))]),
+            Row(mainAxisAlignment: MainAxisAlignment.start, children: [Container(width: 7, height: 7, decoration: const BoxDecoration(color: Color(0xFFf97316), shape: BoxShape.circle)), const SizedBox(width: 8), const Text('ملاحظات الأخصائية', style: TextStyle(color: Color(0xFF9a3412), fontSize: 11, fontWeight: FontWeight.bold))]),
             const SizedBox(height: 10),
             Container(
               width: double.infinity, padding: const EdgeInsets.symmetric(horizontal: 10), decoration: BoxDecoration(color: const Color(0xFFfff7ed), border: Border.all(color: const Color(0xFFfed7aa)), borderRadius: BorderRadius.circular(12)),
               child: TextField(controller: _notesController, maxLines: 3, textAlign: TextAlign.right, style: const TextStyle(fontSize: 11, color: Color(0xFF0f172a), height: 1.6), decoration: const InputDecoration(border: InputBorder.none, hintText: 'اكتب ملاحظاتك هنا...', hintStyle: TextStyle(color: Color(0xFF94a3b8)))),
             ),
             const SizedBox(height: 8),
-            Wrap(spacing: 6, runSpacing: 4, alignment: WrapAlignment.end, children: tags.map((t) => GestureDetector(onTap: () => setState(() { if (_activeNotes.contains(t)) {
+            Wrap(spacing: 6, runSpacing: 4, alignment: WrapAlignment.start, children: tags.map((t) => GestureDetector(onTap: () => setState(() { if (_activeNotes.contains(t)) {
               _activeNotes.remove(t);
             } else {
               _activeNotes.add(t);
@@ -532,21 +570,21 @@ class _AssessmentDetailedScreenState extends ConsumerState<AssessmentDetailedScr
       ),
       child: Row(
         children: [
-          Switch(
-            value: _isInterventionRequired,
-            onChanged: (v) => setState(() => _isInterventionRequired = v),
-            activeThumbColor: const Color(0xFFef4444),
-          ),
-          const Spacer(),
+          const Icon(Icons.report_problem_rounded, color: Color(0xFFef4444)),
+          const SizedBox(width: 12),
           const Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('تفعيل طلب تدخل عاجل', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF991b1b))),
               Text('سيتم إخطار الإدارة والزملاء فوراً', style: TextStyle(fontSize: 10, color: Color(0xFFb91c1c))),
             ],
           ),
-          const SizedBox(width: 12),
-          const Icon(Icons.report_problem_rounded, color: Color(0xFFef4444)),
+          const Spacer(),
+          Switch(
+            value: _isInterventionRequired,
+            onChanged: (v) => setState(() => _isInterventionRequired = v),
+            activeThumbColor: const Color(0xFFef4444),
+          ),
         ],
       ),
     );
@@ -574,13 +612,36 @@ class _AssessmentDetailedScreenState extends ConsumerState<AssessmentDetailedScr
                 notes: _notesController.text,
               );
               
-              Navigator.pop(context); // إغلاق الصفحة بعد الحفظ
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('تم حفظ التقييم وتحديث حالة المقيم بنجاح ✅'), backgroundColor: Color(0xFF10b981)),
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (dialogContext) => AlertDialog(
+                  backgroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Lottie.asset('assets/animations/Done.json', width: 120, height: 120, repeat: false),
+                      const SizedBox(height: 16),
+                      const Text('تم حفظ التقييم بنجاح', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0f172a))),
+                      const SizedBox(height: 8),
+                      const Text('تم تحديث حالة المقيم في النظام', style: TextStyle(fontSize: 12, color: Color(0xFF64748b))),
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(dialogContext); // Close dialog
+                          Navigator.pop(context); // Close screen
+                        },
+                        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFea580c), foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                        child: const Text('موافق'),
+                      ),
+                    ],
+                  ),
+                ),
               );
             }, 
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFea580c), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 0), 
-            child: const Text('حفظ التقييم وإرساله للإدارة ✅', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)))),
+            child: const Text('حفظ التقييم وإرساله للإدارة', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)))),
         ],
       ),
     );

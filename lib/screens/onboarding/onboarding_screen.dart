@@ -27,7 +27,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       primaryColor: const Color(0xFF00C896), // أخضر سيان - لون جسم الروبوت
       secondaryColor: const Color(0xFF4ADE80), // أخضر فاتح - إضاءة الروبوت
       icon: Icons.home_rounded,
-      lottieAsset: 'assets/animations/Welcome.json',
+      lottieAsset: 'assets/animations/welcome.json',
     ),
     OnboardingData(
       title: 'قريبون',
@@ -292,12 +292,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
               SizedBox(
                 width: lottieSize,
                 height: lottieSize,
-                child: LottieBuilder.asset(
+                child: Lottie.asset(
                   data.lottieAsset,
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, _) {
-                    return Icon(data.icon,
-                        size: lottieSize * 0.42, color: data.primaryColor);
+                    return Center(
+                      child: Icon(
+                        data.icon,
+                        size: lottieSize * 0.42,
+                        color: data.primaryColor.withValues(alpha: 0.5),
+                      ),
+                    );
                   },
                 ),
               ),
@@ -340,19 +345,19 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  if (!isLast) ...[
+                    const Icon(Icons.arrow_back_ios_new_rounded,
+                        color: Colors.white, size: 14),
+                    const SizedBox(width: 8),
+                  ],
                   Text(
-                    isLast ? 'ابدأ الآن 🎉' : 'التالي',
+                    isLast ? 'ابدأ الآن' : 'التالي',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: btnFontSize,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  if (!isLast) ...[
-                    const SizedBox(width: 6),
-                    const Icon(Icons.arrow_back_ios_new_rounded,
-                        color: Colors.white, size: 14),
-                  ],
                 ],
               ),
             ),

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../models/app_models.dart';
+import 'chat_with_specialist_screen.dart';
 
 class CareReportDetailScreen extends StatefulWidget {
-  final String title;
-  final String date;
+  final CareReport report;
 
-  const CareReportDetailScreen(
-      {super.key, required this.title, required this.date});
+  const CareReportDetailScreen({super.key, required this.report});
 
   @override
   State<CareReportDetailScreen> createState() => _CareReportDetailScreenState();
@@ -45,26 +45,23 @@ class _CareReportDetailScreenState extends State<CareReportDetailScreen>
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildMainCard(),
                   const SizedBox(height: 32),
                   _buildSectionHeader('الملخص المهني'),
                   const SizedBox(height: 12),
-                  _buildContentCard(
-                      'يُظهر المقيم تحسناً ملحوظاً في التفاعل مع الأنشطة الجماعية وخاصة جلسات القراءة. الروح المعنوية مرتفعة والشهية للطعام منتظمة.'),
+                  _buildContentCard(widget.report.summary),
                   const SizedBox(height: 24),
                   _buildMetricsRow(),
                   const SizedBox(height: 32),
                   _buildSectionHeader('الملاحظات الاجتماعية'),
                   const SizedBox(height: 12),
-                  _buildContentCard(
-                      'شارك في مسابقة الذاكرة وحصل على المركز الثاني. أبدى رغبة في التحدث عن ذكريات الطفولة مع زملائه في الغرفة.'),
+                  _buildContentCard(widget.report.socialNotes),
                   const SizedBox(height: 32),
                   _buildSectionHeader('التوصيات'),
                   const SizedBox(height: 12),
-                  _buildContentCard(
-                      'يُنصح بزيادة التفاعل العائلي عبر مكالمات الفيديو خلال عطلة نهاية الأسبوع لتعزيز الشعور بالانتماء.'),
+                  _buildContentCard(widget.report.recommendations),
                   const SizedBox(height: 40),
                 ],
               ),
@@ -218,23 +215,24 @@ class _CareReportDetailScreenState extends State<CareReportDetailScreen>
         ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(widget.date,
-                  style:
-                      const TextStyle(color: Color(0xFF94a3b8), fontSize: 14)),
               const Text('تقرير تقييم دوري',
                   style: TextStyle(
                       color: Color(0xFFea580c),
                       fontSize: 12,
                       fontWeight: FontWeight.bold)),
+              Text(widget.report.date,
+                  style:
+                      const TextStyle(color: Color(0xFF94a3b8), fontSize: 14)),
             ],
           ),
           const SizedBox(height: 20),
-          Text(widget.title,
-              textAlign: TextAlign.center,
+          Text(widget.report.title,
+              textAlign: TextAlign.right,
               style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -244,18 +242,18 @@ class _CareReportDetailScreenState extends State<CareReportDetailScreen>
           const Divider(color: Color(0xFFf1f5f9), thickness: 1.5),
           const SizedBox(height: 24),
           Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              const Column(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('أ. نور الدين',
-                      style: TextStyle(
+                  Text(widget.report.authorName,
+                      style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
                           color: Color(0xFF1e293b))),
-                  Text('أخصائي اجتماعي أول',
-                      style: TextStyle(color: Color(0xFF64748b), fontSize: 13)),
+                  Text(widget.report.authorRole,
+                      style: const TextStyle(color: Color(0xFF64748b), fontSize: 13)),
                 ],
               ),
               const SizedBox(width: 16),
@@ -327,11 +325,11 @@ class _CareReportDetailScreenState extends State<CareReportDetailScreen>
     return Row(
       children: [
         Expanded(
-            child: _buildMetricBox('التفاعل', 'ممتاز', const Color(0xFFf0fdf4),
+            child: _buildMetricBox('التفاعل', widget.report.interactionLevel, const Color(0xFFf0fdf4),
                 const Color(0xFF16a34a))),
         const SizedBox(width: 16),
         Expanded(
-            child: _buildMetricBox('المزاج', 'مستقر', const Color(0xFFeff6ff),
+            child: _buildMetricBox('المزاج', widget.report.moodStatus, const Color(0xFFeff6ff),
                 const Color(0xFF2563eb))),
       ],
     );
@@ -363,28 +361,31 @@ class _CareReportDetailScreenState extends State<CareReportDetailScreen>
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
       ),
-      child: Container(
-        width: double.infinity,
-        height: 64,
-        decoration: BoxDecoration(
-          color: const Color(0xFF1e293b),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ChatWithSpecialistScreen(report: widget.report),
+              ),
+            );
+          },
           borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-                color: const Color(0xFF1e293b).withValues(alpha: 0.3),
-                blurRadius: 15,
-                offset: const Offset(0, 8))
-          ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('سيتم فتح المحادثة مع الأخصائي')),
-              );
-            },
-            borderRadius: BorderRadius.circular(20),
+          child: Container(
+            width: double.infinity,
+            height: 64,
+            decoration: BoxDecoration(
+              color: const Color(0xFF1e293b),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                    color: const Color(0xFF1e293b).withValues(alpha: 0.3),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8))
+              ],
+            ),
             child: const Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [

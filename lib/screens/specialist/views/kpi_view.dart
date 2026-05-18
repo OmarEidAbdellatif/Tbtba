@@ -63,11 +63,11 @@ class SpecialistKPIView extends ConsumerWidget {
     return FadeTransition(
       opacity: fadeAnimations[min(index, 11)],
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(color: Color(0xFF9a3412), fontSize: 11, fontWeight: FontWeight.bold)),
-          const SizedBox(width: 8),
           Container(width: 7, height: 7, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+          const SizedBox(width: 8),
+          Text(label, style: const TextStyle(color: Color(0xFF9a3412), fontSize: 11, fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -88,10 +88,9 @@ class SpecialistKPIView extends ConsumerWidget {
               border: Border.all(color: const Color(0xFFfed7aa), width: 1.5),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
+                    color: const Color(0xFFea580c).withValues(alpha: 0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4))
               ],
             ),
             child: Column(
@@ -121,7 +120,7 @@ class SpecialistKPIView extends ConsumerWidget {
                     style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF475569))),
+                        color: Color(0xFF1e293b))),
                 const SizedBox(height: 10),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -169,24 +168,11 @@ class SpecialistKPIView extends ConsumerWidget {
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(kpi.label,
-                                style: const TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w900,
-                                    color: Color(0xFF1e293b))),
-                            Text('تحليل الأداء للفترة الحالية',
-                                style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-                          ],
-                        ),
-                        const SizedBox(width: 16),
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
@@ -195,6 +181,19 @@ class SpecialistKPIView extends ConsumerWidget {
                           ),
                           child: const Icon(Icons.analytics_outlined,
                               color: Color(0xFFea580c), size: 30),
+                        ),
+                        const SizedBox(width: 16),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(kpi.label,
+                                style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w900,
+                                    color: Color(0xFF1e293b))),
+                            Text('تحليل الأداء للفترة الحالية',
+                                style: const TextStyle(fontSize: 12, color: Color(0xFF334155), fontWeight: FontWeight.w600)),
+                          ],
                         ),
                       ],
                     ),
@@ -209,7 +208,7 @@ class SpecialistKPIView extends ConsumerWidget {
                         style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF475569))),
+                            color: Color(0xFF1e293b))),
                     const SizedBox(height: 16),
                     _buildMockChart(),
                     const SizedBox(height: 32),
@@ -217,7 +216,7 @@ class SpecialistKPIView extends ConsumerWidget {
                         style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF475569))),
+                            color: Color(0xFF1e293b))),
                     const SizedBox(height: 12),
                     _buildRecommendationCard(
                         'استمر في متابعة المقيمين بشكل دوري لضمان استقرار هذا المؤشر.',
@@ -252,17 +251,21 @@ class SpecialistKPIView extends ConsumerWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
+        Text(label, style: const TextStyle(fontSize: 14, color: Color(0xFF334155), fontWeight: FontWeight.w600)),
         Text(value,
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: color)),
-        Text(label, style: const TextStyle(fontSize: 14, color: Color(0xFF64748b))),
       ],
     );
   }
 
   Widget _buildMockChart() {
+    final days = ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
+    final values = [45, 60, 55, 75, 80, 70, 90];
+
     return Container(
-      height: 120,
+      height: 160,
       width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -273,17 +276,34 @@ class SpecialistKPIView extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: List.generate(
             7,
-            (i) => Container(
-                  width: 12,
-                  height: 30.0 + (i * 10),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.bottomCenter,
-                      end: Alignment.topCenter,
-                      colors: [Color(0xFFea580c), Color(0xFFfb923c)],
+            (i) => Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text('${values[i]}%',
+                        style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF0f172a))),
+                    const SizedBox(height: 4),
+                    Container(
+                      width: 14,
+                      height: values[i].toDouble(),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [Color(0xFFea580c), Color(0xFFfb923c)],
+                        ),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
                     ),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
+                    const SizedBox(height: 6),
+                    Text(days[i],
+                        style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF64748b))),
+                  ],
                 )),
       ),
     );

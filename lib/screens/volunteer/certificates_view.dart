@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +9,7 @@ import 'package:printing/printing.dart';
 import 'package:flutter/services.dart';
 import '../../providers/app_riverpod.dart';
 import '../../models/app_models.dart';
+import 'widgets/volunteer_background.dart';
 
 class VolunteerCertificatesView extends ConsumerStatefulWidget {
   final List<Animation<double>> fadeAnimations;
@@ -39,111 +41,35 @@ class _VolunteerCertificatesViewState
         provider.volunteerCertificates.where((c) => !c.isLocked).toList();
     final activeCert = earnedCerts[_selectedCertIndex];
 
-    return Column(
-      children: [
-        _buildCertSelector(earnedCerts),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildCertificateDocument(activeCert, provider),
-              const SizedBox(height: 20),
-              _buildActionGrid(activeCert, provider),
-              const SizedBox(height: 24),
-              _buildSectionLabel('شهاداتي الأخرى', const Color(0xFF059669), 0),
-              const SizedBox(height: 12),
-              _buildMiniCertsRow(provider.volunteerCertificates),
-              const SizedBox(height: 24),
-              _buildSectionLabel(
-                  'توزيع ساعاتك التطوعية', const Color(0xFF059669), 1),
-              const SizedBox(height: 12),
-              _buildHoursDistribution(provider),
-              const SizedBox(height: 40),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCertSelector(List<VolunteerCertificate> certs) {
-    return Container(
-      height: 50,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: Color(0xFFd1fae5))),
-      ),
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: certs.length + 2,
-        padding: const EdgeInsets.symmetric(horizontal: 10),
-        itemBuilder: (context, index) {
-          if (index >= certs.length) {
-            final isGold = index == certs.length;
-            return _buildCertTab(
-                isGold ? 'الذهبية' : 'الماسية', isGold ? '🏆' : '💎',
-                isLocked: true);
-          }
-          final isSelected = _selectedCertIndex == index;
-          return GestureDetector(
-            onTap: () => setState(() => _selectedCertIndex = index),
-            child: _buildCertTab(certs[index].name, certs[index].icon,
-                isSelected: isSelected),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildCertTab(String label, String icon,
-      {bool isSelected = false, bool isLocked = false}) {
-    return Container(
-      margin: const EdgeInsets.only(right: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        border: Border(
-            bottom: BorderSide(
-                color:
-                    isSelected ? const Color(0xFF059669) : Colors.transparent,
-                width: 2.5)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+    return VolunteerAnimatedBackground(
+      child: Column(
         children: [
-          if (isLocked) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                  color: const Color(0xFF059669),
-                  borderRadius: BorderRadius.circular(6)),
-              child: const Text('قريباً',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 8,
-                      fontWeight: FontWeight.bold)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildCertificateDocument(activeCert, provider),
+                const SizedBox(height: 20),
+                _buildActionGrid(activeCert, provider),
+                const SizedBox(height: 24),
+                _buildSectionLabel('شهاداتي الأخرى', const Color(0xFF059669), 0),
+                const SizedBox(height: 12),
+                _buildMiniCertsRow(provider.volunteerCertificates),
+                const SizedBox(height: 24),
+                _buildSectionLabel(
+                    'توزيع ساعاتك التطوعية', const Color(0xFF059669), 1),
+                const SizedBox(height: 12),
+                _buildHoursDistribution(provider),
+                const SizedBox(height: 40),
+              ],
             ),
-            const SizedBox(width: 6),
-          ],
-          Flexible(
-            child: Text(label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.right,
-                style: TextStyle(
-                  color: isSelected
-                      ? const Color(0xFF059669)
-                      : const Color(0xFF94a3b8),
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                )),
           ),
-          const SizedBox(width: 5),
-          Text(icon, style: const TextStyle(fontSize: 14)),
         ],
       ),
     );
   }
+
 
   Widget _buildCertificateDocument(
       VolunteerCertificate cert, AppRiverpod provider) {
@@ -211,7 +137,7 @@ class _VolunteerCertificatesViewState
                         const Text(
                           'تمنح هذه الشهادة تقديراً لجهود',
                           style:
-                              TextStyle(color: Color(0xFF64748b), fontSize: 11),
+                              TextStyle(color: Color(0xFF475569), fontSize: 11, fontWeight: FontWeight.w500),
                         ),
                         const SizedBox(height: 16),
                         const Text(
@@ -244,9 +170,10 @@ class _VolunteerCertificatesViewState
                             'لمساهمته الاستثنائية وتفانيه في خدمة المجتمع من خلال برنامج "تابتيبا" للتطوع الرقمي والاجتماعي.',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: Color(0xFF64748b),
-                              fontSize: 11,
+                              color: Color(0xFF334155),
+                              fontSize: 12,
                               height: 1.6,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),
@@ -592,76 +519,12 @@ class _VolunteerCertificatesViewState
   }
 
   Widget _buildMiniCertsRow(List<VolunteerCertificate> certs) {
-    return SizedBox(
-      height: 95,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: certs.length,
-        itemBuilder: (context, index) {
-          final cert = certs[index];
-          final isEarned = !cert.isLocked;
-          return GestureDetector(
-            onTap: isEarned
-                ? () {
-                    final earnedIndex =
-                        certs.where((c) => !c.isLocked).toList().indexOf(cert);
-                    if (earnedIndex != -1) {
-                      setState(() => _selectedCertIndex = earnedIndex);
-                    }
-                  }
-                : null,
-            child: Container(
-              width: 90,
-              margin: const EdgeInsets.only(left: 10),
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                    color: cert.isLocked
-                        ? const Color(0xFFd1fae5).withValues(alpha: 0.5)
-                        : const Color(0xFFd1fae5),
-                    width: cert.isLocked ? 1 : 2),
-              ),
-              child: Opacity(
-                opacity: cert.isLocked ? 0.5 : 1.0,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(cert.icon, style: const TextStyle(fontSize: 22)),
-                    const SizedBox(height: 4),
-                    Text(cert.name,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF059669))),
-                    Text(cert.isLocked ? cert.date : cert.date,
-                        style: const TextStyle(
-                            fontSize: 8, color: Color(0xFF94a3b8))),
-                    if (cert.isLocked) ...[
-                      const SizedBox(height: 6),
-                      Container(
-                        height: 3,
-                        decoration: BoxDecoration(
-                            color: const Color(0xFFd1fae5),
-                            borderRadius: BorderRadius.circular(3)),
-                        alignment: Alignment.centerRight,
-                        child: FractionallySizedBox(
-                            widthFactor: cert.progress,
-                            child: Container(
-                                decoration: BoxDecoration(
-                                    color: const Color(0xFF059669),
-                                    borderRadius: BorderRadius.circular(3)))),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-      ),
+    return _CertificatesTicker(
+      certificates: certs,
+      popController: widget.popController,
+      onSelected: (index) {
+        setState(() => _selectedCertIndex = index);
+      },
     );
   }
 
@@ -924,5 +787,140 @@ class _VolunteerCertificatesViewState
     await Printing.layoutPdf(
         onLayout: (PdfPageFormat format) async => pdf.save(),
         name: 'شهادة_تطوع_${cert.name}.pdf');
+  }
+}
+
+// --- Certificates Ticker Widget ---
+
+class _CertificatesTicker extends StatefulWidget {
+  final List<VolunteerCertificate> certificates;
+  final AnimationController popController;
+  final Function(int) onSelected;
+
+  const _CertificatesTicker({
+    required this.certificates,
+    required this.popController,
+    required this.onSelected,
+  });
+
+  @override
+  State<_CertificatesTicker> createState() => _CertificatesTickerState();
+}
+
+class _CertificatesTickerState extends State<_CertificatesTicker> {
+  late ScrollController _scrollController;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startTimer();
+    });
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(milliseconds: 30), (timer) {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(_scrollController.offset + 0.5);
+        if (_scrollController.offset >= _scrollController.position.maxScrollExtent) {
+          _scrollController.jumpTo(0);
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final infiniteItems = [
+      ...widget.certificates,
+      ...widget.certificates,
+      ...widget.certificates,
+    ];
+
+    return SizedBox(
+      height: 95,
+      child: ListView.builder(
+        controller: _scrollController,
+        scrollDirection: Axis.horizontal,
+        itemCount: infiniteItems.length,
+        itemBuilder: (context, index) {
+          final cert = infiniteItems[index];
+          final isEarned = !cert.isLocked;
+          
+          return GestureDetector(
+            onTap: isEarned
+                ? () {
+                    final earnedIndex = widget.certificates
+                        .where((c) => !c.isLocked)
+                        .toList()
+                        .indexOf(cert);
+                    if (earnedIndex != -1) {
+                      widget.onSelected(earnedIndex);
+                    }
+                  }
+                : null,
+            child: Container(
+              width: 90,
+              margin: const EdgeInsets.only(left: 10),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                    color: cert.isLocked
+                        ? const Color(0xFFd1fae5).withValues(alpha: 0.5)
+                        : const Color(0xFFd1fae5),
+                    width: cert.isLocked ? 1 : 2),
+              ),
+              child: Opacity(
+                opacity: cert.isLocked ? 0.5 : 1.0,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(cert.icon, style: const TextStyle(fontSize: 22)),
+                    const SizedBox(height: 4),
+                    Text(cert.name,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF059669))),
+                    Text(cert.isLocked ? cert.date : cert.date,
+                        style: const TextStyle(
+                            fontSize: 8, color: Color(0xFF94a3b8))),
+                    if (cert.isLocked) ...[
+                      const SizedBox(height: 6),
+                      Container(
+                        height: 3,
+                        decoration: BoxDecoration(
+                            color: const Color(0xFFd1fae5),
+                            borderRadius: BorderRadius.circular(3)),
+                        alignment: Alignment.centerRight,
+                        child: FractionallySizedBox(
+                            widthFactor: cert.progress,
+                            child: Container(
+                                decoration: BoxDecoration(
+                                    color: const Color(0xFF059669),
+                                    borderRadius: BorderRadius.circular(3)))),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
   }
 }

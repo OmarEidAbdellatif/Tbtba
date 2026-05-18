@@ -19,6 +19,7 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
   late AnimationController _waveController;
   late AnimationController _floatController;
   late AnimationController _glowController;
+  bool _showAllFamily = false; // التحكم في عرض المزيد من الأرقام المفضلة
 
   @override
   void initState() {
@@ -65,7 +66,8 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
     return Stack(
       children: [
         SingleChildScrollView(
-          padding: const EdgeInsets.only(bottom: 120), // مساحة للزر العائم
+          padding:
+              const EdgeInsets.only(bottom: 120), // العودة للمساحة الطبيعية
           child: Column(
             children: [
               _buildHero(provider),
@@ -86,13 +88,7 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
             ],
           ),
         ),
-        // Recording Button
-        Positioned(
-          bottom: 20,
-          left: 0,
-          right: 0,
-          child: _buildRecordingButton(provider),
-        ),
+        // تم حذف الزر العائم من هنا لدمجه في الصندوق الخاص به بالأسفل
       ],
     );
   }
@@ -283,8 +279,8 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Padding(
-                      padding: EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 8),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                     ),
                     Padding(
                       padding:
@@ -300,8 +296,9 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                           const SizedBox(height: 4),
                           Text('$availableCount متاحين الآن',
                               style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.85),
-                                  fontSize: 18)),
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ),
@@ -316,7 +313,7 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                           _buildHeroChip('● $busyCount', 'مشغول', 1,
                               Colors.white, provider),
                           const SizedBox(width: 8),
-                          _buildHeroChip('🎙️ $voiceMsgCount', 'رسائل', 2,
+                          _buildHeroChip('$voiceMsgCount', 'رسائل', 2,
                               Colors.white, provider),
                         ],
                       ),
@@ -356,6 +353,27 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
   Widget _buildHeroChip(String value, String label, int index, Color valueColor,
       AppRiverpod provider) {
     bool hc = provider.isHighContrast;
+    Color chipColor;
+    Color borderColor;
+    
+    switch (index) {
+      case 0: // متاح
+        chipColor = const Color(0xFF10B981).withValues(alpha: 0.15); // أخضر خفيف
+        borderColor = const Color(0xFF10B981).withValues(alpha: 0.3);
+        break;
+      case 1: // مشغول
+        chipColor = const Color(0xFF8B5CF6).withValues(alpha: 0.15); // بنفسجي فاتح
+        borderColor = const Color(0xFF8B5CF6).withValues(alpha: 0.3);
+        break;
+      case 2: // رسائل
+        chipColor = const Color(0xFF3B82F6).withValues(alpha: 0.15); // أزرق
+        borderColor = const Color(0xFF3B82F6).withValues(alpha: 0.3);
+        break;
+      default:
+        chipColor = Colors.white.withValues(alpha: hc ? 0.08 : 0.13);
+        borderColor = Colors.white.withValues(alpha: hc ? 0.05 : 0.1);
+    }
+
     return Expanded(
       child: TweenAnimationBuilder(
         tween: Tween<double>(begin: 0.6, end: 1),
@@ -366,10 +384,22 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: hc ? 0.08 : 0.13),
-              borderRadius: BorderRadius.circular(14),
-              border:
-                  Border.all(color: Colors.white.withValues(alpha: hc ? 0.05 : 0.1))),
+            color: chipColor,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: borderColor, width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+              BoxShadow(
+                color: borderColor.withValues(alpha: 0.2),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
           child: Column(children: [
             FittedBox(
               fit: BoxFit.scaleDown,
@@ -384,8 +414,9 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
               fit: BoxFit.scaleDown,
               child: Text(label,
                   style: TextStyle(
-                      color: Colors.white.withValues(alpha: hc ? 0.7 : 0.9),
-                      fontSize: 16)),
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold)),
             ),
           ]),
         ),
@@ -450,8 +481,8 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                                         decoration: BoxDecoration(
                                             shape: BoxShape.circle,
                                             border: Border.all(
-                                                color: Colors.white.withValues(alpha: 
-                                                    0.5 *
+                                                color: Colors.white.withValues(
+                                                    alpha: 0.5 *
                                                         (1 -
                                                             _rippleController
                                                                 .value)),
@@ -472,7 +503,8 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                                     height: 52,
                                     decoration: BoxDecoration(
                                         shape: BoxShape.circle,
-                                        color: Colors.white.withValues(alpha: 0.25)),
+                                        color: Colors.white
+                                            .withValues(alpha: 0.25)),
                                     child: const Center(
                                         child: Padding(
                                       padding: EdgeInsets.all(4.0),
@@ -550,9 +582,11 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                                         boxShadow: [
                                           BoxShadow(
                                               color: const Color(0xFF4ade80)
-                                                  .withValues(alpha: 0.5 +
-                                                      (_glowController.value *
-                                                          0.5)),
+                                                  .withValues(
+                                                      alpha: 0.5 +
+                                                          (_glowController
+                                                                  .value *
+                                                              0.5)),
                                               blurRadius: 10 +
                                                   (_glowController.value * 10),
                                               spreadRadius:
@@ -571,7 +605,8 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                                   height: 48,
                                   decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: Colors.white.withValues(alpha: 0.25)),
+                                      color:
+                                          Colors.white.withValues(alpha: 0.25)),
                                   child: const Icon(Icons.close,
                                       color: Colors.white, size: 22),
                                 ),
@@ -595,8 +630,9 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                           const SizedBox(width: 8),
                           Text('مكالمة واردة',
                               style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.75),
-                                  fontSize: 10)),
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ],
@@ -638,6 +674,11 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
         final cardWidth = isLargeText
             ? constraints.maxWidth
             : ((constraints.maxWidth - 46) / 2).floorToDouble();
+        final pinnedMembers =
+            provider.familyMembersList.where((m) => m.isPinned).toList();
+        final displayMembers =
+            _showAllFamily ? pinnedMembers : pinnedMembers.take(3).toList();
+
         return Container(
           width: double.infinity,
           decoration: BoxDecoration(
@@ -648,7 +689,8 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                   width: 1.5),
               boxShadow: [
                 BoxShadow(
-                    color: const Color(0xFF6C63FF).withValues(alpha: hc ? 0.2 : 0.06),
+                    color: const Color(0xFF6C63FF)
+                        .withValues(alpha: hc ? 0.2 : 0.06),
                     blurRadius: 16,
                     offset: const Offset(0, 4))
               ]),
@@ -656,53 +698,200 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
             padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min, // لجعل الصندوق مرناً
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF6C63FF).withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF6C63FF)
+                                  .withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.people_alt_rounded,
+                                color: Color(0xFF6C63FF), size: 24),
+                          ),
+                          const SizedBox(width: 10),
+                          const Flexible(
+                            child: Text('تواصل مع أحبائك 💜',
+                                style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w900,
+                                    color: Color(0xFF6C63FF))),
+                          ),
+                        ],
                       ),
-                      child: const Icon(Icons.people_alt_rounded,
-                          color: Color(0xFF6C63FF), size: 24),
                     ),
-                    const SizedBox(width: 10),
-                    const Text('اتصل بالأسرة',
-                        style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -0.5,
-                            color: Color(0xFF1a1a1a))),
+                    IconButton(
+                      onPressed: () => _showManageContactsSheet(provider),
+                      icon: const Icon(Icons.settings_suggest_rounded,
+                          color: Color(0xFF6C63FF)),
+                      tooltip: 'إدارة الأرقام',
+                    ),
                   ],
                 ),
-                const SizedBox(height: 20),
-                Column(
-                  children: [
-                    for (int i = 0; i < provider.familyMembers.length; i++)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: _buildPersonCard(
-                          provider.familyMembers[i],
-                          [
-                            const [Color(0xFFf472b6), Color(0xFFdb2777)],
-                            const [Color(0xFF34d399), Color(0xFF059669)],
-                            const [Color(0xFF818cf8), Color(0xFF4f46e5)],
-                            const [Color(0xFFfbbf24), Color(0xFFd97706)]
-                          ][i % 4],
-                          i,
-                          provider,
+                const SizedBox(height: 15),
+                if (pinnedMembers.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    child: Center(
+                      child: Text(
+                          'لم يتم اختيار أرقام مفضلة بعد.\nاضغط على الأيقونة بالأعلى لإضافة أرقام.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              color: Color(0xFF94a3b8), fontSize: 16)),
+                    ),
+                  )
+                else
+                  Column(
+                    children: [
+                      for (int i = 0; i < displayMembers.length; i++)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _buildPersonCard(
+                            displayMembers[i],
+                            [
+                              const [Color(0xFFf472b6), Color(0xFFdb2777)],
+                              const [Color(0xFF34d399), Color(0xFF059669)],
+                              const [Color(0xFF818cf8), Color(0xFF4f46e5)],
+                              const [Color(0xFFfbbf24), Color(0xFFd97706)]
+                            ][i % 4],
+                            i,
+                            provider,
+                          ),
                         ),
-                      ),
-                  ],
-                ),
+                      if (pinnedMembers.length > 3)
+                        TextButton.icon(
+                          onPressed: () =>
+                              setState(() => _showAllFamily = !_showAllFamily),
+                          icon: Icon(_showAllFamily
+                              ? Icons.expand_less_rounded
+                              : Icons.expand_more_rounded),
+                          label: Text(
+                              _showAllFamily ? 'عرض أقل' : 'عرض المزيد ➕',
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 16)),
+                          style: TextButton.styleFrom(
+                            foregroundColor: const Color(0xFF6C63FF),
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 10, horizontal: 20),
+                          ),
+                        ),
+                    ],
+                  ),
               ],
             ),
           ),
         );
       },
+    );
+  }
+
+  void _showManageContactsSheet(AppRiverpod provider) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          padding: const EdgeInsets.all(24),
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.8,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(10))),
+              const SizedBox(height: 20),
+              const Text('اختر الأرقام التي تظهر في الواحدة الرئيسية',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 10),
+              const Text('سيتم عرض أول ٣ أرقام فقط بشكل دائم',
+                  style: TextStyle(color: Colors.grey, fontSize: 14)),
+              const SizedBox(height: 20),
+              // زر الإضافة من الهاتف
+              OutlinedButton.icon(
+                onPressed: () async {
+                  await provider.pickAndAddContact();
+                  setModalState(() {}); // تحديث القائمة داخل الشاشة المنبثقة
+                },
+                icon: const Icon(Icons.contact_phone_rounded),
+                label: const Text('إضافة من جهات اتصال الهاتف 📱',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF6C63FF),
+                  side: const BorderSide(color: Color(0xFF6C63FF)),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+              const SizedBox(height: 15),
+              const Divider(),
+              Expanded(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: provider.familyMembersList.length,
+                  itemBuilder: (context, index) {
+                    final member = provider.familyMembersList[index];
+                    return CheckboxListTile(
+                      title: Text(member.name,
+                          style: const TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold)),
+                      subtitle: Text(member.relation,
+                          style: const TextStyle(color: Colors.grey)),
+                      value: member.isPinned,
+                      activeColor: const Color(0xFF6C63FF),
+                      onChanged: (val) {
+                        provider.toggleFamilyPin(member.id);
+                        setModalState(
+                            () {}); // لتحديث الواجهة داخل الـ BottomSheet
+                      },
+                      secondary: CircleAvatar(
+                        backgroundColor:
+                            const Color(0xFF6C63FF).withValues(alpha: 0.1),
+                        child: Text(member.initials,
+                            style: const TextStyle(color: Color(0xFF6C63FF))),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6C63FF),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: const Text('تم الحفظ ✅',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -792,7 +981,8 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                             width: 3.5),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF4ade80).withValues(alpha: 0.5),
+                            color:
+                                const Color(0xFF4ade80).withValues(alpha: 0.5),
                             blurRadius: 8,
                           )
                         ],
@@ -944,16 +1134,57 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
             const Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                Icon(Icons.mic_rounded,
-                    color: Color(0xFF6C63FF), size: 24),
+                Icon(Icons.mic_rounded, color: Color(0xFF6C63FF), size: 24),
                 SizedBox(width: 8),
-                Text('رسائل صوتية من الأسرة',
+                Text('رسائل من القلب ✨',
                     style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF6C63FF))),
               ],
             ),
+            const SizedBox(height: 15),
+            // زر تسجيل رسالة جديدة مدمج داخل الصندوق
+            GestureDetector(
+              onTap: () => _showRecordDialog(provider),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF6C63FF), Color(0xFFa78bfa)],
+                  ),
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF6C63FF).withValues(alpha: 0.2),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    )
+                  ],
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.mic, color: Colors.white, size: 22),
+                    SizedBox(width: 10),
+                    const Text('رسائل من القلب ✨',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold)),
+                    const SizedBox(width: 8),
+                    const Text('— عائلتك بانتظارك',
+                        style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500)),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Divider(color: Color(0xFFf5f3ff), thickness: 1),
             const SizedBox(height: 10),
             ...provider.voiceMessages.asMap().entries.map((entry) {
               final index = entry.key;
@@ -1240,7 +1471,8 @@ class _CallsScreenState extends ConsumerState<CallsScreen>
                       : const Color(0xFFE5E7EB))),
           borderRadius: BorderRadius.circular(14),
           border: isOutlined && isActive
-              ? Border.all(color: primaryColor.withValues(alpha: 0.3), width: 1.5)
+              ? Border.all(
+                  color: primaryColor.withValues(alpha: 0.3), width: 1.5)
               : null,
         ),
         child: Row(
